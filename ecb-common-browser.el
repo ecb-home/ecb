@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.19 2005/04/21 12:15:54 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.20 2005/06/10 11:09:13 berndl Exp $
 
 
 ;;; History
@@ -1201,7 +1201,12 @@ a string with length abs\(FIRST-CHARS) is created, the image is applied to
 this new string and this \"image\"-string is added to the front of TEXT-NAME.
 If no image can be found for ICON-NAME then the original TEXT-NAME is
 returned. NAME-OF-BUFFER is the name of the tree-buffer where the resulting
-node-name will be displayed."
+node-name will be displayed.
+
+If an image is added then two text-properties are added to the FIRST-CHARS of
+the returned string: 'tree-buffer-image-start which holds 0 as value and
+'tree-buffer-image-length which holds the absolute value of FIRST-CHARS
+value."
   (let ((image nil))
     (save-excursion
       (set-buffer name-of-buffer)
@@ -1211,7 +1216,8 @@ node-name will be displayed."
               (tree-buffer-add-image-icon-maybe
                0 first-chars text-name image)
             (concat (tree-buffer-add-image-icon-maybe
-                     0 1 (make-string (- first-chars) ? ) image)
+                     0 (- first-chars)
+                     (make-string (- first-chars) ? ) image)
                     text-name))
         text-name))))
 
