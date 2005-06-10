@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.58 2005/05/23 15:50:54 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.59 2005/06/10 11:07:05 berndl Exp $
 
 ;;; Commentary:
 
@@ -2115,28 +2115,56 @@ by the option `ecb-mode-line-prefixes'."
           (function (lambda (l r)
                       (let* ((l0 (tree-node->name l))
                              (r0 (tree-node->name r))
-                             (l1 (save-match-data
-                                   (if (string-match "^(.) \\(.+\\)$" l0)
-                                       (match-string 1 l0)
-                                     l0)))
-                             (r1 (save-match-data
-                                   (if (string-match "^(.) \\(.+\\)$" r0)
-                                       (match-string 1 r0)
-                                     r0))))
+                             (vc-ascii-icon-length-l (get-text-property
+                                                      0
+                                                      'ecb-vc-ascii-icon-length
+                                                      l0))
+                             (vc-ascii-icon-length-r (get-text-property
+                                                      0
+                                                      'ecb-vc-ascii-icon-length
+                                                      r0))
+                             (prefix-length-l (or vc-ascii-icon-length-l
+                                                  (or (get-text-property
+                                                       0
+                                                       'tree-buffer-image-length
+                                                       l0)
+                                                      0)))
+                             (prefix-length-r (or vc-ascii-icon-length-r
+                                                  (or (get-text-property
+                                                       0
+                                                       'tree-buffer-image-length
+                                                       r0)
+                                                      0)))
+                             (l1 (substring l0 prefix-length-l))
+                             (r1 (substring r0 prefix-length-r)))
                         (ecb-string< l1 r1 ecb-history-sort-ignore-case)))))
          (extension
           (function
            (lambda (l r)
              (let* ((l0 (tree-node->name l))
                     (r0 (tree-node->name r))
-                    (l1 (save-match-data
-                          (if (string-match "^(.) \\(.+\\)$" l0)
-                              (match-string 1 l0)
-                            l0)))
-                    (r1 (save-match-data
-                          (if (string-match "^(.) \\(.+\\)$" r0)
-                              (match-string 1 r0)
-                            r0)))
+                    (vc-ascii-icon-length-l (get-text-property
+                                             0
+                                             'ecb-vc-ascii-icon-length
+                                             l0))
+                    (vc-ascii-icon-length-r (get-text-property
+                                             0
+                                             'ecb-vc-ascii-icon-length
+                                             r0))
+                    (prefix-length-l (or vc-ascii-icon-length-l
+                                         (or (get-text-property
+                                              0
+                                              'tree-buffer-image-length
+                                              l0)
+                                             0)))
+                    (prefix-length-r (or vc-ascii-icon-length-r
+                                         (or (get-text-property
+                                              0
+                                              'tree-buffer-image-length
+                                              r0)
+                                             0)))
+                    (l1 (substring l0 prefix-length-l))
+                    (r1 (substring r0 prefix-length-r))
                     (ext-l (ecb-file-name-extension l1 t))
                     (ext-r (ecb-file-name-extension r1 t)))
                (if (ecb-string= ext-l ext-r ecb-history-sort-ignore-case)
@@ -2840,14 +2868,20 @@ checked for VC-states!"
 (defun ecb-vc-generate-node-name (name state)
   "Generate a node-name with an appropriate icon in the front of NAME
 depending on STATE. If Emacs supports image-display then an image-icon wll be
-used otherwise an ascii-icon."
+used otherwise an ascii-icon. The text-property 'ecb-vc-ascii-icon-length is
+added to the full length of the returned node-name. It contains as value the
+length of the ascii-icon \(incl. one trailing space) which is added in front
+of NAME."
   (let* ((ascii-icon (ecb-vc-get-ascii-icon-for-vc-state state))
          (node-name (concat ascii-icon " "
                             (save-match-data
                               (if (string-match "^(.) \\(.+\\)$" name)
                                   (match-string 1 name)
                                 name)))))
-    (ecb-generate-node-name node-name 4
+    (put-text-property 0 (length node-name)
+                       'ecb-vc-ascii-icon-length (1+ (length ascii-icon))
+                       node-name)
+    (ecb-generate-node-name node-name (1+ (length ascii-icon))
                             (ecb-vc-get-image-name-for-vc-state state)
                             ;; even in the history- or the directories-buffers
                             ;; we use the icons of the sources-buffer because
