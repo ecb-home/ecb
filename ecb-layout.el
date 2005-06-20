@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.252 2005/06/10 11:04:31 berndl Exp $
+;; $Id: ecb-layout.el,v 1.253 2005/06/20 14:34:20 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -101,7 +101,7 @@
 ;;   functions but they always act as if the edit-window(s) of ECB would be the
 ;;   only window(s) of the ECB-frame. So the edit-window(s) of ECB seems to be
 ;;   a normal Emacs-frame to the user.
-;; - If a durable compile-window is used all buffers for which
+;; - If a persistent compile-window is used all buffers for which
 ;;   `ecb-compilation-buffer-p' returns not nil are handled in the
 ;;   compile-window!
 ;;
@@ -312,22 +312,22 @@ these modes/variables is restored."
          nil)))
 
 (defcustom ecb-compile-window-height nil
-  "*Height of the durable compilation-window of ECB.
+  "*Height of the persistent compilation-window of ECB.
 If you want a compilation window shown at the bottom of the ECB-layout
 then set here the height of it \(Default is a height of 5). If you redraw the
 current layout with `ecb-redraw-layout' then the compilation window (if any)
 has the height you set here. If the number is less than 1.0 the height is a
 fraction of the frame height.
 
-If you do not set a durable compilation window then doing a compilation or
+If you do not set a persistent compilation window then doing a compilation or
 displaying temp-buffers \(e.g. *Help*-buffers) splits temporally the edit
 window vertically if the edit window is not splitted already or uses another
 edit window temporally for compilation output if the edit window is already
 splitted. This is the recommended value for this option because this is the
 standard-behavior of Emacs.
 
-Beware: If you set a durable compilation window then ECB displays all buffers
-for which `ecb-compilation-buffer-p' returns not nil in that durable
+Beware: If you set a persistent compilation window then ECB displays all buffers
+for which `ecb-compilation-buffer-p' returns not nil in that persistent
 compilation window. If a buffer which should being displayed there is not
 displayed there then try to modify the options `ecb-compilation-buffer-names',
 `ecb-compilation-major-modes' or `ecb-compilation-predicates' \(in this
@@ -337,7 +337,7 @@ See also the options `ecb-compile-window-temporally-enlarge' and
 `ecb-enlarged-compilation-window-max-height' and also the command
 `ecb-toggle-compile-window-height'!
 
-ECB offers the functionality of such a durable compile-window regardless if
+ECB offers the functionality of such a persistent compile-window regardless if
 the special ECB-windows are visible or not \(see the command
 `ecb-toggle-ecb-windows').
 
@@ -589,7 +589,7 @@ advice documentation of `other-window-for-scrolling'."
   "*Ignore special-display-handling.
 This means, that all values of `special-display-function',
 `special-display-buffer-names' and `special-display-regexps' are ignored
-- only when durable compile window is used - i.e. if
+- only when persistent compile window is used - i.e. if
   `ecb-compile-window-height' is not nil - this is the default value.
 - always when ECB is active - that means no special-display-handling of
   buffers when ECB is active
@@ -597,7 +597,7 @@ This means, that all values of `special-display-function',
   `special-display-function', `special-display-buffer-names' and
   `special-display-regexps'."
   :group 'ecb-layout
-  :type '(radio (const :tag "When a durable compile-window is used"
+  :type '(radio (const :tag "When a persistent compile-window is used"
                        :value compile-window)
                 (const :tag "Always" :value always)
                 (const :tag "Never" nil)))
@@ -616,14 +616,14 @@ the function of `display-buffer-function' is completely responsible which
 window is used for the buffer to display - no smart ECB-logic will help to
 deal best with the ECB-window-layout! You can define if and when
 `display-buffer-function' should be ignored:
-- only when durable compile window is used - i.e. if
+- only when persistent compile window is used - i.e. if
   `ecb-compile-window-height' is not nil
 - always when ECB is active - that means ignore when ECB is active otherwise
   not - this is the default value
 - never, the adviced version of `display-buffer' always uses the value of
   `display-buffer-function' if the value is a function."
   :group 'ecb-layout
-  :type '(radio (const :tag "When a durable compile-window is used"
+  :type '(radio (const :tag "When a persistent compile-window is used"
                        :value compile-window)
                 (const :tag "Always" :value always)
                 (const :tag "Never" nil)))
@@ -5482,9 +5482,9 @@ Emacs)."
 
 (defun ecb-compile-window-state ()
   "Returns the state of the compile-window:
-- 'no: No durable compile-window, i.e. `ecb-compile-window-height' is nil.
+- 'no: No persistent compile-window, i.e. `ecb-compile-window-height' is nil.
 - 'visible: The compile-window is visible.
-- 'hidden: A durable compile-window is set but it is currently hidden."
+- 'hidden: A persistent compile-window is set but it is currently hidden."
   (if (null ecb-compile-window-height)
       'no
     (if (ecb-compile-window-live-p)

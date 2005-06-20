@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-eshell.el,v 1.77 2005/06/10 11:10:11 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.78 2005/06/20 14:34:20 berndl Exp $
 
 ;;; Commentary:
 
@@ -162,7 +162,7 @@ an after-advice) then for every class a cons must be added to this list.")
         (progn
           (add-to-list 'ecb-compilation-buffer-names-internal new-elem)
           (add-to-list 'ecb-compilation-major-modes-internal 'eshell-mode))
-      ;; if we have no durable compile-window we do not handle eshell autom.
+      ;; if we have no persistent compile-window we do not handle eshell autom.
       ;; as compilation-buffer. If the user wants this then he has to modify
       ;; `ecb-compilation-buffer-names' and/or `ecb-compilation-major-modes'.
       ;; Therefore we remove the new-elem here from the internal lists.

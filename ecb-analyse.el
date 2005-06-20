@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.11 2005/06/10 11:13:25 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.12 2005/06/20 14:34:20 berndl Exp $
 
 
 ;;; Commentary:
@@ -106,7 +106,9 @@ class etc. \(what exactly depends on the programming language) point is in.
 This means not the current function/method/variable/class-name point stand on
 but the current surrounding context. Example: If point stays somewhere within
 a defun-definition in emacs-lisp or within a java-method then this defun rsp.
-method is the context.
+method is the context. In object oriented languages this can be the full
+hierachy, i.e. not only the current method, but the current method, the class
+of this method, the superclass of this class and so on!
 
 Arguments: The arguments of the context if the context is a function/method.
 
@@ -427,8 +429,6 @@ value of EDIT-WINDOW-NR is ignored."
   (add-hook 'ecb-current-buffer-sync-hook-internal 'ecb-analyse-buffer-sync)
   (switch-to-buffer ecb-analyse-buffer-name))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Add these commands to the right
-;; submenu of the ECB-menu and also to the ecb-key-map!
 (defun ecb-maximize-window-analyse ()
   "Maximize the ECB-analyse-window.
 I.e. delete all other ECB-windows, so only one ECB-window and the

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-examples.el,v 1.19 2005/05/23 15:49:40 berndl Exp $
+;; $Id: ecb-examples.el,v 1.20 2005/06/20 14:34:20 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -314,7 +314,7 @@ window dedicated for this buffer."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place.
 
 The top-left window always displays informations about the current buffer in

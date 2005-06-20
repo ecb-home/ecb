@@ -5,11 +5,8 @@
 @c                           Kevin A. Burton,
 @c                           Free Software Foundation, Inc.
 
-@c Author: Jesper Nordenberg <mayhem@home.se>
-@c         Klaus Berndl <klaus.berndl@sdm.de>
-@c         Kevin A. Burton <burton@openprivacy.org>
+@c Author: Klaus Berndl <klaus.berndl@sdm.de>
 @c Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
-@c             Kevin A. Burton <burton@openprivacy.org>
 @c Keywords: browser, code, programming, tools
 @c Created: 2001
 
@@ -26,7 +23,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.206 2005/05/23 15:51:39 berndl Exp $
+@c $Id: ecb.texi,v 1.207 2005/06/20 14:34:22 berndl Exp $
 
 @setfilename ecb.info
 
@@ -160,7 +157,9 @@ how to do this.
 
 @menu
 * Install and first steps::     Installing ECB and first steps
-* Overview::                    Introduce basic concepts
+* Overview::                    Compact introducing of basic concepts
+* Manual usage::                How to use this manual
+* ECB-interactors::             Description of all interactors of ECB
 * Activation and Deactivation:: How to start and end ECB
 * Usage of ECB::                How to use ECB
 * Customizing::                 How to customize ECB
@@ -195,11 +194,30 @@ How to set up Emacs for file parsing with ECB
 * Setting up semantic::         How to setup semantic correctly
 * Non-semantic files::          Setup for file types not supported by semantic
 
-Overview
+All interactors of ECB
 
+* Basic interactors::           Description of the basic interactors
+* Add-on interactors::          Description of additional interactors
+
+The basic interactors of ECB
+
+* Tree-buffer basics::          General introduction into tree-buffers
+* Tree-buffer styles::          Displaying the trees with different styles
 * ECB Directories-buffer::      Contents of the ECB Directories-buffer
 * ECB Sources-buffer::          Contents of the ECB Sources/history-buffer
 * ECB Methods-buffer::          Contents of the ECB Methods-buffer
+
+Displaying the trees with different styles
+
+* Style basics::                Basic knowledge about the styles
+* Ascii-based styles::          How to customize the ascii-styles
+* Tree-buffers with images::    Which images are used for the tree
+* Images for Methods-buffer::   Images for the tags in the Methods-buffer
+
+Add-on interactors of ECB
+
+* Semantic analyser::           Analyses and displays semantic context
+* Symboldefinition::            Displays definition of current symbol
 
 Activation and Deactivation
 
@@ -271,6 +289,7 @@ All customizable options of ECB
 * ecb-sources::                 Customizing the ECB-sources-tree
 * ecb-methods::                 Customizing the ECB-methods-tree
 * ecb-history::                 Customizing the ECB-history-tree
+* ecb-analyse::                 Customizing the ECB-analyse-interactor
 * ecb-layout::                  Customizing the ECB-layout
 * ecb-compilation::             Customizing the compile-window
 * ecb-create-layout::           Customizing options for creating layouts
@@ -312,7 +331,6 @@ Tips and tricks
 * Non-semantic sources::        Parsing and displaying non-semantic sources
 * Hide-show::                   Using hide-show from the methods-buffer-menu
 * Window-managers and ECB::     Support of several Emacs-window-managers
-* Tree-buffer styles::          Displaying the trees with different styles
 * Using semanticdb::            Using semanticdb for going to external nodes
 
 Supporting Version control systems
@@ -323,13 +341,6 @@ Supporting Version control systems
 * Refreshing the VC-state::     How to refresh when state changed outside
 * Adding new backends::         Necessary steps for adding new backends
 * Known VC-problems::           Currently known problems of the VC-support
-
-Displaying the trees of the ECB-windows with different styles
-
-* Style basics::                Basic knowledge about the styles
-* Ascii-based styles::          How to customize the ascii-styles
-* Tree-buffers with images::    Which images are used for the tree
-* Images for Methods-buffer::   Images for the tags in the Methods-buffer
 
 Entry points for Elisp programmers
 
@@ -838,49 +849,51 @@ The online-help of ECB is available via
 
 @itemize @minus
 @item calling @code{M-x ecb-show-help},
-@item pressing @kbd{C-c . o} or
+@item pressing @kbd{C-c . h} or
 @item using the menu ``ECB''.
 @end itemize
 
 (The section you are currently reading is part of the online-help of
 ECB)
 
-Here is also the chapter ``Tips and tricks'' very interesting!
+The chapter ``Tips and tricks'' is also very interesting!
 
 @item Start working with ECB.
 @end enumerate
 
-@node Overview, Activation and Deactivation , Install and first steps, Top
+@node Overview, Manual usage, Install and first steps, Top
 @chapter Overview
 
 @cindex tree-buffer
 @cindex ECB-windows
+@cindex interactor
 ECB is a global minor-mode which offers a couple of @dfn{ECB-windows}
 for browsing your sources comfortable with the mouse and the keyboard.
-These ``special'' windows are also called @dfn{tree-buffer} in this
-manual. Every @dfn{item} in such a tree-buffer, i.e. every line, is
-also called a @dfn{node} of this tree-buffer. See @ref{Tree-buffer
-styles} to get an impression about the look&feel of these
-tree-buffers. There are currently three different types of
-ECB-windows/tree-buffers:
+These ``special'' windows are also called @dfn{interactors} in this
+manual.
 
+ECB offers some basic interactors to browse your sources:
 @itemize @minus
-@item ECB-Directories
-@item ECB-Sources
-@item ECB-Methods
+@item ECB-Directories for browsing directories
+@item ECB-Sources for browsing source-files and a file-history
+@item ECB-Methods for browsing the contents of a source
 @end itemize
 
+See @ref{Basic interactors} for a detailled description what these
+basic interactors offer. See @ref{ECB-interactors} for a general
+introduction in the interactor-concept of ECB.
+
 In addition to these ``special'' ECB-windows you have always an
-@dfn{edit-area} where you can edit sour source-files. The edit-area
+@dfn{edit-area} where you can edit your source-files. The edit-area
 can be divided into several @dfn{edit-windows} - as many as you need
-(@pxref{The edit-area}). And at the bottom of the ECB-frame a
-durable @dfn{compilation-window} (also called @dfn{compile-window})
-can be displayed (optional), where all the output of Emacs-compilation
+(@pxref{The edit-area}). And at the bottom of the ECB-frame a persistent
+@dfn{compilation-window} (also called @dfn{compile-window}) can be
+displayed (optional), where all the output of Emacs-compilation
 (compile, grep etc.) is shown (@pxref{Temp- and compile-buffers}).
 
-The following ``screenshot'' illustrates the typical layout of
-the ECB-frame@footnote{This is only one example of the layouts ECB
-offers, see @ref{Changing the ECB-layout}}:
+The following ``screenshot'' illustrates the typical layout of the
+ECB-frame@footnote{This is only one example of the layouts ECB offers,
+see @ref{Changing the ECB-layout}}:
 
 @example
 @group
@@ -902,25 +915,421 @@ offers, see @ref{Changing the ECB-layout}}:
 |              |                                                 |
 ------------------------------------------------------------------
 |                                                                |
-|                 Compilation-window (optional)                  |
+|            Persistent Compilation-window (optional)            |
 |                                                                |
 ------------------------------------------------------------------
 @end group
 @end example
 
-In the following subsections the ``special'' ECB-windows will be
+@node Manual usage, ECB-interactors, Overview, Top
+@chapter How to use this manual
+
+@strong{IMPORTANT}: You should have read the chapter @ref{Overview}
+before going on reading the current chapter.
+
+This chapter describes shortly the contents of the following chapters
+of this manual so maybe you can find faster what you are searching
+for.
+
+@table @asis
+
+@item
+@item All interactors of ECB (@pxref{ECB-interactors})
+Gives an introduction into the concept of interactors of ECB, what
+they are, which different types exist, how they look, how they can be
+used and last but not least what they do in detail, i.e. explains
+every interactor of ECB in detail.
+
+@item Activation and Deactivation (@pxref{Activation and Deactivation})
+Describes how to activate and deactivate ECB and which different types
+of activation are possible.
+
+@item Usage of ECB (@pxref{Usage of ECB})
+Describes in detail how to use ECB with mouse and keyboard, explains
+the concept of the edit-area and the persistent compile-window,
+describe how to change the window-layout and hide and show special
+windows, which stealthy background-tasks ECB performs and so on...
+
+@item Customizing ECB (@pxref{Customizing})
+Gives an overview of the most important options of ECB and tell you
+something about do's and don'ts concerning customization of ECB. Lists
+all options of ECB and describe exactly the purpose of them.
+
+@item Submitting a problem report (@pxref{Submitting problem report})
+Instructions what to do if you encounters problems with ECB.
+
+@item Upgrading and downloading ECB (@pxref{Upgrading})
+Gives an introduction into the automatic option-upgrading-feature of
+ECB and you can download and install a newer ECB-version from within
+ECB.
+
+@item Tips and tricks (@pxref{Tips and tricks})
+How to deal with special situations and circumstances, so e.g. working
+with big and small screens, working with large directories, using the
+builtin version-control-support of ECB, parsing non-semantic-supported
+sources like perl, using hide-show, working best with eshell and JDEE
+and some window-managers of Emacs (like escreen or winring) and many
+more...
+
+@item Entry points for Elisp programmers (@pxref{Elisp programming})
+All informations needed by programmers when using some ECB-concepts
+from within other elisp-libraries. This includes a full description
+how to use the ECB-independent library tree-buffer.el. Lists also all
+available hooks and describes with full working example how to program
+own layouts.
+
+@item Conflicts and bugs of ECB (@pxref{Conflicts and bugs})
+Lists all currently known bugs and problems and gives well working
+work-arounds.
+
+@item Frequently asked Questions (@pxref{FAQ})
+Take a look...
+
+@item Command Index (@pxref{Command Index})
+List of all interactive commands of ECB
+
+@item Option Index (@pxref{Option Index})
+List of all user-customizable options of ECB
+
+@item Concept Index (@pxref{Concept Index})
+List of all concepts introduced by ECB
+
+@end table
+
+
+
+@node ECB-interactors, Activation and Deactivation, Manual usage, Top
+@chapter All interactors of ECB
+
+ECB displays a number of informational windows that allow for easy
+source code navigation and overview. These informational windows are
+called @dfn{interactors}. Each interactor is displayed in its own
+special window/buffer which is dedicated and read-only.
+
+There are some ``basic'' interactors (e.g. for browsing directories
+and sources) and some ``add-on'' interactors for special purposes like
+displaying the definition of the current symbol under point. This
+chapter describes all interactors of ECB in detail.
+
+@menu
+* Basic interactors::           Description of the basic interactors
+* Add-on interactors::          Description of additional interactors
+@end menu
+
+@node Basic interactors, Add-on interactors, ECB-interactors, ECB-interactors
+@section The basic interactors of ECB
+
+ECB offers basic interactors for browsing directory-structures, files
+of a directory and contents of source-files (e.g. methods and
+variables). These basic interactors are build from a special class of
+interactors, called @dfn{tree-buffer}. See @ref{Tree-buffer basics}
+for more details about the functionality of tree-buffers. See
+@ref{Tree-buffer styles} to get an impression about the look&feel of
+these tree-buffers.
+
+In the following subsections these basic interactors of ECB will be
 explained in detail.
 
 @menu
+* Tree-buffer basics::          General introduction into tree-buffers
+* Tree-buffer styles::          Displaying the trees with different styles
 * ECB Directories-buffer::      Contents of the ECB Directories-buffer
 * ECB Sources-buffer::          Contents of the ECB Sources/history-buffer
 * ECB Methods-buffer::          Contents of the ECB Methods-buffer
 @end menu
 
-@node ECB Directories-buffer, ECB Sources-buffer, Overview, Overview
-@section ECB Directories-buffer
+@node Tree-buffer basics, Tree-buffer styles, Basic interactors, Basic interactors
+@subsection General introduction into tree-buffers
+
+ECB displays most of its informations (e.g. about directory-structures
+or file-contents) in so called @dfn{tree-buffers} which means the
+display of such a tree-buffer is structured in a tree consisting of
+@dfn{tree-nodes}. Every line in a tree-buffer displays exactly one
+tree-node. Each node can have any arbitrary number of
+@dfn{children}-nodes. If a tree-node has no children then it is called
+a @dfn{leaf}.
+
+Each tree-buffer of ECB is displayed in an own special
+ECB-window/buffer which is read-only ie. not editable.
+
+The difference between a natural tree like a fir and an ECB-tree is
+that the root(-node) of a tree-buffer is not visible but only its
+children. In the example below the nodes parent-node-1 and
+parent-node-2 are the children of the invisible root-node.
+
+If a tree-node contains at least one child it is displayed with a
+special expand/collapse-symbol (see the example below). This symbol
+allows expanding (rsp. collapsing) the tree-node wheras expanding
+means to display the children-nodes and collapsing means to hide the
+childrens of a tree-node.
+
+Here is an example of a tree-buffer:
+
+@example
+@group
+[+] parent-node-1  -------.
+[-] parent-node-2  -------|
+    [-] expanded  --------|
+        leaf-node-1  -----|
+        leaf-node-2  -----|-----[tree-nodes]
+        leaf-node-3  -----|
+        leaf-node-4  -----|
+    [+] collapsed  -------´
+     |
+     `-----------------[expand/collapse-symbol]
+@end group
+@end example
+     
+In most cases an action is triggered when clicking with the mouse onto
+a tree-node@footnote{Of course using the keyboard is also possible,
+see @ref{Using the keyboard}.} (e.g. clicking onto ``leaf-node-1'' or
+``parent-node-1'' in the example above). Which actions depends on the
+type of the tree-buffer. For example clicking on a tree-node in the
+ECB-sources-buffer (which is the name of a source-file) opens the
+relelated file in the edit-area of ECB (@pxref{ECB Sources-buffer})
+whereas clicking onto a node in the ECB-methods-buffer (which is the
+name of a tag in the current source-file displayed in the edit-area)
+``jumps'' to the location of this tag in the source-buffer in the
+edit-area (@pxref{ECB Methods-buffer}).
+
+Almost every interactor of ECB offers a special popup-menu when
+clicking with the right mouse-button (of course also possible via
+keyboard, see @ref{Using the keyboard}) onto a tree-node (e.g. some
+senseful actions possible for directory-nodes like grepping this
+directory or performing version-control actions for this directory or
+something else).
+
+See @ref{ECB Directories-buffer}, @ref{ECB Sources-buffer}, @ref{ECB
+Methods-buffer} and @ref{Add-on interactors} for a detailed
+description which actions are triggered and which popup-menus are
+offered in all the interactors of ECB.
+
+
+@node Tree-buffer styles, ECB Directories-buffer, Tree-buffer basics, Basic interactors
+@subsection Displaying the trees with different styles
+
+ECB offers three different styles for the tree-buffers in the
+ECB-windows. Two of the styles are ascii-based and one style uses
+images for drawing the tree-structure.
+
+@menu
+* Style basics::                Basic knowledge about the styles
+* Ascii-based styles::          How to customize the ascii-styles
+* Tree-buffers with images::    Which images are used for the tree
+* Images for Methods-buffer::   Images for the tags in the Methods-buffer
+@end menu
+
+@node Style basics, Ascii-based styles, Tree-buffer styles, Tree-buffer styles
+@subsubsection Basic knowledge about the styles
+
+There are nine image-names which define the control- and guide-symbols
+to draw the tree. Here is the list of the allowed image-names and the
+related corresponding ascii-symbols:
+
+@itemize @minus
+@item open (``[-]''):
+The control-symbol displayed for an opened tree-node which has several
+subnodes. Clicking onto this control closes the node.
+
+@item close (``[+]''):
+The control-symbol displayed for a closed tree-node, i.e. an
+expandable node with subnodes but all subnodes are hidden. Clicking
+onto this control opened the node and displays its subnodes - if
+there are any. If it has no subnodes the empty-symbol will be
+displayed.
+
+@item empty (``[x]''):
+The symbol displayed for an empty node. An empty node is a
+node which could have subnodes but has currently none.
+
+@item leaf (``*''):
+The symbol displayed for a node which can not have any subnodes so it
+is a ``leaf'' in the tree.
+
+@item guide (`` |''):
+The symbol used for drawing vertical ``guide-lines'' for opened nodes.
+See the example below.
+
+@item no-guide (``  ''):
+Sometimes invisible guide-lines are needed to draw the tree.
+
+@item end-guide (`` `''):
+The symbol used for the guide-line of the last subnode of an opened
+node.
+
+@item handle (``-''):
+The symbol displayed before every subnode. Each handle is connected to
+a guide-line - either a normal guide or an end-guide.
+
+@item no-handle (`` ''):
+An invisible handle.
+@end itemize
+
+A tree will be build-up with these elements like follows:
+
+@example
+@group
+[-] node-with-subnodes      (open)
+ |-[+] not-empty-subnode1   (guide+handle+close)
+ |-[x] empty-subnode        (guide+handle+empty)
+ `-[-] not-empty-subnode2   (end-guide+handle+open)
+    |-* leaf-1              (no-guide+no-handle+guide+handle+leaf)
+    `-* leaf-2              (no-guide+no-handle+end-guide+handle+leaf)
+@end group
+@end example
+
+@node Ascii-based styles, Tree-buffers with images, Style basics, Tree-buffer styles
+@subsubsection How to customize the ascii-styles
+
+The ECB-option @code{ecb-tree-buffer-style} offers two different
+styles completely drawn with ascii-controls and -guides.
+
+Ascii-style with guide-lines (value @code{ascii-guides})@footnote{For
+a better look&feel of such a tree-buffer ECB displays only the last
+subnode of an opened node with a handle!}:
+
+@example
+@group
+[-] ECB
+ |  [+] code-save
+ `- [-] ecb-images
+     |  [-] directories
+     |   |  [-] height-15
+     |   |   |  * close.xpm
+     |   |   |  * empty.xpm
+     |   |   |  * leaf.xpm
+     |   |   `- * open.xpm
+     |   |  [+] height-17
+     |   |  [+] height-19
+     |   `- [+] height-21
+     |  [x] history
+     |  [x] methods
+     `- [x] sources
+@end group
+@end example
+
+Ascii-style without guide-lines (value @code{ascii-no-guides}) - this
+is the style used by ECB <= 1.96:
+
+@example
+@group
+[-] ECB
+    [+] code-save
+    [-] ecb-images
+        [-] directories
+            [-] height-15
+                * close.xpm
+                * empty.xpm
+                * leaf.xpm
+                * open.xpm
+            [+] height-17
+            [+] height-19
+            [+] height-21
+        [x] history
+        [x] methods
+        [x] sources
+@end group
+@end example
+
+The tree-layout of both ascii-styles can be affected with the options
+@code{ecb-tree-indent} and @code{ecb-tree-expand-symbol-before} (the
+examples above have set 4 for the former and true for the latter one).
+For the guide-style the face and color of the guide- and
+handle-symbols can be customized with the option
+@code{ecb-tree-guide-line-face} (default is the equal-named face).
+
+@node Tree-buffers with images, Images for Methods-buffer, Ascii-based styles, Tree-buffer styles
+@subsubsection Which images are used for the tree
+
+Depending on the value of @code{ecb-tree-buffer-style} and the
+image-support of (X)Emacs, the tree-buffer try to use images instead
+of strings to draw a nice-looking tree.
+
+If images can and should be used then the option
+@code{ecb-tree-image-icons-directories} tells ECB where to search for
+suitable image-icons for each of the nine image-names (see above). An
+image is used for displaying a control with name ``XXX'' if one of the
+directories of @code{ecb-tree-image-icons-directories} contains an
+image-file with basename ``ecb-XXX'' and an extension which is
+supported by (X)Emacs. Currently supported extensions are ``.xpm'',
+``.png'', ``.gif'', ``.jpeg'', .''jpg'' and ``.xbm''.
+
+Example: To display the control with name ``open'' with a suitable
+image then one of the directories of
+@code{ecb-tree-image-icons-directories} must contain a file with name
+``ecb-open.xpm'' or ``ecb-open.png'' etc. See the description of this
+option to get all important details how and in which sequence ECB
+searches the directories of @code{ecb-tree-image-icons-directories}.
+
+ECB comes with predefined default-images usable for every tree-buffer
+and special images for the Directories- and the Methods-tree-buffer.
+They are defined in several different heights - so for the most
+senseful font-heights of a tree-buffer a fitting image-size should be
+available. The shipped images reside either in the subdirectory
+"ecb-images" of the ECB-installation or - if ECB is installed as
+regular XEmacs-package - in the ECB-etc data-directory (the directory
+returned by evaluating (locate-data-directory "ecb"). If you do not
+want to change the images then you normally have nothing to do because
+the default value of @code{ecb-tree-image-icons-directories} points
+already to the correct image-directories.
+
+A special remark for XEmacs:
+
+At least XEmacs 21.14 (but probably previous versions too) has a bug
+in its display-engine which prevents adjacent images to be displayed
+correctly. The effect is, that in a row of two or more adjacent images
+(e.g. end-guide+handle+open - see the tree-example above) always all
+images are masked by the last one, means only the last one is visible.
+If at least one normal character (e.g. a space) is placed between two
+images then the images are displayed correctly. Therefore ECB has
+implemented the following work-around to get best possible results
+with XEmacs: open-, close-, empty-, leaf-, guide-, end-guide- and
+no-guide-images are displayed with images and the handle- and the
+no-handle-images are displayed with the corresponding ascii-symbols
+(which is ``-'' rsp. `` ''). The face (the color) of the handle-symbol
+is customizable via the option @code{ecb-tree-guide-line-face}.
+
+This bug is already reported to the XEmacs-team. If your XEmacs has
+fixed this bug then add the following to your @file{.emacs}-file (or
+whereever your emacs-setup is located):
+
+@lisp
+(setq tree-buffer-enable-xemacs-image-bug-hack nil)
+@end lisp
+
+Then ECB uses images without any special work-around with XEmacs too.
+Just try it - if the tree-buffers look ugly then the XEmacs-bug is
+probably not fixed correctly.
+
+@node Images for Methods-buffer, ,Tree-buffers with images, Tree-buffer styles
+@subsubsection Special images for the Methods-buffer
+
+ECB can display all the semantic-tags in the Method-buffer with
+special icons for methods, variables and classes - each of them with a
+different icon dependend of the protection of the tag. This feature
+can be disabled/enabled via the option
+@code{ecb-display-image-icons-for-semantic-tags}. All the special
+images are located in that directory where the option
+@code{ecb-tree-image-icons-directories} point to for methods.
+
+@node ECB Directories-buffer, ECB Sources-buffer, Tree-buffer styles, Basic interactors
+@subsection ECB Directories-interactor
 
 @cindex Directories
+The ECB directories interactor is for browsing directories. The direct
+children of the invisible root-node are called @dfn{source-path} and
+can be defined with the option @code{ecb-source-path}. Each
+source-path is the starting-node of the complete directory-structure
+below this path and can be browsed with the directories-interactor.
+
+When a sources interactor is contained in the current layout then per
+default only directories and subdirectories are displayed in the
+directories tree-buffer (the source-files are displayed in the sources
+tree-buffer - see @ref{ECB Sources-buffer}) but this can be changed
+with the option @code{ecb-show-sources-in-directories-buffer}.
+
+@subsubsection Usage of the directories interactor
+
 @itemize @bullet
 @item
 Select directories (and - if enabled - source files) in the
@@ -942,7 +1351,10 @@ line or clicking a mouse button on the item, see @ref{Using the mouse}.
 
 @item
 Right clicking on an item will open a popup menu where different
-operations on the item under the mouse cursor can be performed.
+operations on the item under the mouse cursor can be performed. This
+popup-menu offers operations for version-control, dired, grep, some
+file-operations like creating a directory and commands to make a
+directory a source-path in the sense of @code{ecb-source-path}.
 
 @item
 Pressing F2 will open the ECB customization group
@@ -951,11 +1363,42 @@ the edit-window. Pressing F4 in the ECB-directories buffer will offer
 adding a new source-path.
 @end itemize
 
-@node ECB Sources-buffer, ECB Methods-buffer, ECB Directories-buffer, Overview
-@section ECB Sources-buffer
+When source-files-nodes are displayed in the directories-buffer (see
+@code{ecb-show-sources-in-directories-buffer}) then for these nodes
+all descriptions of section @ref{ECB Sources-buffer} are valid.
+
+@subsubsection Activating/Displaying the directories interactor
+
+Either use one of the predefined layouts which contain the directories
+interactor (@pxref{Changing the ECB-layout}) (e.g. via @kbd{C-c . l
+c}) or create a new ecb-layout via the command
+@code{ecb-create-new-layout} and add a buffer of type ``directories''
+into this new layout (@pxref{Creating a new ECB-layout}).
+
+@subsubsection Customizing the directories interactor
+
+See @ref{ecb-directories} for a list of all options currently
+available for customizing this interactors to your needs.
+
+@node ECB Sources-buffer, ECB Methods-buffer, ECB Directories-buffer, Basic interactors
+@subsection ECB Sources- and history-interactor
 
 @cindex Sources
 @cindex History
+ECB offers two interactors for displaying source-file-names: The
+sources- and the history-interactor. The former one displays all
+source-file names of the currently selected directory of the
+directories-interactor (@pxref{ECB Directories-buffer}) whereas the
+latter one displays the names of all currently loaded source-files
+regardless in which directory they reside so it works as a ``history''
+of source-files.
+
+Both the sources- and the history-tree-buffer are ``flat''
+tree-buffers means all nodes are direct children of the invisible
+root-node and can not be expanded.
+
+@subsubsection Usage of the sources/history interactor
+
 @itemize @bullet
 @item
 Source files can be selected by clicking with the primary mouse button
@@ -984,14 +1427,31 @@ another edit window - which one depends on the setting in
 @item
 Right clicking on a source file (mouse-button 3) will open a popup
 menu where different operation on the item under the mouse cursor can
-be performed.
+be performed. This popup-menu offers operations for version-control,
+dired, grep, filtering the file-names and some file-operations like
+deleting the related file from disk.
+
 @end itemize
 
-@node ECB Methods-buffer, , ECB Sources-buffer, Overview
-@section ECB Methods-buffer
+@subsubsection Activating/Displaying the sources/history interactor
+
+Either use one of the predefined layouts which contain the sources
+(rsp. history) interactor (@pxref{Changing the ECB-layout}) (e.g. via
+@kbd{C-c . l c}) or create a new ecb-layout via the command
+@code{ecb-create-new-layout} and add a buffer of type ``sources''
+(rsp. ``history'') into this new layout (@pxref{Creating a new
+ECB-layout}).
+
+@subsubsection Customizing the sources/history interactor
+
+See @ref{ecb-sources} and @ref{ecb-history} for a list of all options
+currently available for customizing these interactors to your needs.
+
+@node ECB Methods-buffer, , ECB Sources-buffer, Basic interactors
+@subsection The ECB Methods interactor
 
 @cindex Methods
-The @dfn{ECB-Methods} buffer contains all parsed and recognized tags
+The @dfn{ECB-Methods} interactor contains all parsed and recognized tags
 of the current source-buffer. It is called ``Method-buffer'' because
 ECB is mostly designed for browsing sourcecode files and for
 programming-languages these tags are often methods (and variables
@@ -999,6 +1459,13 @@ etc.) To simplify explanations we talk in the following only about
 methods and variables - but in general the method-buffer can contain
 any kind of tags (e.g. sections and subsections for texinfo
 buffers).
+
+Per default the content of the methods-interactor is automatically
+synchronized and updated with current point of the current
+source-buffer in the edit-area (see @code{ecb-window-sync} and
+@ref{ECB-window synchronizing}).
+
+@subsubsection Usage of the methods interactor
 
 @itemize @bullet
 @item
@@ -1023,10 +1490,113 @@ Clicking on a method/variable with the secondary mouse button or C-RETURN
 @item
 Right clicking on a method/variable will open a popup menu where
 different operation on the item under the mouse cursor can be
-performed.
+performed. The popup-menu offers commands for filtering the displayed
+tree-nodes, hiding/narrowing the related tags in the source-buffer and
+expanding/collapsing one/all tree-nodes according to a certain
+expansion-level.
+
 @end itemize
 
-@node Activation and Deactivation, Usage of ECB, Overview, Top
+@subsubsection Activating/Displaying the methods interactor
+
+Either use one of the predefined layouts which contain the methods
+interactor (@pxref{Changing the ECB-layout}) (e.g. via @kbd{C-c . l
+c}) or create a new ecb-layout via the command
+@code{ecb-create-new-layout} and add a buffer of type ``methods'' into
+this new layout (@pxref{Creating a new ECB-layout}).
+
+@subsubsection Customizing the methods interactor
+
+See @ref{ecb-methods} for a list of all options currently available
+for customizing this interactor to your needs.
+
+
+@node Add-on interactors, , Basic interactors, ECB-interactors
+@section Add-on interactors of ECB
+
+This chapter gives detailled informations about available add-on
+interactors. This includes basic desciptions what they do as well as
+how to use them.
+
+@menu
+* Semantic analyser::           Analyses and displays semantic context
+* Symboldefinition::            Displays definition of current symbol
+@end menu
+
+@node Semantic analyser, Symboldefinition, Add-on interactors, Add-on interactors
+@subsection Displaying the current semantic context
+
+@cindex Analyse
+The cedet-suite contains the @dfn{semantic analyzer} which is a
+library tool that performs context analysis and can derive useful
+information. See the related node in the info-manual of cedet/semantic
+for more detailed informations about this tool.
+
+The analyzer output can be used through a special ECB-interactor. This
+interface lists details about the analysis, such as the current
+function, local arguments and variables, details on the prefix (the
+symbol the cursor is on), and a list of all possible completions (see
+@code{semantic-analyze-possible-completions} for more details about
+completions available via the semantic-analyser).
+
+Per default the content of the analyser-interactor is automatically
+synchronized and updated with current point of the current
+source-buffer in the edit-area (see @code{ecb-window-sync} and
+@ref{ECB-window synchronizing}).
+
+The analyser-interactor is of type tree-buffer. See @ref{Tree-buffer
+basics} for basic informations how to use such a tree-buffer.
+
+@subsubsection Usage of the analyser-interactor
+
+@itemize @bullet
+@item
+When a node-name in the ``Context''-bucket is selected with the
+primary mouse button (@pxref{Using the mouse}) or RETURN (@pxref{Using
+the keyboard}) the buffer in the edit-window (which one depends on the
+setting in @code{ecb-mouse-click-destination}) will jump to the
+related entry. For strongly typed languages, this means you will jump
+to the definition of the variable, slot, or type definition.
+
+@item
+Clicking on a node-name in the ``Context''-bucket with the secondary
+mouse button or C-RETURN (@pxref{Usage of ECB}) will jump to the
+related entry in another edit window - which one depends on the
+setting in @code{ecb-mouse-click-destination}.
+
+@item
+If you click on a node-name in the "Completions"-bucket, then the text
+that was recently analyzed will be replaced with the name of the tag
+that was clicked on in the analyser-interactor.
+
+@item
+Right clicking with the mouse (or with the keyboard, see @ref{Using
+popup-menus}) onto a tree-node opens a popup-menu which allows to
+display additional (if available) informations to the current node.
+
+@c TODO: Ev. adding the interactive commands of ecb-analyse here?!
+
+@end itemize
+
+@subsubsection Activating/Displaying the analyser-interactor
+
+Either use the predefined layout "left-analyse" (e.g. via @kbd{C-c . l
+c}) or create a new ecb-layout via the command
+@code{ecb-create-new-layout} and add a buffer of type ``other'' and
+name ``analyse'' into this new layout (@pxref{Creating a new
+ECB-layout}).
+
+@subsubsection Customizing the analyser interactor
+
+See @ref{ecb-analyse} for a list of all options currently available
+for customizing this interactor to your needs.
+
+@node Symboldefinition, ,Semantic analyser, Add-on interactors
+@subsection Displaying the definition of the current symbol under point
+
+@c TODO
+
+@node Activation and Deactivation, Usage of ECB, ECB-interactors, Top
 @chapter Activation and Deactivation
 
 @noindent
@@ -1530,7 +2100,7 @@ ensures that neither the special ECB-windows nor the compile-window
 will be damaged.
 
 @item
-If there is a durable compile-window (@pxref{Temp- and
+If there is a persistent compile-window (@pxref{Temp- and
 compile-buffers}) then all compilation-buffers in the sense of
 @code{ecb-compilation-buffer-p} will be displayed in the
 compile-window.
@@ -1815,10 +2385,10 @@ Same for all compilation output-buffers (e.g. after a @code{compile} or
 @code{grep}) and the variable @code{compilation-window-height}.
 
 This is default behavior of ECB. But there is also another way to
-display such buffers: Using a durable extra window at the bottom of
+display such buffers: Using a persistent extra window at the bottom of
 the ECB-frame:
 
-@subsection Using a durable compile window
+@subsection Using a persistent compile window
 
 With the option @code{ecb-compile-window-height} you can define if the
 ECB layout should contain per default a compile-window at the
@@ -1919,11 +2489,11 @@ situations ECB should take account for the values of these
 special-display-options.
 
 Default-behavior of ECB is to ignore these special-display-options
-when a durable compile-window is active (i.e.
+when a persistent compile-window is active (i.e.
 @code{ecb-compile-window-height} is not nil). But with
 @code{ecb-ignore-special-display} you can tell ECB, that either always
 the special-display-options should be ignored as long as ECB is active
-or that they should be never igored regardless if a durable
+or that they should be never igored regardless if a persistent
 compile-window is set or not. In the latter case using
 @code{display-buffer} or @code{pop-to-buffer} takes always account for
 the values of these options - like the original behavior of Emacs.
@@ -2692,7 +3262,7 @@ define if sources are displayed in the directory-window of a layout
 (@pxref{ECB Directories-buffer}).
 
 In addition to the general layout you can specify if the layout should
-contain a durable compilation-window at the bottom of the frame, see
+contain a persistent compilation-window at the bottom of the frame, see
 @code{ecb-compile-window-height} (@pxref{Temp- and compile-buffers}).
 
 Maybe you want also change the look&feel of the tree-buffers. Then you
@@ -3292,6 +3862,62 @@ see @ref{Creating a new ECB-layout}); just customize the option
 @end group
 @end example
 
+
+@item Layout ``left-analyse''
+@example
+@group
+-------------------------------------------------------
+|              |                                      |
+|  Directories |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  Sources     |                                      |
+|              |                                      |
+|--------------|                 Edit                 |
+|              |                                      |
+|  Methods     |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  Analyse     |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
+
+@item Layout ``left-symboldef''
+@example
+@group
+-------------------------------------------------------
+|              |                                      |
+|  Directories |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  Sources     |                                      |
+|              |                                      |
+|--------------|                 Edit                 |
+|              |                                      |
+|  Methods     |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  Symbol-defs |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
 @end table
 
 @node Redrawing the ECB-layout, Changing window sizes, Changing the ECB-layout, The ECB-layout
@@ -3427,7 +4053,7 @@ Afterwards you will see a frame like follows (here the layout-type is
 |              | ECB-layout creation mode          |            |
 |              | ========================          |            |
 |              |                                   |            |
-|              | <This is a durable help-screen>   |            |
+|              | <This is a persistent help-screen>|            |
 |              |                                   |            |
 |              |                                   |            |
 |              |                                   |            |
@@ -3874,6 +4500,10 @@ are on the top of the history and the seldom used buffers at the
 bottom.
 @end deffn
 
+@deffn Command analyse-buffer-sync
+Synchronize the analyse buffer with the current buffer and point. This
+means in fact display the current analysis for current point.
+@end deffn
 
 
 @deffn Command change-layout &optional preselect-type
@@ -4081,6 +4711,10 @@ command can last a long time - depending of machine- and
 disk-performance.
 @end deffn
 
+@deffn Command goto-window-analyse
+Make the ECB-analyse window the current window.
+@end deffn
+
 @deffn Command goto-window-compilation
 Goto the ecb compilation window @code{ecb-compile-window}.
 @end deffn
@@ -4139,8 +4773,6 @@ This means to display an entry for all currently living file-buffers.
 @end itemize
 @end deffn
 
-
-
 @deffn Command jde-display-class-at-point
 Display in the ECB-methods-buffer the contents (methods, attributes
 etc...) of the class which contains the definition of the ``thing''
@@ -4153,6 +4785,13 @@ the method-completion feature of JDEE (see
 
 Works only for classes where the source-code (i.e. the *.java-file) is
 available.
+@end deffn
+
+@deffn Command maximize-window-analyse
+Maximize the ECB-analyse-window. I.e. delete all other ECB-windows, so
+only one ECB-window and the edit-window(s) are visible (and maybe a
+compile-window). Works also if the ECB-analyse-window is not visible
+in current layout.
 @end deffn
 
 @deffn Command maximize-window-directories
@@ -4721,7 +5360,7 @@ future sessions until now)
 (defun customize-option-get-value (option type)
   "Return the value of a customizable option OPTION with TYPE, where TYPE
 can either be 'standard-value \(the default-value of the defcustom) or
-'saved-value \(the value stored durable by the user via customize)."
+'saved-value \(the value stored persistent by the user via customize)."
   (let ((val (car (get option type))))
     (cond ((not (listp val)) val)
           ((equal 'quote (car val)) (car (cdr val)))
@@ -4919,6 +5558,7 @@ been done for a better readable option index. @xref{Option Index}.
 * ecb-sources::                 Customizing the ECB-sources-tree
 * ecb-methods::                 Customizing the ECB-methods-tree
 * ecb-history::                 Customizing the ECB-history-tree
+* ecb-analyse::                 Customizing the ECB-analyse-interactor
 * ecb-layout::                  Customizing the ECB-layout
 * ecb-compilation::             Customizing the compile-window
 * ecb-create-layout::           Customizing options for creating layouts
@@ -7028,7 +7668,7 @@ supported by semantic!
 @end defopt
 
 
-@node ecb-history, ecb-layout, ecb-methods, Customizable options
+@node ecb-history, ecb-analyse, ecb-methods, Customizable options
 @subsection Group ecb-history
 
 @noindent
@@ -7159,7 +7799,172 @@ Asks, if the history-entry should be removed after the kill.
 @end itemize
 @end defopt
 
-@node ecb-layout, ecb-compilation, ecb-history, Customizable options
+@node ecb-analyse, ecb-layout, ecb-history, Customizable options
+@subsection Group ecb-analyse
+
+@defopt analyse-bucket-element-face
+Basic face for displaying elements of buckets in the
+ECB-analyse-buffer. This defines the basic face for the elements of
+category-buckets like Context, Prefix, Completions etc. in the
+ECB-analyse-buffer.
+
+Changes take first effect after finishing and reactivating ECB!
+@end defopt
+
+@defopt analyse-bucket-node-face
+Basic face for displaying a bucket-node in the ECB-analyse-buffer.
+This defines the basic face for the bucket-nodes like Context, Prefix,
+Completions etc. in the ECB-analyse-buffer.
+
+Changes take first effect after finishing and reactivating ECB!
+@end defopt
+
+@defopt analyse-buffer-after-create-hook
+Local hook running after the creation of the analyse-buffer. Every
+function of this hook is called once without arguments direct after
+creating the analyse-buffer of ECB and it's local key-map. So for
+example a function could be added which performs calls of
+@code{local-set-key} to define new key-bindings only for the
+analyse-buffer of ECB.
+@end defopt
+
+@defopt analyse-buffer-name
+Name of the ECB analyse buffer. Because it is not a normal buffer for
+editing you should enclose the name with stars, e.g. ``*ECB
+Analyse*''.
+
+If it is necessary for you you can get emacs-lisp access to the
+buffer-object of the ECB-analyse-buffer by this name, e.g. by a call
+of @code{set-buffer}.
+
+Changes for this option at runtime will take affect only after
+deactivating and then activating ECB again!
+@end defopt
+
+@defopt analyse-collapsed-buckets
+Buckets collapsed when displaying the current semantic analysis. The
+semantic analyse-modul offers several categories of analysis which are
+called buckets here. These are for example:
+
+Context: The current context, which is the current function/method,
+variable, class etc. (what exactly depends on the programming
+language) point is in. This means not the current
+function/method/variable/class-name point stand on but the current
+surrounding context. Example: If point stays somewhere within a
+defun-definition in emacs-lisp or within a java-method then this defun
+rsp. method is the context. In object oriented languages this can be
+the full hierachy, i.e. not only the current method, but the current
+method, the class of this method, the superclass of this class and so
+on!
+
+Arguments: The arguments of the context if the context is a
+function/method.
+
+Local Variables: All accessible and bound local variables visible at
+current point.
+
+Prefix: The currently parsed prefix, which is mostly the current
+identifier point stands on.
+
+Assignee: See the semantic user-manual
+
+Function: Current function-name point stands on.
+
+Argument #: When point is located within a function-call then this is
+the number of the argument point stands on.
+
+Completions: All possible completions for current prefix (see above).
+This is probably the most helpful bucket.
+
+If one of these categories/buckets are not needed per default then add
+the bucket-name (s.a.) to this option and ECB will per default
+collapse this bucket. So most needed buckets are better visible in the
+analyse-buffer.
+@end defopt
+
+@defopt analyse-face
+Face used for highlighting current entry in the analyse buffer. If the
+face @code{ecb-default-highlight-face} is used then the display of all
+ECB-tree-buffers can be changed by modifying only the face
+@code{ecb-default-highlight-face}.
+
+Changes take first effect after finishing and reactivating ECB!
+@end defopt
+
+@defopt analyse-fontified-buckets
+Buckets whose elements should be fontified as in the methods-buffer.
+If the name of a category/bucket is contained in this option then all
+elements of this bucket will be displayed as in the methods-buffer -
+at least if an element is a semantic-tag. This means if
+@code{ecb-font-lock-tags} is not nil these elements will be fontified
+and also displayed with an appropriate icon if possible. The default
+value does this only for the Context-bucket because for most of the
+other buckets this makes not really much sense.
+
+For available buckets see @code{ecb-analyse-collapsed-buckets}.
+
+For the faces used to display a bucket-node itself or bucket-elements
+not fontified see the options @code{ecb-analyse-bucket-node-face} rsp.
+@code{ecb-analyse-bucket-element-face}.
+@end defopt
+
+@defopt analyse-gen-tag-info-fn
+Which info should be displayed for a tag of the analyse-buffer. If nil
+then the default information about a tag will be displayed. If a
+function then this function gets as argument the tag for which
+tag-information should be displayed. This function has to return a
+string which will be then display as tag-info. This string has to be
+fully formatted (e.g. must already include line-breaks if the tag-info
+should be displayed in several lines).
+
+See @code{ecb-analyse-show-tag-info-fn} how the tag-info is displayed.
+@end defopt
+
+@defopt analyse-general-face
+Basic face for the ECB analyse buffer. This defines the basic face the
+whole history buffer should displayed with. If the face
+@code{ecb-default-general-face} is used then the display of all
+ECB-tree-buffers can be changed by modifying only the face
+@code{ecb-default-general-face}.
+
+Changes take first effect after finishing and reactivating ECB!
+@end defopt
+
+@defopt analyse-show-node-info
+When to display which node-info in the history-buffer. Define which
+node info should displayed after moving the mouse over a node (or
+after a shift click onto the node) in the history-buffer.
+
+You can define ``when'' a node-info should be displayed: See
+@code{ecb-directories-show-node-info} for the possible choices.
+
+You can define what info should be displayed:
+
+@itemize @minus
+@item name: The full name of the node
+@item full-info: All infos available to a node.
+@end itemize
+
+Do NOT set this option directly via setq but use always customize!
+@end defopt
+
+@defopt analyse-show-tag-info-fn
+How to display the tag-info for a tag of the analyse-buffer. The value
+of this option is a function which will be called with the info-string
+generated for the current tag of the analyse-buffer. This function
+must do all things necessary for displaying this info. When this
+function is called the window stored in
+@code{ecb-last-edit-window-with-point} is the selected window!
+
+ECB offers two builtin ways: Display the info in the echo-area (via
+the function @code{message}) or in a temp-buffer in the edit-area (via
+the function @code{ecb-analyse-show-tag-info-in-temp-buffer}). Default
+is echo-area-display.
+
+See also @code{ecb-analyse-gen-tag-info-fn}.
+@end defopt
+
+@node ecb-layout, ecb-compilation, ecb-analyse, Customizable options
 @subsection Group ecb-layout
 
 @noindent
@@ -7333,7 +8138,7 @@ deal best with the ECB-window-layout! You can define if and when
 
 @itemize @minus
 @item
-only when durable compile window is used - i.e. if
+only when persistent compile window is used - i.e. if
 @code{ecb-compile-window-height} is not nil
 
 @item
@@ -7355,7 +8160,7 @@ and @code{special-display-regexps} are ignored
 
 @itemize
 @item
-only when durable compile window is used - i.e. if
+only when persistent compile window is used - i.e. if
 @code{ecb-compile-window-height} is not nil - this is the default
 value.
 
@@ -7885,14 +8690,14 @@ not nil when the buffer is related to a living process.
 @end defopt
 
 @defopt compile-window-height
-Height of the durable compilation-window of ECB. If you want a
+Height of the persistent compilation-window of ECB. If you want a
 compilation window shown at the bottom of the ECB-layout then set here
 the height of it (Default is a height of 5). If you redraw the current
 layout with @code{ecb-redraw-layout} then the compilation window (if
 any) has the height you set here. If the number is less than 1.0 the
 height is a fraction of the frame height.
 
-If you do not set a durable compilation window then doing a
+If you do not set a persistent compilation window then doing a
 compilation or displaying temp-buffers (e.g. *Help*-buffers) splits
 temporally the edit window vertically if the edit window is not
 splitted already or uses another edit window temporally for
@@ -7900,9 +8705,9 @@ compilation output if the edit window is already splitted. This is the
 recommended value for this option because this is the
 standard-behavior of Emacs.
 
-Beware: If you set a durable compilation window then ECB displays all
+Beware: If you set a persistent compilation window then ECB displays all
 buffers for which @code{ecb-compilation-buffer-p} returns not nil in
-that durable compilation window. If a buffer which should being
+that persistent compilation window. If a buffer which should being
 displayed there is not displayed there then try to modify the options
 @code{ecb-compilation-buffer-names},
 @code{ecb-compilation-major-modes} or
@@ -7912,7 +8717,7 @@ See also the options @code{ecb-compile-window-temporally-enlarge} and
 @code{ecb-enlarged-compilation-window-max-height} and also the command
 @code{ecb-toggle-compile-window-height}!
 
-ECB offers the functionality of such a durable compile-window
+ECB offers the functionality of such a persistent compile-window
 regardless if the special ECB-windows are visible or not (see the
 command @code{ecb-toggle-ecb-windows}).
 
@@ -8511,7 +9316,13 @@ interactively but normally it is called autom. by the
 @node ecb-speedbar, ecb-non-semantic, ecb-eshell, Customizable options
 @subsection Group ecb-speedbar
 
-@c TODO
+@defopt speedbar-before-activate-hook
+Hook running directly before ECB activates the integrated speedbar.
+
+For example this hook can be used to change the expansion-mode of the
+integrated speedbar via @code{speedbar-change-initial-expansion-list}.
+Example: (speedbar-change-initial-expansion-list ``buffers'').
+@end defopt
 
 @node ecb-non-semantic, ecb-winman, ecb-speedbar, Customizable options
 @subsection Group ecb-non-semantic
@@ -9215,6 +10026,8 @@ upgraded or reseted option with their old and new values.
 @node Tips and tricks, Elisp programming, Upgrading, Top
 @chapter Tips and tricks
 
+@c TODO: Move some section to the Usage-chapter!!
+
 This chapter contains some tips and tricks how to deal best with some
 situations.
 
@@ -9234,7 +10047,6 @@ situations.
 * Non-semantic sources::        Parsing and displaying non-semantic sources
 * Hide-show::                   Using hide-show from the methods-buffer-menu
 * Window-managers and ECB::     Support of several Emacs-window-managers
-* Tree-buffer styles::          Displaying the trees with different styles
 * Using semanticdb::            Using semanticdb for going to external nodes
 @end menu
 
@@ -10052,7 +10864,7 @@ nothing is hidden.
 @end itemize
 
 Here comes a detailed explanation of these features and how to use it
-(all these features are only available if you use a durable
+(all these features are only available if you use a persistent
 compile-window, i.e. if @code{ecb-compile-window-height} is not nil):
 
 You have not to learn a new command for the eshell-start - just call
@@ -10375,7 +11187,7 @@ entry for it like the already contained entries for @code{c++-mode} or
 @code{java-mode} and hiding and showing will work for you with JDEE
 too.
 
-@node Window-managers and ECB, Tree-buffer styles, Hide-show, Tips and tricks
+@node Window-managers and ECB, Using semanticdb, Hide-show, Tips and tricks
 @section Support of several Emacs-window-managers
 
 @cindex winring
@@ -10507,214 +11319,8 @@ There is normally no need to do this but nevertheless it can be done
 by @code{ecb-winman-escreen-disable-support} rsp.
 @code{ecb-winman-winring-disable-support}.
 
-@node Tree-buffer styles, Using semanticdb, Window-managers and ECB, Tips and tricks
-@section Displaying the trees of the ECB-windows with different styles
 
-ECB offers three different styles for the tree-buffers in the
-ECB-windows. Two of the styles are ascii-based and one style uses
-images for drawing the tree-structure.
-
-@menu
-* Style basics::                Basic knowledge about the styles
-* Ascii-based styles::          How to customize the ascii-styles
-* Tree-buffers with images::    Which images are used for the tree
-* Images for Methods-buffer::   Images for the tags in the Methods-buffer
-@end menu
-
-@node Style basics, Ascii-based styles, ,Tree-buffer styles
-@subsection Basic knowledge about the styles
-
-There are nine image-names which define the control- and guide-symbols
-to draw the tree. Here is the list of the allowed image-names and the
-related corresponding ascii-symbols:
-
-@itemize @minus
-@item open (``[-]''):
-The control-symbol displayed for an opened tree-node which has several
-subnodes. Clicking onto this control closes the node.
-
-@item close (``[+]''):
-The control-symbol displayed for a closed tree-node, i.e. an
-expandable node with subnodes but all subnodes are hidden. Clicking
-onto this control opened the node and displays its subnodes - if
-there are any. If it has no subnodes the empty-symbol will be
-displayed.
-
-@item empty (``[x]''):
-The symbol displayed for an empty node. An empty node is a
-node which could have subnodes but has currently none.
-
-@item leaf (``*''):
-The symbol displayed for a node which can not have any subnodes so it
-is a ``leaf'' in the tree.
-
-@item guide (`` |''):
-The symbol used for drawing vertical ``guide-lines'' for opened nodes.
-See the example below.
-
-@item no-guide (``  ''):
-Sometimes invisible guide-lines are needed to draw the tree.
-
-@item end-guide (`` `''):
-The symbol used for the guide-line of the last subnode of an opened
-node.
-
-@item handle (``-''):
-The symbol displayed before every subnode. Each handle is connected to
-a guide-line - either a normal guide or an end-guide.
-
-@item no-handle (`` ''):
-An invisible handle.
-@end itemize
-
-A tree will be build-up with these elements like follows:
-
-@example
-@group
-[-] node-with-subnodes      (open)
- |-[+] not-empty-subnode1   (guide+handle+close)
- |-[x] empty-subnode        (guide+handle+empty)
- `-[-] not-empty-subnode2   (end-guide+handle+open)
-    |-* leaf-1              (no-guide+no-handle+guide+handle+leaf)
-    `-* leaf-2              (no-guide+no-handle+end-guide+handle+leaf)
-@end group
-@end example
-
-@node Ascii-based styles, Tree-buffers with images, Style basics, Tree-buffer styles
-@subsection How to customize the ascii-styles
-
-The ECB-option @code{ecb-tree-buffer-style} offers two different
-styles completely drawn with ascii-controls and -guides.
-
-Ascii-style with guide-lines (value @code{ascii-guides})@footnote{For
-a better look&feel of such a tree-buffer ECB displays only the last
-subnode of an opened node with a handle!}:
-
-@example
-@group
-[-] ECB
- |  [+] code-save
- `- [-] ecb-images
-     |  [-] directories
-     |   |  [-] height-15
-     |   |   |  * close.xpm
-     |   |   |  * empty.xpm
-     |   |   |  * leaf.xpm
-     |   |   `- * open.xpm
-     |   |  [+] height-17
-     |   |  [+] height-19
-     |   `- [+] height-21
-     |  [x] history
-     |  [x] methods
-     `- [x] sources
-@end group
-@end example
-
-Ascii-style without guide-lines (value @code{ascii-no-guides}) - this
-is the style used by ECB <= 1.96:
-
-@example
-@group
-[-] ECB
-    [+] code-save
-    [-] ecb-images
-        [-] directories
-            [-] height-15
-                * close.xpm
-                * empty.xpm
-                * leaf.xpm
-                * open.xpm
-            [+] height-17
-            [+] height-19
-            [+] height-21
-        [x] history
-        [x] methods
-        [x] sources
-@end group
-@end example
-
-The tree-layout of both ascii-styles can be affected with the options
-@code{ecb-tree-indent} and @code{ecb-tree-expand-symbol-before} (the
-examples above have set 4 for the former and true for the latter one).
-For the guide-style the face and color of the guide- and
-handle-symbols can be customized with the option
-@code{ecb-tree-guide-line-face} (default is the equal-named face).
-
-@node Tree-buffers with images, Images for Methods-buffer, Ascii-based styles, Tree-buffer styles
-@subsection Which images are used for the tree
-
-Depending on the value of @code{ecb-tree-buffer-style} and the
-image-support of (X)Emacs, the tree-buffer try to use images instead
-of strings to draw a nice-looking tree.
-
-If images can and should be used then the option
-@code{ecb-tree-image-icons-directories} tells ECB where to search for
-suitable image-icons for each of the nine image-names (see above). An
-image is used for displaying a control with name ``XXX'' if one of the
-directories of @code{ecb-tree-image-icons-directories} contains an
-image-file with basename ``ecb-XXX'' and an extension which is
-supported by (X)Emacs. Currently supported extensions are ``.xpm'',
-``.png'', ``.gif'', ``.jpeg'', .''jpg'' and ``.xbm''.
-
-Example: To display the control with name ``open'' with a suitable
-image then one of the directories of
-@code{ecb-tree-image-icons-directories} must contain a file with name
-``ecb-open.xpm'' or ``ecb-open.png'' etc. See the description of this
-option to get all important details how and in which sequence ECB
-searches the directories of @code{ecb-tree-image-icons-directories}.
-
-ECB comes with predefined default-images usable for every tree-buffer
-and special images for the Directories- and the Methods-tree-buffer.
-They are defined in several different heights - so for the most
-senseful font-heights of a tree-buffer a fitting image-size should be
-available. The shipped images reside either in the subdirectory
-"ecb-images" of the ECB-installation or - if ECB is installed as
-regular XEmacs-package - in the ECB-etc data-directory (the directory
-returned by evaluating (locate-data-directory "ecb"). If you do not
-want to change the images then you normally have nothing to do because
-the default value of @code{ecb-tree-image-icons-directories} points
-already to the correct image-directories.
-
-@subsubsection A special note for XEmacs
-
-At least XEmacs 21.14 (but probably previous versions too) has a bug
-in its display-engine which prevents adjacent images to be displayed
-correctly. The effect is, that in a row of two or more adjacent images
-(e.g. end-guide+handle+open - see the tree-example above) always all
-images are masked by the last one, means only the last one is visible.
-If at least one normal character (e.g. a space) is placed between two
-images then the images are displayed correctly. Therefore ECB has
-implemented the following work-around to get best possible results
-with XEmacs: open-, close-, empty-, leaf-, guide-, end-guide- and
-no-guide-images are displayed with images and the handle- and the
-no-handle-images are displayed with the corresponding ascii-symbols
-(which is ``-'' rsp. `` ''). The face (the color) of the handle-symbol
-is customizable via the option @code{ecb-tree-guide-line-face}.
-
-This bug is already reported to the XEmacs-team. If your XEmacs has
-fixed this bug then add the following to your @file{.emacs}-file (or
-whereever your emacs-setup is located):
-
-@lisp
-(setq tree-buffer-enable-xemacs-image-bug-hack nil)
-@end lisp
-
-Then ECB uses images without any special work-around with XEmacs too.
-Just try it - if the tree-buffers look ugly then the XEmacs-bug is
-probably not fixed correctly.
-
-@node Images for Methods-buffer, ,Tree-buffers with images, Tree-buffer styles
-@subsection Special images for the Methods-buffer
-
-ECB can display all the semantic-tags in the Method-buffer with
-special icons for methods, variables and classes - each of them with a
-different icon dependend of the protection of the tag. This feature
-can be disabled/enabled via the option
-@code{ecb-display-image-icons-for-semantic-tags}. All the special
-images are located in that directory where the option
-@code{ecb-tree-image-icons-directories} point to for methods.
-
-@node Using semanticdb, , Tree-buffer styles, Tips and tricks
+@node Using semanticdb, , Window-managers and ECB, Tips and tricks
 @section Using semanticdb to jump to type-tags defined in other files
 
 In OO-languages like CLOS, eieio and C++ there can be type-tags in the
@@ -10910,25 +11516,27 @@ to use the offered tree-buffer- and tree-node-APIs.
 @node Introduction, A new tree-buffer, tree-buffer, tree-buffer
 @subsection General description of tree-buffers
 
-TODO
+@c TODO
 
 @node A new tree-buffer, A new tree-node, Introduction, tree-buffer
 @subsection How to create a new tree-buffer
 
-TODO
+@c TODO
 
 @node A new tree-node, The tree-buffer-API, A new tree-buffer, tree-buffer
 @subsection How to create a new tree-node
 
+@c TODO
+
 @node The tree-buffer-API, Do not with tree-buffer, A new tree-node, tree-buffer
 @subsection All functions available for tree-buffers
 
-TODO
+@c TODO
 
 @node Do not with tree-buffer, ,The tree-buffer-API, tree-buffer
 @subsection Things which are strictly forbidden
 
-TODO
+@c TODO
 
 @code{tree-buffers}: Only for internal use. It contains all
 tree-buffers of current Emacs-instance, means @strong{all}
@@ -11255,7 +11863,7 @@ how to control the edit-window with actions performed in a special
 window/buffer of a layout.
 
 (If you have not set a compilation-window in
-@code{ecb-compile-window-height} then the layout contains no durable
+@code{ecb-compile-window-height} then the layout contains no persistent
 compilation window and the other windows get a little more place).
 
 @subsubsection The example code
@@ -12073,7 +12681,7 @@ the buffer-name of these dialog-buffers (normally ``Dialog'') is not
 contained in the option @code{ecb-compilation-buffer-names}. So do not
 add the string ``Dialog'' to this option!
 
-@strong{Please Note}: Regardless if a durable compile-window is used
+@strong{Please Note}: Regardless if a persistent compile-window is used
 (i.e. @code{ecb-compile-window-height} is not nil) or not, these
 JDEE-dialogs will always being displayed by splitting the edit-window
 of ECB and not within the compile-window.

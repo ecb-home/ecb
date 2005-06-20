@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-cycle.el,v 1.27 2005/02/28 11:31:58 berndl Exp $
+;; $Id: ecb-cycle.el,v 1.28 2005/06/20 14:34:20 berndl Exp $
 
 ;;; Commentary:
 
@@ -90,7 +90,7 @@ Afterwards always the compile-window of ECB is selected."
 
   (interactive "P")
   (if (not (numberp ecb-compile-window-height))
-      (ecb-error "This command needs a durable compile window!")
+      (ecb-error "This command needs a persistent compile window!")
     (if choose-buffer
         (ecb-with-adviced-functions
          (switch-to-buffer (completing-read "ECB compilation buffer: "

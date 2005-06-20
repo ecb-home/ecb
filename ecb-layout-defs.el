@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout-defs.el,v 1.19 2005/05/23 15:48:14 berndl Exp $
+;; $Id: ecb-layout-defs.el,v 1.20 2005/06/20 14:34:20 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -80,7 +80,7 @@
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place."
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.3)
@@ -120,7 +120,7 @@ little more place."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place."
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.5)
@@ -155,7 +155,7 @@ little more place."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place."
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.3)
@@ -192,7 +192,7 @@ little more place."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place."
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.5)
@@ -229,7 +229,7 @@ little more place."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place."
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.3)
@@ -266,7 +266,7 @@ little more place."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place."
   (let ((edit-win (previous-window (selected-window) 0)))
     (ecb-set-directories-buffer)
@@ -304,7 +304,7 @@ little more place."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place."
   (let ((edit-win (previous-window (selected-window) 0)))
     (ecb-set-directories-buffer)
@@ -336,7 +336,7 @@ little more place."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place."
   (ecb-set-sources-buffer)
   (ecb-split-ver 0.2)
@@ -373,7 +373,7 @@ little more place."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place."
   (ecb-set-directories-buffer)
   (ecb-split-hor 0.5)
@@ -410,7 +410,7 @@ little more place."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place. This layout works best if it is contained in
 `ecb-show-sources-in-directories-buffer'!"
   (ecb-set-directories-buffer)
@@ -448,7 +448,7 @@ little more place. This layout works best if it is contained in
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place."
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.3)
@@ -487,7 +487,7 @@ little more place."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place."
   (ecb-set-methods-buffer)
   (select-window (next-window)))
@@ -520,7 +520,7 @@ little more place."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place."
   (ecb-set-methods-buffer)
   (select-window (next-window)))
@@ -549,7 +549,7 @@ little more place."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then the
-layout contains no durable compilation window and the other windows get a little
+layout contains no persistent compilation window and the other windows get a little
 more place."
   (ecb-set-methods-buffer)
   (ecb-split-ver 0.75)
@@ -582,7 +582,7 @@ more place."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then the
-layout contains no durable compilation window and the other windows get a little
+layout contains no persistent compilation window and the other windows get a little
 more place."
   (ecb-set-methods-buffer)
   (ecb-split-ver 0.75)
@@ -617,7 +617,7 @@ more place."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place."
   (ecb-set-history-buffer)
   (select-window (next-window)))
@@ -650,7 +650,7 @@ little more place."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place. This layout works best if it is contained in
 `ecb-show-sources-in-directories-buffer'!"
   (ecb-set-directories-buffer)
@@ -680,7 +680,7 @@ little more place. This layout works best if it is contained in
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place. This layout works best if it is contained in
 `ecb-show-sources-in-directories-buffer'!"
   (ecb-set-directories-buffer)
@@ -716,7 +716,7 @@ little more place. This layout works best if it is contained in
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place. This layout works best if it is contained in
 `ecb-show-sources-in-directories-buffer'!"
   (ecb-set-directories-buffer)
@@ -752,7 +752,7 @@ little more place. This layout works best if it is contained in
    --------------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place."
  (ecb-set-directories-buffer)
  (ecb-split-ver 0.4)
@@ -791,7 +791,7 @@ little more place."
    --------------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place."
  (ecb-set-directories-buffer)
  (ecb-split-ver 0.66)
@@ -830,7 +830,7 @@ little more place."
    --------------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place."
   (ecb-set-directories-buffer)
   (select-window (next-window (next-window)))
@@ -864,7 +864,7 @@ little more place."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place. This layout works best if it is contained in
 `ecb-show-sources-in-directories-buffer'!"
   (ecb-set-directories-buffer)
@@ -898,7 +898,7 @@ little more place. This layout works best if it is contained in
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place."
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.3)
@@ -935,7 +935,7 @@ little more place."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place."
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.3)
