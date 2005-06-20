@@ -314,7 +314,7 @@ window dedicated for this buffer."
    -------------------------------------------------------
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
-the layout contains no durable compilation window and the other windows get a
+the layout contains no persistent compilation window and the other windows get a
 little more place.
 
 The top-left window always displays informations about the current buffer in

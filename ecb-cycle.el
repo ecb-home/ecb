@@ -90,7 +90,7 @@ Afterwards always the compile-window of ECB is selected."
 
   (interactive "P")
   (if (not (numberp ecb-compile-window-height))
-      (ecb-error "This command needs a durable compile window!")
+      (ecb-error "This command needs a persistent compile window!")
     (if choose-buffer
         (ecb-with-adviced-functions
          (switch-to-buffer (completing-read "ECB compilation buffer: "

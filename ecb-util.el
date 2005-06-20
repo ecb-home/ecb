@@ -459,7 +459,7 @@ by semantic and also killed afterwards."
 (defun ecb-option-get-value (option &optional type)
   "Return the value of a customizable ECB-option OPTION with TYPE, where TYPE
 can either be 'standard-value \(the default-value of the defcustom) or
-'saved-value \(the value stored durable by the user via customize) or
+'saved-value \(the value stored persistent by the user via customize) or
 'customized-value \(the value set but not saved in the customize buffer).
 If TYPE is nil then the most recent set value is returned, means it
 tries the customized-value, then the saved-value and then the standard-value
