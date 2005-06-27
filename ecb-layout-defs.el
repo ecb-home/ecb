@@ -909,6 +909,45 @@ little more place."
   (ecb-set-analyse-buffer)
   (select-window (next-window)))
 
+(ecb-layout-define "leftright-analyse" left-right
+  "This function creates the following layout:
+
+   --------------------------------------------------------------
+   |              |                               |             |
+   |  Directories |                               |  Methods    |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   |--------------|             Edit              |-------------|
+   |              |                               |             |
+   |  Sources     |                               |             |
+   |              |                               |             |
+   |--------------|                               |  Analyse    |
+   |              |                               |             |
+   |  History     |                               |             |
+   |              |                               |             |
+   --------------------------------------------------------------
+   |                                                            |
+   |                    Compilation                             |
+   |                                                            |
+   --------------------------------------------------------------
+
+If you have not set a compilation-window in `ecb-compile-window-height' then
+the layout contains no persistent compilation window and the other windows get a
+little more place."
+  (ecb-set-directories-buffer)
+  (ecb-split-ver 0.4)
+  (ecb-set-sources-buffer)
+  (ecb-split-ver 0.5)
+  (ecb-set-history-buffer)
+  (select-window (next-window (next-window)))
+  (ecb-set-methods-buffer)
+  (ecb-split-ver 0.5)
+  (ecb-set-analyse-buffer)
+  (select-window (previous-window (previous-window (selected-window) 0) 0)))
+
 (ecb-layout-define "left-symboldef" left
   "This function creates the following layout:
 
