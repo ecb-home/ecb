@@ -617,6 +617,8 @@ analyse-buffer."
                        ecb-analyse-buffer-after-create-hook)
    :after-update-hook nil))
 
+
+
 (silentcomp-provide 'ecb-analyse)
 
 ;;; ecb-anaylse.el ends here

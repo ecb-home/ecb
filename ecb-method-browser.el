@@ -3509,11 +3509,19 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
      ;; in current buffer; e.g. parent or include tags can be such tags! Try
      ;; to find the tag
      ((= type ecb-methods-nodetype-externtag)
+      ;; data is here a string and just the name of a tag not a tag!
       (set-buffer (get-file-buffer ecb-path-selected-source))
       ;; Try to find source using JDE
       (setq found (ecb-jde-show-class-source data))
+      ;; Fix from Daniel Dbertin (<airboss@nodewarrior.org>)
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: encapsulate these function
+      ;; with ecb-- wrappers!
+      (let ((types (semantic-ctxt-scoped-types)))
+        (setq tag (and types (car (semantic-deep-find-tags-by-name data types))))
+        (if tag
+            (setq filename (semantic-tag-file-name tag))))
       ;; Try to find source using Semantic DB
-      (when (not found)
+      (when (and (null tag) (not found))
         (let ((parent (ecb-semanticdb-get-type-definition data)))
           (when parent
             (setq tag (cdr parent))

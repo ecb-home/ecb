@@ -1,6 +1,6 @@
 * Changes for ECB version 2.32beta3
 
-** New backbone-add-on of ECB for getting definition for the symbol at point
+** New backbone-add-on of ECB for getting the definition of the symbol at point
 
    It allows to display in a new special ECB-window the semantic (do not
    confuse this trem with the semantic-library!) context of the definition of
@@ -18,13 +18,13 @@
 
 ** New native ECB-display interactor for the semantic-analyzer
    There is a new tree-buffer ECB-analyse which displays the tags and
-   informations of the semanic-analyzer in a smooth way. There are already
-   some new prebuild layouts which contain this new tree-buffer (TODO). But of
-   course it can be added to own build layouts (either via the command
-   `ecb-create-new-layout' or via a elisp-rogrammed new layout).
+   informations of the semanic-analyzer in a smooth way. There are already new
+   prebuild layouts "left-analyse" and "leftright-analyse" which contain this
+   new tree-buffer interactor. But of course it can be added to own build
+   layouts - either via the command `ecb-create-new-layout' (add a buffer of
+   type "other" and name "analyse" into the new layout) or via a
+   elisp-rogrammed new layout.
    
-   TODO: + adding new section in the info-manual
-
 ** New smart-arrow-navigation in a tree-buffer with up- and down-arrow
    Point jumps to the first character of the previous (up) rsp. next node
    (down). "First" character means either the first character of the

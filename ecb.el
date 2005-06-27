@@ -2263,6 +2263,10 @@ performance-problem!"
     (when (and (not (> (minibuffer-depth) 0))
                (not (equal ecb-last-major-mode major-mode))
                (not (member (buffer-name (current-buffer))
+                            ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: I
+                            ;; think this is not fully correct - what about an
+                            ;; ecb-interactor which is not a tree-buffer like
+                            ;; the ecb-symboldef-stuff?!
                             (ecb-tree-buffers-name-list))))
       (let ((last-mode ecb-last-major-mode))
         (setq ecb-last-major-mode major-mode)
