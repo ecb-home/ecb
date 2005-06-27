@@ -23,7 +23,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.208 2005/06/24 16:19:50 berndl Exp $
+@c $Id: ecb.texi,v 1.209 2005/06/27 17:01:34 berndl Exp $
 
 @setfilename ecb.info
 
@@ -359,6 +359,7 @@ The library tree-buffer.el
 * Tree-buffer keybindings::     Default and customizable keybindings
 * The tree-buffer-API::         All functions available for tree-buffers
 * Do not with tree-buffer::     Things which are strictly forbidden
+* Tree-buffer How to::          Dealing with special situations
 
 How to program new layouts and new special windows
 
@@ -935,7 +936,6 @@ for.
 
 @table @asis
 
-@item
 @item All interactors of ECB (@pxref{ECB-interactors})
 Gives an introduction into the concept of interactors of ECB, what
 they are, which different types exist, how they look, how they can be
@@ -11445,7 +11445,7 @@ Elisp-program. This contains:
 @menu
 * List of variables::           Which variables an Elisp-program can use
 * List of hooks::               All available hooks
-* tree-buffer::                 Some words to the tree-buffer-library
+* tree-buffer::                 Full description of the tree-buffer-library
 * Adviced functions::           How to deal with the adviced functions
 * The layout-engine::           Programming new layouts and special windows
 @end menu
@@ -11513,12 +11513,18 @@ to use the offered tree-buffer- and tree-node-APIs.
 * A new tree-node::             How to add new tree-nodes to a tree-buffer
 * Updating a tree-buffer::      How to update a tree-buffer after changes
 * Tree-buffer keybindings::     Default and customizable keybindings
-* The tree-buffer-API::         All functions available for tree-buffers
+* The tree-buffer-API::         All functions for tree-buffers and -nodes
 * Do not with tree-buffer::     Things which are strictly forbidden
+* Tree-buffer How to::          Dealing with special situations
 @end menu
 
 @node Introduction, A new tree-buffer, tree-buffer, tree-buffer
 @subsection General description of tree-buffers
+
+This subchapter is a general introduction in the main concepts of a
+tree-buffer.
+
+@subsubsection What is a tree-buffer?
 
 A @dfn{tree-buffer} is meant to display certain informations (e.g. a
 directory-tree) in a tree-structure consisting of @dfn{tree-nodes}.
@@ -11575,7 +11581,7 @@ tree-node (e.g. some senseful actions possible for directory-nodes
 like grepping this directory or performing version-control actions for
 this directory or something else).
 
-@subsubsection General recipe for programming a tree-buffer
+@subsubsection General recipe for a tree-buffer
 
 The following sequence of tasks is the general recipe for a
 tree-buffer beginning from creation and ending with the display.
@@ -11605,12 +11611,13 @@ When you are finished building up the tree-node-structure call
 @code{tree-buffer-update} to display the current tree-structure (again
 after making the tree-buffer the current-buffer). See @ref{Updating a
 tree-buffer} for all details.
-
-Note: First a call of @code{tree-buffer-update} updates the
-@strong{display} of a tree-buffer, means shows all the tree-nodes in
-an emacs-buffer! Neither creating a tree-buffer nor adding tree-nodes
-to it display anything; this just builds the internal tree-structure.
 @end enumerate
+
+@strong{IMPORTANT}: First a call of @code{tree-buffer-update} updates
+the @strong{display} of a tree-buffer, means shows all the tree-nodes
+in an emacs-buffer! Neither creating a tree-buffer nor adding
+tree-nodes display anything; this just builds the internal
+tree-structure.
 
 
 @node A new tree-buffer, A new tree-node, Introduction, tree-buffer
@@ -11791,6 +11798,10 @@ This example would be passed as parameter as follows:
                     ...)
 @end example
 
+@strong{IMPORTANT}: This callback must not modify the slot
+@var{EXPANDED} of the passed node because this is done automatically
+by the tree-buffer-library!
+
 @item @var{NODE-EXPANDED-FN}
 Function to call if a node is expandable, point stays onto the
 expand-symbol and node is not already expanded. This function is
@@ -11809,6 +11820,10 @@ This function should add all children nodes to this node if not
 already done (if possible). This function has to ensure that the
 expandable- and expanded state of the selected node is correct after
 returning!
+
+@strong{IMPORTANT}: This callback must not modify the slot
+@var{EXPANDED} of the passed node because this is done automatically
+by the tree-buffer-library!
 
 @item @var{NODE-COLLAPSED-FN}
 Function to call if a node is expandable, point stays onto the
@@ -11830,6 +11845,10 @@ modify the expandable- or expanded state of the selected node!
 
 Often a sensefull value for this parameter is the function
 @code{ignore}.
+
+@strong{IMPORTANT}: This callback must not modify the slot
+@var{EXPANDED} of the passed node because this is done automatically
+by the tree-buffer-library!
 
 @item @var{NODE-MOUSE-OVER-FN}
 Function to call when the mouse is moved over a node. This function is
@@ -11853,9 +11872,12 @@ callback-function:
                                          click-force)
   (let ((str (when (or click-force
                        (ecb-show-minibuffer-info
-                        node window (car ecb-analyse-show-node-info)))
-               (if (equal (cdr ecb-analyse-show-node-info) 'full-info)
-                   (ecb-analyse-gen-tag-info (car (tree-node->data node)))
+                        node window
+                        (car ecb-analyse-show-node-info)))
+               (if (equal (cdr ecb-analyse-show-node-info)
+                          'full-info)
+                   (ecb-analyse-gen-tag-info
+                    (car (tree-node->data node)))
                  (tree-node->name node)))))
     (prog1 str
       (unless no-message
@@ -12153,44 +12175,478 @@ after the tree-buffer has been updated via @code{tree-buffer-update}.
 
 @end table
 
+Here is an example how to create a tree-buffer (if you want a
+tree-buffer not for ECB then just strip off the
+@code{defecb-tree-buffer-creator} and just call
+@code{tree-buffer-create}):
+
+@example
+@group
+(defecb-tree-buffer-creator ecb-create-analyse-tree-buffer
+    ecb-analyse-buffer-name
+  "Create the tree-buffer for analyse-display."
+  (tree-buffer-create
+   ecb-analyse-buffer-name
+   :frame ecb-frame
+   :mouse-action-trigger ecb-tree-mouse-action-trigger
+   :is-click-valid-fn 'ecb-interpret-mouse-click
+   :node-selected-fn 'ecb-tree-buffer-node-select-callback
+   :node-expanded-fn 'ecb-tree-buffer-node-expand-callback
+   :node-collapsed-fn 'ecb-tree-buffer-node-collapsed-callback
+   :node-mouse-over-fn 'ecb-mouse-over-analyse-node
+   :mouse-highlight-fn 'ecb-analyse-node-mouse-highlighted-p
+   :node-data-equal-fn 'ecb-analyse-compare-node-data
+   :maybe-empty-node-types nil
+   :leaf-node-types nil
+   :menu-creator 'ecb-analyse-menu-creator
+   :menu-titles (ecb-analyse-gen-menu-title-creator)
+   :modeline-menu-creator 'ecb-common-tree-buffer-modeline-menu-creator
+   :trunc-lines (ecb-member-of-symbol/value-list
+                 ecb-analyse-buffer-name
+                 ecb-tree-truncate-lines)
+   :read-only t
+   :tree-indent ecb-tree-indent
+   :incr-search-p t
+   :incr-search-additional-pattern nil
+   :arrow-navigation ecb-tree-navigation-by-arrow
+   :hor-scroll-step ecb-tree-easy-hor-scroll
+   :default-images-dir (car ecb-tree-image-icons-directories)
+   :additional-images-dir (ecb-member-of-symbol/value-list
+                           ecb-analyse-buffer-name
+                           (cdr ecb-tree-image-icons-directories)
+                           'car 'cdr)
+   :image-file-prefix "ecb-"
+   :tree-style ecb-tree-buffer-style
+   :ascii-guide-face ecb-tree-guide-line-face
+   :type-facer nil
+   :expand-symbol-before-p ecb-tree-expand-symbol-before
+   :highlight-node-face ecb-analyse-face
+   :general-face ecb-analyse-general-face
+   :after-create-hook (append
+                       (list (lambda ()
+                               (ecb-common-after-create-actions)))
+                       ecb-common-tree-buffer-after-create-hook
+                       ecb-analyse-buffer-after-create-hook)
+   :after-update-hook nil))
+@end group
+@end example
 
 @node A new tree-node, Updating a tree-buffer, A new tree-buffer, tree-buffer
 @subsection How to create a new tree-node
 
 When a new tree-buffer has been created, then the most senseful
-programming-task is to add some tree-nodes to it.
+programming-task is adding some tree-nodes to it.
 
-@c TODO
+@subsubsection Content of a tree-node
+
+A tree-node is an object which stores in special @dfn{slots} several
+data necessary to link the node with other nodes, to display the node
+and to hold some associated node-data (e.g. a tag created by the
+semantic-library).
+
+A tree-node can have the following slots:
+
+@table @code
+@item @var{NAME}
+The name of the node. Regardless how the node is displayed; see
+@var{SHRINK-NAME} and @var{DISPLAYED-NAME}.
+
+@item @var{TYPE}
+The type of the node; must currently be an interger! The type is used
+to classify the nodes, so for example all nodes of a certain type can
+display the same popup-menu - see @code{tree-buffer-create} or @ref{A
+new tree-buffer} which parts of a tree-buffer are distinguished by
+node-types.
+
+@item @var{DATA}
+The data of the node; This can be any arbitrary emacs-lisp-object.
+This slots holds that data asscociated with the node and represented
+by the node in the tree-buffer. Example: Assume a tree-buffer
+displaying a directory-tree where each node just displays as its name
+the name of (sub)directories, but not the full path. The full path is
+stored in the @var{DATA}-slot of a node so when clicking onto this
+node the asscociated directory can be open for example in a
+dired-buffer.
+
+@item @var{EXPANDABLE}
+If not nil then the node is expandable means it has children.
+
+@item @var{EXPANDED}
+If not nil then the node is currently expanded, means its
+children are visible in the tree-buffers as subnodes of the node.
+
+@item @var{PARENT}
+The parent tree-node. This is the link to the father (rsp. mother ;-)
+of the node. It must be a object of type tree-node!
+
+@item @var{CHILDREN}
+List of children tree-nodes. They must be all objects of type
+tree-node!
+
+@item @var{SHRINK-NAME}
+Decides if the @var{NAME} can be shortened when displayed in a narrow
+tree buffer window. The following values are valid:
+
+@itemize @minus
+@item @code{beginning}:
+The @var{NAME} is truncated at the beginning so the end is always
+visible.
+
+@item @code{end}:
+The @var{NAME} is truncated at the end. If the tree-node is EXPANDABLE
+the name is truncated so that the expand symbol is visible.
+
+@item @code{nil}:
+The @var{NAME} is never truncated. In this case @var{DISPLAYED-NAME}
+is equal to @var{NAME}.
+@end itemize
+
+@item @var{INDENTSTR}
+Containes the full indentation-string for the node. So a single node
+can easily be redrawn.
+
+@item @var{DISPLAYED-NAME}
+Contains the current displayed name of the node. The
+displayed name can be different from the @var{NAME} according to the value of
+@var{SHRINK-NAME}.
+
+@end table
+
+@subsubsection Creating a new tree-node and adding it to the tree
+
+A new tree-node has to be created with the function
+@code{tree-node-new}. This ``constructor'' accepts the following
+parameter: @var{NAME}, @var{TYPE}, @var{DATA}, @var{NOT-EXPANDABLE},
+@var{PARENT} and @var{SHRINK-NAME}.
+
+For all parameters except @var{NOT-EXPANDABLE} the description is
+available in the slot-description in the section above. If
+@var{NOT-EXPANDABLE} is set to not nil then the slot @var{EXPANDABLE}
+will be set to @code{nil}; otherwise to @code{t}.
+
+@code{tree-node-new} returns a new tree-node.
+
+The new node can either being added implicitely to the tree via the
+optional @var{PARENT}-parameter when calling @code{tree-buffer-new} or
+explicitely by first creating the new node without setting the
+parent-node but later setting the parent-node via the according
+accessor (see next section below). Children should only being added
+with @code{tree-node-add-children} - see next section.
+
+@subsubsection Accessing the slots of a tree-node
+
+The section above shows which slots a tree-node have. 
+
+A slot with name XXX is getable with the following piece of code:
+
+@lisp
+(tree-node->xxx <a tree node>)
+@end lisp
+
+Here is an example how to get the value of the slot @var{DATA}:
+
+@example
+(tree-node->data <a tree node>)
+@end example
+
+A slot with name XXX is setable with the following piece of code:
+
+@lisp
+(setf (tree-node->xxx <a tree node>) <new value>)
+@end lisp
+
+Again an example with slot @var{DATA} which sets this slot to the
+string ``~/a_subdir_of_HOME'':
+
+@example
+(setf (tree-node->data <a tree node>) "~/a_subdir_of_HOME")
+@end example
+
+@strong{IMPORTANT}: Adding new children to a node should always being
+done with the function @code{tree-node-add-children} because this
+functions encapsulates all the necessary stuff needed to add children
+to a node (mainly adding the children itself and setting the node itself as
+parent for every children).
+
+See @ref{The tree-buffer-API} for the rest of the API available for
+tree-nodes.
 
 @node Updating a tree-buffer, Tree-buffer keybindings, A new tree-node, tree-buffer
 @subsection How to update a tree-buffer-display after changes
 
-@c TODO
+When finished with adding tree-nodes to the tree-structure you mostly
+want to display the current tree and its state in the buffer/window so
+a user can see the current tree and can use it.
+
+Threre are two ways to update a tree-buffer for display:
+
+@enumerate
+@item Updating the whole tree-buffer:
+
+This is the most used way to update the tree-buffer display. It's
+quite simple, just call @code{tree-buffer-update}. In most cases you
+want to call it without arguments.
+
+If you want to display a certain expanded node and as much as possible
+subnodes of this node then pass this node-object as first argument to
+@code{tree-buffer-update}.
+
+If you do not have the need to display a completely new tree-structure
+but you want only to display a previously cached display-state then
+pass this cached-state as second argument to
+@code{tree-buffer-update}. See the documentation of this function and
+also @ref{Tree-buffer How to} for a detailled description how to do
+this.
+
+@item Updating only a single node of the tree-buffer:
+
+Sometimes it can be useful to update only exactly one special node,
+e.g. when your application codes some node-state in the displayed
+node-name (e.g. ECB displays the version-control state of a file as
+part of the related node-name) then it is necessary to update only
+this node if the state has changed.
+
+This can be done with the function @code{tree-buffer-update-node}. For
+this function the mentioning in this section can be misleading because
+this function can not only update the node-display but in general the
+slots @var{NAME}, @var{SHRINK-NAME}, @var{TYPE}, @var{DATA} and
+@var{EXPANDABLE}. Do @kbd{C-h f} to see the documentation of this
+function for all details!
+
+@end enumerate
 
 @node Tree-buffer keybindings, The tree-buffer-API, Updating a tree-buffer, tree-buffer
 @subsection Default and customizable keybindings of a tree-buffer
 
-@c TODO
+When creating a tree-buffer with @code{tree-buffer-create} the
+following keys will automatically being bound:
+
+@table @asis
+
+@item @kbd{delete}
+@itemx @kbd{backspace}
+@itemx @kbd{home}
+@itemx @kbd{end}
+@itemx @kbd{a} (and each other key bound to @code{self-insert-command})
+All of these keys are bound to the command
+@code{tree-buffer-incremental-node-search} if the argument
+@var{INCR-SEARCH-P} of @code{tree-buffer-create} was set to not nil.
+See the documentation of @code{tree-buffer-incremental-node-search}
+for all details.
+
+@item @kbd{RET}
+@itemx @kbd{C-RET}
+@itemx @kbd{S-RET}
+@itemx @kbd{M-RET}
+@itemx @kbd{C-S-RET}
+@itemx @kbd{mouse-1}
+@itemx @kbd{C-mouse-1}
+@itemx @kbd{S-mouse-1}
+@itemx @kbd{M-mouse-1}
+@itemx @kbd{mouse-2}
+@itemx @kbd{C-mouse-2}
+@itemx @kbd{S-mouse-2}
+@itemx @kbd{M-mouse-2}
+All these keys are bound to an action-dispatcher which works as
+follows:
+
+If the callback-function in slot @var{IS-CLICK-VALID-FN} of the
+tree-buffer (@pxref{A new tree-buffer}) returns nil then nothing is
+done.
+
+If either @kbd{RET} has been hitted or point is as the node-name (i.e.
+the user has clicked with the mouse-1/2 at the node-name) then the
+callback-function in slot @var{NODE-SELECTED-FN} is called with the
+needed arguments (@pxref{A new tree-buffer}).
+
+If point is at the expand/collape-button then depending on the
+expansion-state of the node either the callback in slot
+@var{NODE-EXPANDED-FN} or @var{NODE-COLLAPSED-FN} is called (for
+parameters see again @ref{A new tree-buffer}).
+
+@strong{IMPORTANT}: None of these callbacks must modify the slot
+@var{EXPANDED} of the passed node because this is done automatically
+by the action-dispatcher!
+
+At the end the dispatcher updates the tree-buffer-display with
+optimized display of the clicked/selected node - see @ref{Updating a
+tree-buffer}. This means @code{tree-buffer-update} is called with that
+node as argument.
+
+@item @kbd{TAB}
+Depending on the expansion-state of the node either the callback in
+slot @var{NODE-EXPANDED-FN} or @var{NODE-COLLAPSED-FN} is called (for
+parameters see again @ref{A new tree-buffer}).
+
+@strong{IMPORTANT}: None of these callbacks must modify the slot
+@var{EXPANDED} of the passed node because this is done automatically
+by the action-dispatcher!
+
+At the end the the tree-buffer-display is updated with optimized
+display of the clicked/selected node - see @ref{Updating a
+tree-buffer}. This means @code{tree-buffer-update} is called with that
+node as argument.
+
+@item @kbd{mouse-3}
+Activates the popup-menu for the current tree-buffer for current
+node-type (if defined). See @ref{A new tree-buffer} at argument
+@var{MENU-CREATOR} and @var{MENU-TITLES}. These callbacks are called
+for getting the menu and the menu-title.
+
+@item @kbd{modeline-mouse-3}
+Activates the popup-menu for the modeline of the current tree-buffer
+(if defined). See @ref{A new tree-buffer} at argument
+@var{MODELINE-MENU-CREATOR}. This callback is called for getting the
+modeline-menu.
+
+@item @kbd{M-m}
+This key is bound to the command
+@code{tree-buffer-show-node-menu-keyboard}: Activates the popup-menu
+of current tree-buffer for current node-type via keyboard. If called
+with a prefix-arg then the library @file{tmm.el} is used for
+displaying the popup-menu - ignored with XEmacs.
+
+@item @kbd{<up>}
+@itemx @kbd{<down>}
+@itemx @kbd{<left>}
+@itemx @kbd{<right>}
+These keys are bound to the command @code{tree-buffer-arrow-pressed}
+which implements the smart arrow-key-navigation described in @ref{A
+new tree-buffer} at argument @var{ARROW-NAVIGATION}.
+
+@end table
+
+In addition to these automatically bound keys you can add further
+keybindings to the local-keymap of the tree-buffer with the parameter
+@var{AFTER-CREATE-HOOK} of @code{tree-buffer-create}. See @ref{A new
+tree-buffer} for an example which binds @kbd{C-t} in this hook.
 
 @node The tree-buffer-API, Do not with tree-buffer, Tree-buffer keybindings, tree-buffer
-@subsection All functions available for tree-buffers
+@subsection All functions available for tree-buffers and tree-nodes
 
-@c TODO
+This chapter lists the complete AI available for tree-buffers and
+tree-nodes.
 
-@node Do not with tree-buffer, ,The tree-buffer-API, tree-buffer
+@strong{IMPORTANT}: These are the only functions and macros of
+tree-buffer.el you are allowed to use for programming with
+tree-buffers and tree-nodes. If you use other - not here listed -
+functions, macros or variables of tree-buffer.el then you run the risk
+of unwanted side-effects or program-behaviors!
+
+@subsubsection The API for a tree-buffer:
+
+See the documentation of these functions (e.g. via @kbd{C-h f}) to get
+the details how to use it.
+
+@itemize
+@item @code{tree-buffer-add-image-icon-maybe}
+@item @code{tree-buffer-find-image}
+@item @code{tree-buffer-create}@footnote{If the tree-buffer should be
+used by ECB then you must use @code{defecb-tree-buffer-creator} - see
+the documentation!}
+@item @code{tree-buffer-defpopup-command}
+@item @code{tree-buffer-destroy}@footnote{Not needed when
+@code{defecb-tree-buffer-creator} has been used for creation.}
+@item @code{tree-buffer-empty-p}
+@item @code{tree-buffer-expand-node}
+@item @code{tree-buffer-get-node-at-point}
+@item @code{tree-buffer-node-data-equal-p}
+@item @code{tree-buffer-recenter}
+@item @code{tree-buffer-highlight-node-data}
+@item @code{tree-buffer-remove-highlight}
+@item @code{tree-buffer-remove-node}
+@item @code{tree-buffer-clear-tree}
+@item @code{tree-buffer-displayed-nodes-copy}
+@item @code{tree-buffer-search-displayed-node-list}
+@item @code{tree-buffer-number-of-displayed-nodes}
+@item @code{tree-buffer-get-data-store}
+@item @code{tree-buffer-set-data-store}
+@item @code{tree-buffer-get-root}
+@item @code{tree-buffer-set-root}
+@item @code{tree-buffer-update}
+@item @code{tree-buffer-update-node}
+@end itemize
+
+@subsubsection The API for a tree-node
+
+See the documentation of these functions (e.g. via @kbd{C-h f}) to get
+the details how to use it.
+
+@itemize
+@item @code{tree-node-add-children}
+@item @code{tree-node-linelength}
+@item @code{tree-node-new}
+@item @code{tree-node-new-root}
+@item @code{tree-node-remove-child}
+@item @code{tree-node-remove-child-by-data}
+@item @code{tree-node-find-child-by-data}
+@item @code{tree-node-find-child-by-name}
+@item @code{tree-node-search-subtree-by-data}
+@item @code{tree-node-sort-children}
+@item @code{tree-node-toggle-expanded}
+@end itemize
+
+In addition to these functions the tree-node API contains all accessors
+for a tree-node which are described in @ref{A new tree-node}.
+
+@node Do not with tree-buffer, Tree-buffer How to, The tree-buffer-API, tree-buffer
 @subsection Things which are strictly forbidden
 
-@c TODO
-
-@code{tree-buffers}: Only for internal use. It contains all
+Variable @code{tree-buffers}: Only for internal use! It contains all
 tree-buffers of current Emacs-instance, means @strong{all}
 tree-buffers of @strong{all} applications which uses currently
 tree-buffers. Every application must store its own collection of
 tree-buffers in an own variable! For example: ECB stores its
 tree-buffer set in @code{ecb-tree-buffers}!
 
-An application may only use the methods tree-buffer.el provides but no
-internal variables!
+Variable @code{tree-buffer-displayed-nodes}: Only for internal use!
+Contains all the current visible nodes of current tree-buffer in
+top-to-bottom order. This variable is buffer-local in each
+tree-buffer! Do not use it directly! When you want to cache the
+current display, then see @ref{Tree-buffer How to} how to do this.
+
+@strong{IMPORTANT}: An application may only use the API tree-buffer.el
+provides but no internal variables - see @ref{The tree-buffer-API}!
+
+@node Tree-buffer How to, ,Do not with tree-buffer, tree-buffer
+@subsection How to deal with certain programming-requirements
+
+This chapter describes in detail how to solve certain
+programming-challenges with tree-buffers.
+
+@subsubsection Caching the current tree-buffer display
+
+Sometimes it can be useful or important to cache the current display
+of a tree-buffer and display later exactly this cached display-state.
+Here is how to do this:
+
+@enumerate
+@item Caching the display:
+You have to do two tasks: First store the current internal structure
+of the tree-buffer; you must do this with the function
+@code{tree-buffer-displayed-nodes-copy}. Then store the
+buffer-contents of that tree-buffer you want to cache; you can do this
+for example with @code{buffer-substring}. For both tasks you must make
+the tree-buffer the current-buffer.
+
+@item Displaying a previous tree-buffer-cache:
+Make the tree-buffer the current buffer, call
+@code{tree-buffer-update} and pass as second argument @var{CONTENT}
+the data you have stored in step 1. See the documentation of
+@code{tree-buffer-update} for details.
+
+Here is an example:
+
+@example
+@group
+(tree-buffer-update
+  nil
+  (cons (nth 2 cache-elem) ;; the stored buffer-string
+        (nth 1 cache-elem) ;; the stored tree-structure
+  )))
+@end group
+@end example
+@end enumerate
 
 @node Adviced functions, The layout-engine, tree-buffer, Elisp programming
 @section How to deal with the adviced window-functions
