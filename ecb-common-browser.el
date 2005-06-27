@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.20 2005/06/10 11:09:13 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.21 2005/06/27 17:03:06 berndl Exp $
 
 
 ;;; History
@@ -550,13 +550,17 @@ Removes all creators and set it to nil."
   "Define a creator-function CREATOR for a tree-buffer which name is hold in
 the symbol TREE-BUFFER-NAME-SYMBOL. Do not quote CREATOR and
 TREE-BUFFER-NAME-SYMBOL. DOCSTRING is the docstring for CREATOR. BODY is all
-the program-code of CREATOR \(should contain a call to `tree-buffer-create').
-It makes sense that BODY returns the created tree-buffer.
+the program-code of CREATOR \(must contain a call to `tree-buffer-create'). It
+makes sense that BODY returns the created tree-buffer.
 
 When creating a tree-buffer with this macro then this tree-buffer will be
 automatically created \(i.e. its creator-function defined with this macro will
 be called) when activating ECB and the tree-buffer will automatically
-registered at ECB."
+registered at ECB. This means that some features of ECB will work
+automatically out of the box with this tree-buffer.
+
+When creating a tree-buffer for ECB then it MUST be created with this macro
+and not with `tree-buffer-create'!"
   `(eval-and-compile
      (ecb-tree-buffer-creators-register (quote ,tree-buffer-name-symbol)
                                         (quote ,creator))

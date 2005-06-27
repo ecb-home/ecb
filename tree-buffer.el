@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.169 2005/06/10 11:12:34 berndl Exp $
+;; $Id: tree-buffer.el,v 1.170 2005/06/27 17:02:29 berndl Exp $
 
 ;;; Commentary:
 
@@ -317,8 +317,8 @@ A tree-node can have the following slots:
 
   DATA: The data of the node; can be arbitrary lisp-structures.
 
-  EXPANDABLE: If not nil then the node is currently expanded, means its
-  children are visible.
+  EXPANDED: If not nil then the node is currently expanded, means its children
+  are visible.
 
   PARENT: The parent tree-node.
 
@@ -342,9 +342,11 @@ A tree-node can have the following slots:
   displayed name can be different from the NAME according to the value of
   SHRINK-NAME.
 
-TODO: Add here a full description about the usage of tree-node or - even
-better - add a hyper-link to the related info-node like follows:
-See Info node `Font Lock' and Info node `(elisp)Font Lock Basics'.."
+For all parameters except NOT-EXPANDABLE the description is available in the
+slot-list above. If NOT-EXPANDABLE is set to not nil then the slot EXPANDABLE
+will be set to nil; otherwise to t.
+
+See Info node `(ecb)tree-buffer' for all details of using tree-nodes."
   (let ((n (-tree-node-new :name name
                            :type type
                            :data data
@@ -1080,14 +1082,14 @@ image-object for TREE-IMAGE-NAME."
 
 (defun tree-buffer-select (mouse-button shift-pressed control-pressed meta-pressed)
   "If the callback-function in slot IS-CLICK-VALID-FN of `tree-buffer-spec'
-returns nil then nothing is done. Otherwise: If the node is expandable and the
-node is not expanded then the callback-function in slot NODE-EXPANDED-FN of
-`tree-buffer-spec' is called with the node, the clicked MOUSE-BUTTON \(1 for
-mouse-1, 2 for mouse-2, 0 for no mouse-button but a key like RET or TAB),
-SHIFT-PRESSED, CONTROL-PRESSED and META-PRESSED informations and the name of
-the tree-buffer as arguments. If the node is not expandable then the
-callback-function in NODE-SELECTED-FN of `tree-buffer-spec' is called with the
-same arguments as slot NODE-EXPANDED-FN of `tree-buffer-spec'."
+returns nil then nothing is done. Otherwise: If either the MOUSE-BUTTON is 0
+or point is as the node-name then the callback-function in slot
+NODE-SELECTED-FN is called with the needed arguments \(see
+`tree-buffer-create'). If point is at the expand/collape-button depending of
+the expansion-state either the callback in slot NODE-EXPANDED-FN or
+NODE-COLLAPSED-FN is called \(for parameters see again `tree-buffer-create').
+None of these callbacks must modify the slot EXPANDED of the passed node
+because this is done automatically by this function."
   (unless (not (equal (selected-frame) tree-buffer-frame))
     (when (and (tree-buffer-spec->is-click-valid-fn tree-buffer-spec)
                (funcall (tree-buffer-spec->is-click-valid-fn tree-buffer-spec)
@@ -1881,7 +1883,8 @@ see `tree-buffer-expand-node'. This function is not for external usage; use
 
 (defun tree-buffer-set-root (root)
   "Set the root-node of current tree-buffer to ROOT.
-ROOT must be a tree-node object."
+ROOT must be either that root-node automatically created by
+`tree-buffer-create' or a node returned by `tree-node-new-root'!"
   (setq tree-buffer-root root)
   (setf (tree-node->expanded tree-buffer-root) t))
 
@@ -2121,7 +2124,9 @@ For a description of NODE-COMMAND-P see `tree-buffer-create-menu'."
 ;; to current window not to frame!
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: For XEmacs this does not work!
 (defun tree-buffer-show-node-menu-keyboard (&optional use-tmm)
-  "Activate the popup-menu of current tree-buffer via keyboard."
+  "Activate the popup-menu of current tree-buffer via keyboard. If called with
+a prefix-arg then the library tmm.el is used for displaying the popup-menu -
+ignored with XEmacs."
   (interactive "P")
   (if use-tmm
       (unless (not (equal (selected-frame) tree-buffer-frame))
@@ -2450,7 +2455,7 @@ IS-CLICK-VALID-FN: `tree-buffer-create' rebinds mouse-1, mouse-2, RET \(and
                    TAB) and also in combination with shift and control \(not
                    with TAB). IS-CLICK-VALID-FN is called first if a node or
                    an expand-symbol is clicked. This function is called with
-                   four arguments:
+                   five arguments:
                    - mouse-button: The clicked mouse-button or RET or TAB \(0
                      = RET or TAB, 1 = mouse-1, 2 = mouse 2)
                    - shift-pressed: non nil if the SHIFT-key was pressed
@@ -2485,10 +2490,10 @@ NODE-EXPANDED-FN: Function to call if a node is expandable, point stays onto
                   - control-pressed
                   - meta-pressed
                   - tree-buffer-name
-                  This function should add all children nodes to this node
-                  \(if possible). This function has to ensure that the
-                  expandable- and expanded state of the selected node is
-                  correct after returning!
+                  This function should add all children nodes to this node if
+                  not already done \(if possible). This function has to ensure
+                  that the expandable- and expanded state of the selected node
+                  is correct after returning!
 NODE-COLLAPSED-FN: Function to call if a node is expandable, point stays
                    onto the expand-symbol and node is already expanded.
                    This function is called with the following parameters:
@@ -2498,10 +2503,10 @@ NODE-COLLAPSED-FN: Function to call if a node is expandable, point stays
                    - control-pressed
                    - meta-pressed
                    - tree-buffer-name
-                   This function is only a callback to inform the user of
-                   this tree-buffer that this node has been collapsed. This
-                   function must not modify the expandable- or expanded
-                   state of the selected node!
+                   This function is only a callback to inform the owner/user
+                   of this tree-buffer that this node has been collapsed. This
+                   function must not modify the expandable- or expanded state
+                   of the selected node!
 NODE-MOUSE-OVER-FN: Function to call when the mouse is moved over a node. This
                     function is called with three arguments: NODE, WINDOW,
                     NO-PRINT, each of them related to the current tree-buffer.
@@ -2509,9 +2514,9 @@ NODE-MOUSE-OVER-FN: Function to call when the mouse is moved over a node. This
                     itself in any manner. This function must always return the
                     text which either is printed by the function itself or by
                     the caller \(if NO-PRINT is not nil). The current buffer
-                    for this function is the tree-buffer. With XEmacs this
-                    function is only called if the tree-buffer track-mouse
-                    mechanism is activated \(see the function
+                    for this function is the tree-buffer itself. With XEmacs
+                    this function is only called if the tree-buffer
+                    track-mouse mechanism is activated \(see the function
                     `tree-buffer-activate-follow-mouse'). With GNU Emacs 21
                     this function is called by the `help-echo' property added
                     to each node.
@@ -2523,7 +2528,7 @@ MOUSE-HIGHLIGHT-FN: If nil then in this tree-buffer no node is highlighted
                     mouse moves over it - otherwise no highlighting takes place.
 NODE-DATA-EQUAL-FN: Function used by the tree-buffer to test if the data of
                     two tree-nodes are equal. The function is called with two
-                    args: The DATA-slot of the two tree-nodes.
+                    args: The DATA-slots of the two tree-nodes.
 MAYBE-EMPTY-NODE-TYPES: Nil or a list of node-types \(a node-type is an
                         integer which must be set for `tree-node-new'). Nodes
                         with one of these types are treated as empty if they
@@ -2643,17 +2648,17 @@ TYPE-FACER: Nil or a list of one or more conses, each cons for a node-type \(a
             node-type is an integer which must be set for `tree-node-new').
             The cdr of a cons can be:
             - a face-symbol
-            - a function-symbol which gets to arguments \(see
+            - a function-symbol which gets two arguments \(see
               `tree-buffer-insert-text'). This function can do anything, but
               normally it should face a tree-node.
             - the symbol t. Then the tree-buffer assumes that the node-text is
               already faced and therefore it does not face the node, means it
               does nothing then inserting the node-text, if the tree-buffer is
               updated.
-EXPAND-SYMBOL-BEFORE-P: If not nil then the expand-symbol \(is displayed before
+EXPAND-SYMBOL-BEFORE-P: If not nil then the expand-symbol is displayed before
                         the node-text. Ignored when TREE-STYLE is 'image and
                         Emacs can display images.
-HIGHLIGHT-NODE-FACE: Face used for highlighting current node in this
+HIGHLIGHT-NODE-FACE: Face used for highlighting current selected node in this
                      tree-buffer.
 GENERAL-FACE: General face in which the whole tree-buffer should be displayed.
 AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
@@ -2663,7 +2668,9 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
                    \(use `local-set-key' for this).
 AFTER-UPDATE-HOOK: A function or a list of functions \(with no arguments)
                    called each time after the tree-buffer has been updated via
-                   `tree-buffer-update'."
+                   `tree-buffer-update'.
+
+See Info node `(ecb)tree-buffer' for all details of using tree-buffers."
   (let ((nop (function (lambda(e) (interactive "e"))))
         (a-c-h (if (functionp after-create-hook)
                    (list after-create-hook)
@@ -2953,11 +2960,13 @@ AFTER-UPDATE-HOOK: A function or a list of functions \(with no arguments)
       (dolist (f a-c-h)
         (funcall f)))))
 
-(defun tree-buffer-destroy (buffer)
-  "Destroy the tree-buffer"
-  (when buffer
-    (setq tree-buffers (delq (get-buffer buffer) tree-buffers))
-    (ignore-errors (kill-buffer buffer))))
+(defun tree-buffer-destroy (tree-buffer-name)
+  "Destroy the tree-buffer with name TREE-BUFFER-NAME. Does nothing if either
+tree-buffer-name is not alive or if it is not a tree-buffer created with
+`tree-buffer-create'."
+  (when (and tree-buffer-name (member (get-buffer tree-buffer-name) tree-buffers))
+    (setq tree-buffers (delq (get-buffer tree-buffer-name) tree-buffers))
+    (ignore-errors (kill-buffer tree-buffer-name))))
 
 
 ;; editor goodies

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.428 2005/06/10 11:10:44 berndl Exp $
+;; $Id: ecb.el,v 1.429 2005/06/27 17:02:34 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2263,6 +2263,10 @@ performance-problem!"
     (when (and (not (> (minibuffer-depth) 0))
                (not (equal ecb-last-major-mode major-mode))
                (not (member (buffer-name (current-buffer))
+                            ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: I
+                            ;; think this is not fully correct - what about an
+                            ;; ecb-interactor which is not a tree-buffer like
+                            ;; the ecb-symboldef-stuff?!
                             (ecb-tree-buffers-name-list))))
       (let ((last-mode ecb-last-major-mode))
         (setq ecb-last-major-mode major-mode)
