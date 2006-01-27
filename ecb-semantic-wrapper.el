@@ -176,9 +176,6 @@ function of `semantic-token->text-functions' (rsp. for semantic 2.X
 
 (defconst ecb--semanticdb-function-alist
   '((semanticdb-minor-mode-p             . semanticdb-minor-mode-p)
-    ;; This is not a full compatible alias. Only the first two parameters can
-    ;; be used with this alias!
-    (semanticdb-find-nonterminal-by-name . semanticdb-find-tags-by-name)
     (semanticdb-full-filename            . semanticdb-full-filename))
   "Alist where the car is a function of semanticdb 1.X and the cdr is the
 equivalent new function of semanticdb 2.X. This alist should contain every
@@ -317,6 +314,31 @@ unmodified as components of their parent tags."
 ;;
 ;; Once you have a search result, use these routines to operate
 ;; on the search results at a higher level
+
+(if (fboundp 'semanticdb-find-tags-by-name)
+    (defalias 'ecb--semanticdb-find-tags-by-name
+      'semanticdb-find-tags-by-name)
+  (defun ecb--semanticdb-find-tags-by-name (name &optional path find-file-match)
+    "Runs `semanticdb-find-nonterminal-by-name' with SEARCH-PARTS is nil."
+    (apply 'semanticdb-find-nonterminal-by-name
+           (list name path nil nil nil find-file-match))))
+
+(if (fboundp 'semanticdb-deep-find-tags-by-name)
+    (defalias 'ecb--semanticdb-deep-find-tags-by-name
+      'semanticdb-deep-find-tags-by-name)
+  (defun ecb--semanticdb-deep-find-tags-by-name (name &optional path find-file-match)
+    "Runs `semanticdb-find-nonterminal-by-name' with SEARCH-PARTS is t."
+    (apply 'semanticdb-find-nonterminal-by-name
+           (list name path t nil nil find-file-match))))
+
+(if (fboundp 'semanticdb-brute-deep-find-tags-by-name)
+    (defalias 'ecb--semanticdb-brute-deep-find-tags-by-name
+      'semanticdb-brute-deep-find-tags-by-name)
+  (defun ecb--semanticdb-brute-deep-find-tags-by-name (name &optional
+                                                            path find-file-match)
+    "In semantic 1.4 all searches are brutish, so it runs just
+    `semanticdb-find-nonterminal-by-name' with SEARCH-PARTS is t."
+    (ecb--semanticdb-deep-find-tags-by-name name path find-file-match)))
 
 
 (if (fboundp 'semanticdb-strip-find-results)

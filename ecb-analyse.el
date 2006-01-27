@@ -228,6 +228,8 @@ See also `ecb-analyse-gen-tag-info-fn'."
 (defconst ecb-analyse-nodetype-function 7)
 (defconst ecb-analyse-nodetype-function-arg 8)
 
+
+
 (defun ecb-analyse-buffer-sync ()
   "Synchronize the analyse buffer with the current buffer and point.
 This means in fact display the current analysis for current point."

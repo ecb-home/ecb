@@ -148,7 +148,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
-ecb_VERSION=2.32beta3
+ecb_VERSION=2.32
 
 include ecb-makedef.mk
 
@@ -228,7 +228,7 @@ pdf: $(ecb_TEXI)
 
 install-help: $(ecb_INFO_DIR)/$(ecb_INFO)
 	@if test -x "$(INSTALLINFO)" -a -f "$(EMACSINFOPATH)/dir"; then\
-	   echo Installing the Online-help in $(INSTALLINFO)...; \
+	   echo Installing the Online-help in $(EMACSINFOPATH)...; \
 	   $(CP) $(ecb_INFO_DIR)/*info* $(EMACSINFOPATH); \
 	   $(INSTALLINFO) $< $(EMACSINFOPATH)/dir; \
 	else \
