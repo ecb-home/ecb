@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.59 2005/06/10 11:07:05 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.60 2006/01/27 18:21:48 berndl Exp $
 
 ;;; Commentary:
 
@@ -50,6 +50,7 @@
 
 (silentcomp-defun ecb-speedbar-update-contents)
 (silentcomp-defvar vc-cvs-stay-local)
+(silentcomp-defvar dired-directory)
 
 ;;====================================================
 ;; Customization
@@ -424,6 +425,41 @@ The check is performed according to the settings in the options
            (and (equal 'unless-remote ecb-prescan-directories-for-emptyness)
                 (not (ecb-remote-path dir))))
        (not (ecb-match-regexp-list dir ecb-prescan-directories-exclude-regexps))))
+
+(defcustom ecb-grep-function (if (fboundp 'igrep) 'igrep 'grep)
+  "*Function used for performing a grep.
+The popup-menu of the tree-buffers \"Directories\", \"Sources\" and
+\"History\" offer to grep the \"current\" directory:
+- Directory-buffer: The grep is performed in the current popup-directory after
+  clicking the right mouse-button onto a node.
+- Sources-buffer: The grep is performed in the current selected directory.
+- History-buffer: The grep is performed in the directory of the current
+  popup-source after clicking the right mouse-button onto a node.
+
+Conditions for such a function:
+- The function is called interactively via `call-interactively'
+- During the function-call the `default-directory' is temp. set to that
+  directory mentioned above with \"... is performed in ...\", i.e. the
+  function can use the value of `default-directory' to determine the directory
+  to grep.
+- The function must read all it's arguments itself.
+- The function is completely responsible for performing the grep itself and
+  displaying the results.
+
+Normally one of the standard-grepping functions like `grep' or `igrep' \(or
+some wrappers around it) should be used!"
+  :group 'ecb-directories
+  :group 'ecb-sources
+  :type 'function)
+
+(defcustom ecb-grep-find-function (if (fboundp 'igrep-find)
+                                      'igrep-find 'grep-find)
+  "*Function used for performing a recursive grep.
+For more Details see option `ecb-grep-function' and replace \"grep\" with
+\"recursive grep\" or \"grep-find\"."
+  :group 'ecb-directories
+  :group 'ecb-sources
+  :type 'function)
 
 (defcustom ecb-after-directory-change-hook nil
   "*Hook which run directly after the selected directory has changed.
@@ -1558,6 +1594,99 @@ ECB-history-window is not visible in current layout."
   "Display the History-buffer in current window and make window dedicated."
   (switch-to-buffer ecb-history-buffer-name))
 
+
+(defun ecb-directories-sources-history-buffer-sync (&optional force)
+  "Synchronizing the basic tree-buffers of ECB.
+
+Under the following additional conditions some tasks are performed:
+
+- Current buffer is a file-buffer and either FORCE is not nil or the buffer
+  is different from the source-file currently displayed in the
+  ECB-tree-buffers:
+
+  Synchronizing all tree-buffers with the current buffer
+
+- Current buffer is a dired-buffer:
+
+  Synchronizing the directory- and sources-tree-buffer if visible"
+  (let ((filename (buffer-file-name (current-buffer))))
+    (cond ( ;; synchronizing for real filesource-buffers
+           (and filename
+                (ecb-buffer-or-file-readable-p)
+                (or force
+                    (not (ecb-string= filename ecb-path-selected-source))))
+          
+           ;; * KB: Problem: seems this little sleep is necessary because
+           ;;   otherwise jumping to certain markers in new opened files (e.g.
+           ;;   with next-error etc. ) doesn´t work correct. Can´t debug down
+           ;;   this mysterious thing! Regardless of the size of the file to
+           ;;   load, this 0.1 fraction of a sec is enough!
+           ;; * KB: With current ECB implementation this sit-for seems not
+           ;;   longer necessary, it works with every Emacs version correct.
+           ;;   Therefore i comment out the sit-for until this error occurs
+           ;;   again.               
+           ;;           (sit-for 0.1)
+               
+           ;; if the file is not located in any of the paths in
+           ;; `ecb-source-path' or in the paths returned from
+           ;; `ecb-source-path-functions' we must at least add the new
+           ;; source path temporally to our paths. But the user has also
+           ;; the choice to save it for future sessions too.
+           (if (null (ecb-matching-source-paths filename))
+               (let* ((norm-filename (ecb-fix-filename filename))
+                      (remote-path (ecb-remote-path norm-filename))
+                      (source-path (if (car ecb-add-path-for-not-matching-files)
+                                       ;; we always add the only the root
+                                       ;; as source-path
+                                       (if remote-path
+                                           ;; for a remote-path we add the
+                                           ;; host+ the root of the host
+                                           (concat (car remote-path) "/")
+                                         ;; filename is a local-path
+                                         (if (= (aref norm-filename 0) ?/)
+                                             ;; for Unix-style-path we add the
+                                             ;; root-dir
+                                             (substring norm-filename 0 1)
+                                           ;; for win32-style-path we add
+                                           ;; the drive; because
+                                           ;; `ecb-fix-filename' also
+                                           ;; converts cygwin-path-style
+                                           ;; to win32-path-style here
+                                           ;; also the drive is added.
+                                           (substring norm-filename 0 2)))
+                                     ;; add the full directory as source-path
+                                     (ecb-file-name-directory norm-filename))))
+                 (ecb-add-source-path source-path (ecb-fix-filename source-path)
+                                      (not (cdr ecb-add-path-for-not-matching-files)))))
+
+           ;; now we can be sure that a matching source-path exists
+               
+           ;; Klaus: The explicit update of the directories buffer is not
+           ;; necessary because the sync with the current source is done by
+           ;; `ecb-select-source-file'!
+           ;;           (ecb-update-directories-buffer)
+           (ecb-select-source-file filename force)
+           (ecb-update-methods-buffer--internal 'scroll-to-begin)
+           (setq ecb-major-mode-selected-source major-mode)
+
+           ;; Klaus Berndl <klaus.berndl@sdm.de>: is now be done at the
+           ;; end of `ecb-rebuild-methods-buffer-with-tagcache' which is
+           ;; called by `ecb-update-methods-buffer--internal'!
+
+           ;; selected source has changed, therefore we must initialize
+           ;; ecb-selected-tag again.
+           (ecb-tag-sync 'force)
+           )
+              
+          ( ;; synchronizing for dired-mode
+           (eq major-mode 'dired-mode)
+           (ecb-set-selected-directory
+            (or (and (stringp dired-directory)
+                     (ecb-file-exists-p dired-directory)
+                     dired-directory)
+                (and (listp dired-directory)
+                     (car dired-directory)))))
+          (t nil))))
 
 (defun ecb-expand-directory-tree (path node)
   "Expands the directory part so the node representing PATH is visible.

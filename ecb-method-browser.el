@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.75 2005/06/27 17:03:04 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.76 2006/01/27 18:21:48 berndl Exp $
 
 ;;; Commentary:
 
@@ -1188,7 +1188,7 @@ check the result if `ecb-debug-mode' is nil in which case the function
                     ;; 1. After every jump to a tag X via the method-buffer of
                     ;;    ECB this tag X is added to the navigation history list
                     ;;    as new ecb-nav-tag-history-item.
-                    ;; 2. Before every select of a source in the sources- or
+                    ;; 2. Before any select of a source in the sources- or
                     ;;    history-buffer or of a node in the method-buffer
                     ;;    `ecb-nav-save-current' is called which operates onto
                     ;;    the last saved history-item which is often a
@@ -2819,7 +2819,7 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
             (if (equal non-semantic-handling 'parsed)
                 (ecb-create-non-semantic-tree new-tree updated-cache))
           (ecb-add-tags new-tree
-                         (ecb-post-process-taglist updated-cache)))
+                        (ecb-post-process-taglist updated-cache)))
         (if cache
             (setcdr cache new-tree)
           (setq cache (cons norm-buffer-file-name new-tree))
@@ -3514,12 +3514,48 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
       ;; Try to find source using JDE
       (setq found (ecb-jde-show-class-source data))
       ;; Fix from Daniel Dbertin (<airboss@nodewarrior.org>)
+      ;; works for code like this:
+      ;;       namespace moose {
+      ;;          class fee {
+      ;;            int fi;
+      ;;          };
+      ;;          
+      ;;          class fie : public fee {
+      ;;            int fi;
+      ;;          };
+      ;;       }
+      ;;
+      ;; but not for code like this:
+      ;;
+      ;;       namespace moose {
+      ;;          class fee {
+      ;;            int fi;
+      ;;          };
+      ;;          
+      ;;          class fie : public fee {
+      ;;            int fi;
+      ;;          };
+      ;;       }
+      ;;
+      ;;       namespace meese {
+      ;;          class fee {
+      ;;            int fi;
+      ;;          };
+      ;;          
+      ;;          class fey : public fee {
+      ;;            int fi;
+      ;;          };
+      ;;       }
+      ;;
+      ;; In the latter example `semantic-ctxt-scoped-types' returns both
+      ;; namespace-tag-tables and not only the right one!
       ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: encapsulate these function
       ;; with ecb-- wrappers!
-      (let ((types (semantic-ctxt-scoped-types)))
-        (setq tag (and types (car (semantic-deep-find-tags-by-name data types))))
-        (if tag
-            (setq filename (semantic-tag-file-name tag))))
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Make this code save - e.g.
+      ;; what about getting more than one tag with that name?
+;;       (let ((types (semantic-ctxt-scoped-types)))
+;;         (setq tag (and types (car (semantic-deep-find-tags-by-name data types))))
+;;         (if tag (setq filename (semantic-tag-file-name tag))))
       ;; Try to find source using Semantic DB
       (when (and (null tag) (not found))
         (let ((parent (ecb-semanticdb-get-type-definition data)))

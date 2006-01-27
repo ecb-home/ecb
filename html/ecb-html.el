@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.74 2004/12/29 08:36:19 berndl Exp $
+;; $Id: ecb-html.el,v 1.75 2006/01/27 18:21:47 berndl Exp $
 
 ;;; Code:
 
@@ -77,6 +77,11 @@
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
       `(
+        ,(h-sub-section "ECB 2.32 released! (2005-07-11)"
+                        "ECB offers now two new interactors (special ecb-windows): One for the semantic-analyser (of cedet) and one for displaying the definition of current symbol at point. In addition the up- and down-arrow-keys are also smart in the tree-buffers. Much better maximizing and minimizing of the ecb-windows. Support for (X)Emacs < 21 has been officialy removed. Full documentation of the library tree-buffer.el. Some important bug-fixes. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 2.31 released! (2004-12-10)"
                         "This is mostly a bug-fix-release for native Windows-XEmacs. In addition beta-code for Clearcase-support has been added. It's strongly recommended to install this release when using native Window-XEmacs! "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
@@ -87,11 +92,6 @@
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
-        ,(h-sub-section "ECB 2.30 released! (2004-11-26)"
-                        "ECB can now display the version-control state of files in the tree-buffers; state is displayed with new image-icons. ECB is now capable of handling remote paths (e.g. TRAMP-, ANGE-FTP- or EFS-paths). Much better performance because all time consuming tasks (e.g. checking directories for emptyness or checking the VC-state) are performed stealthy. Now the current node in the methods-buffer can be expanded very precisely via new commands in the popup-menu. ECB has now the new upgrade policy \"Never touching the customization-files of a user without asking\". Some bug fixes. "
-                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
-                        "Click " (h-link "NEWS.html" "here")
-                        " for information about changes in the new version. ")
         ))
 
 (defvar ecb-rest-news nil
@@ -99,6 +99,11 @@
 `ecb-html-all-news'.")
 (setq ecb-rest-news
       `(
+        ,(h-sub-section "ECB 2.30 released! (2004-11-26)"
+                        "ECB can now display the version-control state of files in the tree-buffers; state is displayed with new image-icons. ECB is now capable of handling remote paths (e.g. TRAMP-, ANGE-FTP- or EFS-paths). Much better performance because all time consuming tasks (e.g. checking directories for emptyness or checking the VC-state) are performed stealthy. Now the current node in the methods-buffer can be expanded very precisely via new commands in the popup-menu. ECB has now the new upgrade policy \"Never touching the customization-files of a user without asking\". Some bug fixes. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 2.27 released! (2004-08-31)"
                         "Much saver mechanism for resizing the permanent compile-window: Enlarging the compile-window does never destroy some ecb-windows, shrinking the compile-window shrinks always back to the correct size and all ecb-windows have their correct size after shrinking the compile-window. Some minor fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "

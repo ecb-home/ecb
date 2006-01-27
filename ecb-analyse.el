@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.13 2005/06/27 17:03:06 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.14 2006/01/27 18:21:48 berndl Exp $
 
 
 ;;; Commentary:
@@ -227,6 +227,8 @@ See also `ecb-analyse-gen-tag-info-fn'."
 (defconst ecb-analyse-nodetype-assignee 6)
 (defconst ecb-analyse-nodetype-function 7)
 (defconst ecb-analyse-nodetype-function-arg 8)
+
+
 
 (defun ecb-analyse-buffer-sync ()
   "Synchronize the analyse buffer with the current buffer and point.

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.104 2005/05/23 15:43:27 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.105 2006/01/27 18:21:48 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -159,7 +159,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "2.32beta3"
+(defconst ecb-version "2.32"
   "Current ECB version.")
 
 (eval-when-compile
@@ -177,7 +177,13 @@
 
 ;; Each NEWS-string should be a one-liner shorter than 70 chars
 (defconst ecb-upgrade-news
-  '(("2.30" . ("Support for displaying the VC-state in the tree-buffers; see NEWS."
+  '(("2.32" . ("New tree-interactor for the semantic-analyser."
+               "New interactor for displaying definition for current symbol at point."
+               "Up- and down-arrow are now also smart in the tree-buffers."
+               "Much better maximizing/minimizing of the ecb-tree-windows."
+               "New option `ecb-maximize-next-after-maximized-select'."
+               "`ecb-truncate-lines' has been renamed to `ecb-tree-truncate-lines'"))
+    ("2.30" . ("Support for displaying the VC-state in the tree-buffers; see NEWS." ;;
                "ECB is now capable of handling remote paths (e.g. TRAMP-paths)"
                "Precisely expanding of current node via popup-menu of the methods-buffer."
                "Time consuming tasks are performed stealthy; see `ecb-stealthy-tasks-delay'"))
@@ -300,6 +306,8 @@
                                          ecb-upgrade-tree-image-icons-directories))
     (ecb-tree-RET-selects-edit-window . (ecb-tree-do-not-leave-window-after-select
                                          ecb-upgrade-tree-RET-selects-edit-window))
+    (ecb-download-url . (ecb-download-ecb-url identity))
+    (ecb-cedet-url . (ecb-download-cedet-url identity))
     )
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
@@ -911,18 +919,20 @@ your customization-file!"
             (erase-buffer))
           (if (not (ecb-custom-file-writeable-p))
               (progn
-                (widget-insert "Emacs can not save the upgraded options because the needed file\n")
+                (widget-insert "Emacs can not save the upgraded incompatible options (s.b.) because that file\n")
+                (widget-insert "specified for storing all customizations (see documentation of the option\n")
+                (widget-insert "`custom-file') because the file")
                 (widget-insert (if (ecb-custom-file)
                                    (concat (ecb-custom-file) " is not writeable by Emacs!")
-                                 "does not exist!"))
-                (widget-insert "\nPlease ensure that the new values will be stored!\n\n"))
+                                 " does either not exist or Emacs has been\nstarted with -q (in the latter case Emacs prevents from writing in the\ncustomizations-file)!\n"))
+                (widget-insert "\nPlease restart Emacs with a writeable custom- or init-file or without -q\nso the new option-values can be stored!\n\n"))
             (when (not (get 'ecb-display-upgraded-options
                             'ecb-upgrades-saved))
-              (widget-insert (format "Click on [Save] to save all changed options into %s.\n"
+              (widget-insert (format "Click on [Save] to save all changed options (s.b.) into %s.\n"
                                      (ecb-custom-file)))
-              (widget-insert (format "This makes a backup of this file unique named with a suffix .before_ecb_%s.\n\n"
-                                     ecb-version))))              
-          (widget-insert "Click on [Cancel] to kill this buffer.\n\n")
+              (widget-insert (format "This makes a backup of this file uniquely named with a suffix .before_ecb_%s.\n\n"
+                                     ecb-version))))
+          (widget-insert "Click on [Close] to kill this buffer (do this also after clicking [Save]).\n\n")
           (when ecb-not-compatible-options
             (widget-insert "The values of the following options are incompatible with current type.\nECB has tried to transform the old-value to the new type. In cases where\nthis was not possible ECB has reset to the current default-value.")
             (widget-insert "\n\n"))
@@ -1018,7 +1028,7 @@ your customization-file!"
                          :keymap ecb-upgrade-button-keymap ; Emacs
                          :notify (lambda (&rest ignore)
                                    (kill-buffer (current-buffer)))
-                         "Cancel")
+                         "Close")
           (widget-setup)
           (goto-char (point-min)))
         t)
@@ -1040,16 +1050,18 @@ your customization-file!"
                                ecb-version))
         (if (not (ecb-custom-file-writeable-p))
             (progn
-              (widget-insert "Emacs can not save the `ecb-options-version' because the needed file\n")
+              (widget-insert (format "Emacs can not save the value of `ecb-options-version' (%s) in that file\n" ecb-options-version))
+              (widget-insert "specified for storing all customizations (see documentation of the option\n")
+              (widget-insert "`custom-file') because the file")
               (widget-insert (if (ecb-custom-file)
                                  (concat (ecb-custom-file) " is not writeable by Emacs!")
-                               "does not exist!"))
-              (widget-insert "\nPlease ensure that `ecb-options-version' will be saved!\n\n"))
-          (widget-insert (format "Click on [Save] to save `ecb-options-version' into %s.\n"
-                                 (ecb-custom-file)))
+                               " does either not exist or Emacs has been\nstarted with -q (in the latter case Emacs prevents from writing in the\ncustomizations-file)!\n"))
+              (widget-insert "\nPlease restart Emacs with a writeable custom- or init-file or without -q\nso the value of `ecb-options-version' (s.a.) can be stored!\n\n"))
+          (widget-insert (format "Click on [Save] to save `ecb-options-version' (%s) into %s.\n"
+                                 ecb-options-version (ecb-custom-file)))
           (widget-insert (format "This makes a backup of this file unique named with a suffix .before_ecb_%s.\n\n"
                                  ecb-version)))
-        (widget-insert "Click on [Cancel] to kill this buffer.\n\n")
+        (widget-insert "Click on [Close] to kill this buffer (do this also after clicking [Save]).\n\n")
         (widget-insert "For a list of the most important NEWS call `ecb-display-news-for-upgrade'!\n\n")
         (widget-insert "\n")
         (when (ecb-custom-file-writeable-p)
@@ -1063,13 +1075,13 @@ your customization-file!"
                                    (ecb-info-message "ecb-options-version saved!"))
                          "Save")
           (widget-insert " "))
-        ;; Insert the Cancel button
+        ;; Insert the Close button
         (widget-create 'push-button
                        :button-keymap ecb-upgrade-button-keymap ; XEmacs
                        :keymap ecb-upgrade-button-keymap ; Emacs
                        :notify (lambda (&rest ignore)
                                  (kill-buffer (current-buffer)))
-                       "Cancel")
+                       "Close")
         (widget-setup)
         (goto-char (point-min))))
     nil))
@@ -1251,13 +1263,13 @@ always true."
                 (setq semantic-state "Correct version already loaded!")
               (setq semantic-installed-version-str
                     (ecb-package-get-matching-versions-str
-                     "semantic" ecb-cedet-url
+                     "semantic" ecb-packagelist-cedet-url
                      ecb-required-semantic-version-min
                      ecb-required-semantic-version-max))
               (setq semantic-dir
                     (ecb-package-download "semantic"
                                           semantic-installed-version-str
-                                          ecb-cedet-url))
+                                          ecb-download-cedet-url))
               (setq semantic-state (if (and semantic-dir
                                             semantic-installed-version-str)
                                        (concat "Installed "
@@ -1270,13 +1282,13 @@ always true."
                 (setq eieio-state "Correct version already loaded!")
               (setq eieio-installed-version-str
                     (ecb-package-get-matching-versions-str
-                     "eieio" ecb-cedet-url
+                     "eieio" ecb-packagelist-cedet-url
                      ecb-required-eieio-version-min
                      ecb-required-eieio-version-max))
               (setq eieio-dir
                     (ecb-package-download "eieio"
                                           eieio-installed-version-str
-                                          ecb-cedet-url))
+                                          ecb-download-cedet-url))
               (setq eieio-state (if (and eieio-dir
                                          eieio-installed-version-str)
                                     (concat "Installed "
@@ -1289,13 +1301,13 @@ always true."
                 (setq speedbar-state "Correct version already loaded!")
               (setq speedbar-installed-version-str
                     (ecb-package-get-matching-versions-str
-                     "speedbar" ecb-cedet-url
+                     "speedbar" ecb-packagelist-cedet-url
                      ecb-required-speedbar-version-min
                      ecb-required-speedbar-version-max))
               (setq speedbar-dir
                     (ecb-package-download "speedbar"
                                           speedbar-installed-version-str
-                                          ecb-cedet-url))
+                                          ecb-download-cedet-url))
               (setq speedbar-state (if (and speedbar-dir
                                             speedbar-installed-version-str)
                                        (concat "Installed "
@@ -1338,7 +1350,17 @@ always true."
   :group 'ecb
   :prefix "ecb-")
 
-(defcustom ecb-download-url "http://ftp1.sourceforge.net/ecb/"
+(defvar ecb-packagelist-ecb-url "ftp://ftp1.sourceforge.net/pub/sourceforge/e/ec/ecb/"
+  "Url used to get a list of available versions of ECB.
+wget is called with this url so a list of all available files is downloaded
+which is parsed by ECB. For the real download see `ecb-download-ecb-url'.")
+
+(defvar ecb-packagelist-cedet-url "ftp://ftp1.sourceforge.net/pub/sourceforge/c/ce/cedet/"
+  "Url used to get a list of available versions of CEDET.
+wget is called with this url so a list of all available files is downloaded
+which is parsed by ECB. For the real download see `ecb-download-cedet-url'.")
+  
+(defcustom ecb-download-ecb-url "http://ftp1.sourceforge.net/ecb/"
   "*URL where download-able ECB-versions are located.
 The ECB-archive-file \(e.g. ecb-1.70.tar.gz\) will be appended to this URL and
 `ecb-download-ecb' will try to download this archive.
@@ -1445,7 +1467,7 @@ Possible values are:
                  (const :tag "Always" always)
                  (const :tag "Never" nil)))
 
-(defcustom ecb-cedet-url "http://ftp1.sourceforge.net/cedet/"
+(defcustom ecb-download-cedet-url "http://ftp1.sourceforge.net/cedet/"
   "*URL where download-able CEDET-libraries are located.
 ECB will try to download \(if necessary) required versions of the libraries
 needed by ECB: The CEDET libraries semantic, eieio and speedbar.
@@ -1653,7 +1675,7 @@ return autom. the newest version-number as version-string."
 
 (defun ecb-download-ecb ()
   "Download ECB from the ECB-website and install it.
-For this the option `ecb-download-url' must be set correct, whereas the
+For this the option `ecb-download-ecb-url' must be set correct, whereas the
 default value of this option should always be correct.
 
 If `ecb-download-package-version-type' is set to -1 \(means asking for a
@@ -1677,12 +1699,13 @@ archive available at the ECB website then this function asks for proceeding!"
             (ecb-package-display-xemacs-package-info "ecb"))
     (ecb-package-download-ecb/semantic "ecb"
                                        ecb-version
-                                       ecb-download-url)))
+                                       ecb-download-ecb-url
+                                       ecb-packagelist-ecb-url)))
 
 (defun ecb-download-semantic ()
   "Download semantic from the semantic-website and install it.
-For this the variable `ecb-cedet-url' must be set correct, whereas the default
-value of this variable should always be correct.
+For this the variable `ecb-download-cedet-url' must be set correct, whereas
+the default value of this variable should always be correct.
 
 If `ecb-download-package-version-type' is set to -1 \(means asking for a
 version) then you will be ask in the minibuffer for the version to download.
@@ -1711,7 +1734,8 @@ proceeding!"
               (ecb-package-display-xemacs-package-info "semantic"))
       (ecb-package-download-ecb/semantic "semantic"
                                          semantic-version
-                                         ecb-cedet-url))))
+                                         ecb-download-cedet-url
+                                         ecb-packagelist-cedet-url))))
 
 (defun ecb-package-display-xemacs-package-info (package)
   "Displays a warning if PACKAGE is a standard xemacs-package and ask if to
@@ -1737,11 +1761,13 @@ proceed with downloading. Return not nil if proceeding."
                        "-website? ")))
 
 
-(defun ecb-package-download-ecb/semantic (package curr-version url)
-  "Download PACKAGE from URL. CURR-VERSION must be the current version of
-current active version of PACKAGE."
+(defun ecb-package-download-ecb/semantic (package curr-version download-url
+                                                  &optional package-list-url)
+  "Download PACKAGE from DOWNLOAD-URL. CURR-VERSION must be the current
+version of current active version of PACKAGE. If PACKAGE-LIST-URL is not nil
+then this url is used to get a list of all available versions of PACKAGE."
   (let ((ver (ecb-package-get-matching-versions-str
-              package url
+              package (or package-list-url download-url)
               (if (= ecb-download-package-version-type -1)
                   '(0 0 0 0) ;; smallest possible version-number
                 (ecb-package-version-str2list curr-version))
@@ -1750,7 +1776,7 @@ current active version of PACKAGE."
     (if (ecb-string= ver curr-version)
         (ecb-error "You tried to download an already installed version %s - Stop!"
                    ver))
-    (setq install-dir (ecb-package-download package ver url))
+    (setq install-dir (ecb-package-download package ver download-url))
     (when install-dir
       (message "New %s successfully installed!" package)
       (with-output-to-temp-buffer "*ECB downloading and installing*"
@@ -2007,8 +2033,8 @@ for details about using \"wget\"."
           (princ "\n\n")
           (princ "Please check the wget configuration in \"~/.wgetrc\" and also the value\n")
           (princ (format "of the option %s." (if (ecb-string= package "ecb")
-                                                 "`ecb-download-url'"
-                                               "`ecb-cedet-url'")))
+                                                 "`ecb-download-ecb-url'"
+                                               "`ecb-download-cedet-url'")))
           (princ " ECB has tried to get informations from\nthe following URL:\n\n")
           (princ (concat "   " package-url))
           (princ "\n\n")

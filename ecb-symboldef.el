@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-symboldef.el,v 1.1 2005/05/23 15:36:15 berndl Exp $
+;; $Id: ecb-symboldef.el,v 1.2 2006/01/27 18:21:48 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -47,6 +47,7 @@
 (require 'ecb-util)
 (require 'ecb-layout)
 (require 'ecb-common-browser)
+(require 'ecb-semantic-wrapper)
 
 (eval-when-compile
   (require 'silentcomp))
@@ -117,7 +118,7 @@ find-function."
 ;; user could determine which backends should be used for finding a definition
 ;; and also in which order the backends should be tried...
 (defcustom ecb-symboldef-find-backends '(semanticdb etags)
-  "*"
+  "*Feature currently not implemented!"
   :group 'ecb-symboldef
   :type '(repeat (choice :tag "Backends"
                          :menu-tag "Backends"
@@ -230,19 +231,17 @@ Only prints mode and info but does not find any symbol-definition."
     (fill-region (point-min) (point-max) 'left)
     retval))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Replace the semantic-calls with
-;; ecb--* wrappers
 (defun ecb-symboldef-find-tag-by-semanticdb (symbol-name edit-buffer)
   "Function to find a semantic-tag by SYMBOL-NAME.
 Returns nil if not found otherwise a list \(tag-buffer tag-begin tag-end)"
   (save-excursion
     (set-buffer edit-buffer)
-    (let* ((mytag-list (semanticdb-brute-deep-find-tags-by-name symbol-name
-                                                                nil t))
+    (let* ((mytag-list (ecb--semanticdb-brute-deep-find-tags-by-name symbol-name
+                                                                     nil t))
 	   (mytag (if mytag-list 
-                      (car (semanticdb-find-result-nth
+                      (car (ecb--semanticdb-find-result-nth
                             mytag-list
-                            (1- (semanticdb-find-result-length mytag-list))))))
+                            (1- (ecb--semanticdb-find-result-length mytag-list))))))
 	   (mytag-ovr (if mytag (semantic-tag-bounds mytag)))
 	   (mytag-min (if mytag-ovr (car mytag-ovr)))
 	   (mytag-max (if mytag-ovr (car (cdr mytag-ovr))))

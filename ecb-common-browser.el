@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.21 2005/06/27 17:03:06 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.22 2006/01/27 18:21:48 berndl Exp $
 
 
 ;;; History
@@ -830,6 +830,106 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
 
 ;; -- end of canonical filenames
 
+;; -- interactors synchronizers
+
+(defvar ecb-interactor-synchronizers nil)
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Only called from within
+;; `defecb-interactor-synchronizer'.
+(defun ecb-interactor-synchronizer-register (buffer-name-symbol
+                                             synchronizer-fcn)
+  ""
+  )
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: This function can only be used if
+;; a synchronizer is already registered.
+(defun ecb-interactor-synchronizer-activate (&optional arg)
+  "Activate if ARG >= 0, deactivate if ARG < 0. Toggle if ARG is nil."
+  )
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We do not change the
+;; synchronizing of the basic-interactors! eshell and speedbar synchonizing
+;; won't be changed too. So the internal-hook still remains for this stuff! But
+;; all add-on-interactors (currently analyse and symboldef) MUST use the new
+;; macro `defecb-interactor-synchronizer' for their synchronizers! For these
+;; we introduce also a new option `ecb-add-on-interactor-sync-delay' (if a
+;; buffer is not contained it will not be synced anymore!) which allows adding
+;; delays for these interactors. In addition we rename `ecb-window-sync' to
+;; `ecb-interactor-sync' and `ecb-window-sync-delay' to
+;; `ecb-basic-interactor-sync-delay'. Maybe there are further
+;; options/functions/commands to rename!?
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hmmmmmmm, maybe we should ensure
+;; that the add-on synchonizers will always being called AFTER the basic ones?
+;; For this we should name the new option
+;; `ecb-add-on-interactor-sync-delay-plus' which means each add-on interactor
+;; has at elast the basic delay of `ecb-basic-interactor-sync-delay' plus
+;; eventually some delay on top (this addon-delay must be realized with
+;; `ecb-run-with-timer'). Hmm, i think i have to make some brainstorming what
+;; is the better approach!
+(defmacro defecb-interactor-synchronizer (synchronizer
+                                          buffer-name-symbol
+                                          docstring &rest body)
+  "Define a creator-function CREATOR for a tree-buffer which name is hold in
+the symbol TREE-BUFFER-NAME-SYMBOL. Do not quote CREATOR and
+TREE-BUFFER-NAME-SYMBOL. DOCSTRING is the docstring for CREATOR. BODY is all
+the program-code of CREATOR \(must contain a call to `tree-buffer-create'). It
+makes sense that BODY returns the created tree-buffer.
+
+When creating a tree-buffer with this macro then this tree-buffer will be
+automatically created \(i.e. its creator-function defined with this macro will
+be called) when activating ECB and the tree-buffer will automatically
+registered at ECB. This means that some features of ECB will work
+automatically out of the box with this tree-buffer.
+
+When creating a tree-buffer for ECB then it MUST be created with this macro
+and not with `tree-buffer-create'!"
+  `(eval-and-compile
+     (ecb-interactor-synchronizer-register (quote ,buffer-name-symbol)
+                                           (quote ,synchronizer))
+     (defun ,synchronizer ()
+       ,docstring
+       (interactive)
+       (ecb-do-if-buffer-visible-in-ecb-frame (quote ,buffer-name-symbol)
+         ,@body))))
+
+;; (insert (pp (macroexpand
+;;              '(defecb-interactor-synchronizer ecb-analyse-buffer-sync-test
+;;                 ecb-analyse-buffer-name
+;;                 "testdoctsirng"
+;;                 (let ((analysis nil)
+;;                       (completions nil)
+;;                       (fnargs nil)
+;;                       (cnt nil)
+;;                       )
+;;                   ;; Try and get some sort of analysis
+;;                   (ignore-errors
+;;                     (save-excursion
+;;                       (setq analysis (ecb--semantic-analyze-current-context (point)))
+;;                       (setq cnt (ecb--semantic-find-tag-by-overlay))
+;;                       (when analysis
+;;                         (setq completions (ecb--semantic-analyze-possible-completions analysis))
+;;                         (setq fnargs (ecb--semantic-get-local-arguments (point)))
+;;                         )))
+;;                   (ecb-exec-in-window ecb-analyse-buffer-name
+;;                     ;; we must remove the old nodes
+;;                     (tree-buffer-set-root (tree-node-new-root))
+;;                     (when analysis
+;;                       ;; Now insert information about the context
+;;                       (when cnt
+;;                         (ecb-analyse-add-nodes "Context" "Context"
+;;                                                cnt ecb-analyse-nodetype-context))
+;;                       (when fnargs
+;;                         (ecb-analyse-add-nodes "Arguments" "Arguments" fnargs
+;;                                                ecb-analyse-nodetype-arguments))
+;;                       ;; Let different classes draw more nodes.
+;;                       (ecb-analyse-more-nodes analysis)
+;;                       (when completions
+;;                         (ecb-analyse-add-nodes "Completions" "Completions" completions
+;;                                                ecb-analyse-nodetype-completions)))
+;;                     (tree-buffer-update)))))))
+
+;; -- end of interactors synchronizers
 
 (defun ecb-format-bucket-name (name)
   "Format NAME as a bucket-name according to `ecb-bucket-node-display'."
@@ -1177,13 +1277,17 @@ be done by any code and must be done via `ecb-stealthy-function-state-init'!"
 Each function returns 'done if it completes successfully, or something else if
 interrupted by the user \(i.e. the function has been interrupted by the
 user). If a function is interrupted then `ecb-stealthy-function-list' is
-rotated so the interrupted function is the first element so the nect stealthy
+rotated so the interrupted function is the first element so the next stealthy
 run starts with this interrupted function."
   (ecb-debug-autocontrol-fcn-error 'ecb-stealthy-updates
                                    "Begin: Cur-buf: %s" (current-buffer))
   (unless ecb-stealthy-update-running
     (let ((l ecb-stealthy-function-list)
-          (ecb-stealthy-update-running t))
+          (ecb-stealthy-update-running t)
+          ;; necessary because timers set this locally to t to prevent
+          ;; timer-actions from being quitted by C-g. Our potentially long
+          ;; lasting actions must be quit-able!
+          (inhibit-quit nil))
       (while (and l (equal 'done (funcall (car l))))
         (setq l (cdr l)))
       ;; if l is nil this means all functions have successfully completed -

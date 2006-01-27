@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.429 2005/06/27 17:02:34 berndl Exp $
+;; $Id: ecb.el,v 1.430 2006/01/27 18:21:47 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -230,7 +230,6 @@ is loaded or the value of `semantic-version' at ECB-compilation time.")
 (silentcomp-defun force-mode-line-update)
 (silentcomp-defun font-lock-add-keywords)
 
-(silentcomp-defvar dired-directory)
 (silentcomp-defvar current-menubar)
 (silentcomp-defun find-menu-item)
 (silentcomp-defun add-submenu)
@@ -333,7 +332,7 @@ used for files- and subdirs \(see `ecb-cache-directory-contents' and
 `ecb-cache-directory-contents-not') for semantic-tags and for the
 history-filter.
 
-This caches are completely clean at load-time of the ECB-library!
+This caches are completely empty at load-time of the ECB-library!
 
 Default is nil, because is makes sense not to clear these caches at start-time
 because ECB is often deacticated temporally especially in combination with
@@ -341,39 +340,6 @@ window-managers like escreen.el. In these situations the internal state of ECB
 should be preserved for next activation."
   :group 'ecb-general
   :type 'boolean)
-
-(defcustom ecb-grep-function (if (fboundp 'igrep) 'igrep 'grep)
-  "*Function used for performing a grep.
-The popup-menu of the tree-buffers \"Directories\", \"Sources\" and
-\"History\" offer to grep the \"current\" directory:
-- Directory-buffer: The grep is performed in the current popup-directory after
-  clicking the right mouse-button onto a node.
-- Sources-buffer: The grep is performed in the current selected directory.
-- History-buffer: The grep is performed in the directory of the current
-  popup-source after clicking the right mouse-button onto a node.
-
-Conditions for such a function:
-- The function is called interactively via `call-interactively'
-- During the function-call the `default-directory' is temp. set to that
-  directory mentioned above with \"... is performed in ...\", i.e. the
-  function can use the value of `default-directory' to determine the directory
-  to grep.
-- The function must read all it's arguments itself.
-- The function is completely responsible for performing the grep itself and
-  displaying the results.
-
-Normally one of the standard-grepping functions like `grep' or `igrep' \(or
-some wrappers around it) should be used!"
-  :group 'ecb-general
-  :type 'function)
-
-(defcustom ecb-grep-find-function (if (fboundp 'igrep-find)
-                                      'igrep-find 'grep-find)
-  "*Function used for performing a recursive grep.
-For more Details see option `ecb-grep-function' and replace \"grep\" with
-\"recursive grep\" or \"grep-find\"."
-  :group 'ecb-general
-  :type 'function)
 
 
 (defcustom ecb-window-sync '(Info-mode dired-mode)
@@ -637,109 +603,25 @@ examples how to use this macro!"
     (when (member curr-buf (ecb-get-current-visible-ecb-buffers))
       (ecb-error "Killing an special ECB-buffer is not possible!"))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Add a force-argument to all
+;; sybc-functions (eshell, speedbar, symboldef, analyse...). Make an
+;; infrastructure which accepts for each buffer an own timeout (or
+;; post-command, like ecb-window-sync!) and a sync-function! Update the
+;; docstring (and also texi) of this command! remove the internal-hook, i
+;; think we do not need it anymore!
 (defun ecb-current-buffer-sync (&optional force)
   "Synchronizes all special ECB-buffers with current buffer.
 
 Depending on the contents of current buffer this function performs several
 synchronizing tasks but only if ECB is active and point stays in an
-edit-window. If this is true under the following additional conditions some
-tasks are performed:
+edit-window.
 
-- Current buffer is a file-buffer and either FORCE is not nil or the buffer
-  is different from the source-file currently displayed in the
-  ECB-tree-buffers:
-
-  Synchronizing all tree-buffers with the current buffer
-
-- Current buffer is a dired-buffer:
-
-  Synchronizing the directory- and sources-tree-buffer if visible
-
-- Always:
-
-  Running the hooks in `ecb-current-buffer-sync-hook'."  
+Running the hooks in `ecb-current-buffer-sync-hook'."  
   (when (and ecb-minor-mode
              (not ecb-windows-hidden)
              (ecb-point-in-edit-window))
     (ignore-errors
-      (let ((filename (buffer-file-name (current-buffer))))
-        (cond (;; synchronizing for real filesource-buffers
-               (and filename
-                    (ecb-buffer-or-file-readable-p)
-                    (or force
-                        (not (ecb-string= filename ecb-path-selected-source))))
-          
-               ;; * KB: Problem: seems this little sleep is necessary because
-               ;;   otherwise jumping to certain markers in new opened files (e.g.
-               ;;   with next-error etc. ) doesn´t work correct. Can´t debug down
-               ;;   this mysterious thing! Regardless of the size of the file to
-               ;;   load, this 0.1 fraction of a sec is enough!
-               ;; * KB: With current ECB implementation this sit-for seems not
-               ;;   longer necessary, it works with every Emacs version correct.
-               ;;   Therefore i comment out the sit-for until this error occurs
-               ;;   again.               
-               ;;           (sit-for 0.1)
-               
-               ;; if the file is not located in any of the paths in
-               ;; `ecb-source-path' or in the paths returned from
-               ;; `ecb-source-path-functions' we must at least add the new
-               ;; source path temporally to our paths. But the user has also
-               ;; the choice to save it for future sessions too.
-               (if (null (ecb-matching-source-paths filename))
-                   (let* ((norm-filename (ecb-fix-filename filename))
-                          (remote-path (ecb-remote-path norm-filename))
-                          (source-path (if (car ecb-add-path-for-not-matching-files)
-                                           ;; we always add the only the root
-                                           ;; as source-path
-                                           (if remote-path
-                                               ;; for a remote-path we add the
-                                               ;; host+ the root of the host
-                                               (concat (car remote-path) "/")
-                                             ;; filename is a local-path
-                                             (if (= (aref norm-filename 0) ?/)
-                                                 ;; for Unix-style-path we add the
-                                                 ;; root-dir
-                                                 (substring norm-filename 0 1)
-                                               ;; for win32-style-path we add
-                                               ;; the drive; because
-                                               ;; `ecb-fix-filename' also
-                                               ;; converts cygwin-path-style
-                                               ;; to win32-path-style here
-                                               ;; also the drive is added.
-                                               (substring norm-filename 0 2)))
-                                         ;; add the full directory as source-path
-                                         (ecb-file-name-directory norm-filename))))
-                     (ecb-add-source-path source-path (ecb-fix-filename source-path)
-                                          (not (cdr ecb-add-path-for-not-matching-files)))))
-
-               ;; now we can be sure that a matching source-path exists
-               
-               ;; Klaus: The explicit update of the directories buffer is not
-               ;; necessary because the sync with the current source is done by
-               ;; `ecb-select-source-file'!
-               ;;           (ecb-update-directories-buffer)
-               (ecb-select-source-file filename force)
-               (ecb-update-methods-buffer--internal 'scroll-to-begin)
-               (setq ecb-major-mode-selected-source major-mode)
-
-               ;; Klaus Berndl <klaus.berndl@sdm.de>: is now be done at the
-               ;; end of `ecb-rebuild-methods-buffer-with-tagcache' which is
-               ;; called by `ecb-update-methods-buffer--internal'!
-
-               ;; selected source has changed, therefore we must initialize
-               ;; ecb-selected-tag again.
-               (ecb-tag-sync 'force)
-               )
-              
-              (;; synchronizing for dired-mode
-               (eq major-mode 'dired-mode)
-               (ecb-set-selected-directory
-                (or (and (stringp dired-directory)
-                         (ecb-file-exists-p dired-directory)
-                         dired-directory)
-                    (and (listp dired-directory)
-                         (car dired-directory)))))
-              (t nil))))
+      (ecb-directories-sources-history-buffer-sync force))
 
     ;; at the end we are running the hooks
     (run-hooks 'ecb-current-buffer-sync-hook-internal)
@@ -782,19 +664,19 @@ effect is that auto-synchronizing is switched off then the current value of
 the option `ecb-window-sync' is saved so it can be used for the next switch on
 by this command. See also the option `ecb-window-sync'."
   (interactive "P")
-  (let* ((new-value (if (null arg)
-                        (if ecb-window-sync
-                            (progn
-                              (setq ecb-window-sync-old
-                                    ecb-window-sync)
-                              nil)
-                          ecb-window-sync-old)
-                      (if (<= (prefix-numeric-value arg) 0)
-                          (progn
-                            (if ecb-window-sync
-                                (setq ecb-window-sync-old ecb-window-sync))
-                            nil)
-                        (or ecb-window-sync ecb-window-sync-old)))))
+  (let ((new-value (if (null arg)
+                       (if ecb-window-sync
+                           (progn
+                             (setq ecb-window-sync-old
+                                   ecb-window-sync)
+                             nil)
+                         ecb-window-sync-old)
+                     (if (<= (prefix-numeric-value arg) 0)
+                         (progn
+                           (if ecb-window-sync
+                               (setq ecb-window-sync-old ecb-window-sync))
+                           nil)
+                       (or ecb-window-sync ecb-window-sync-old)))))
     (setq ecb-window-sync new-value)
     (message "Automatic synchronizing the ECB-windows is %s \(Value: %s\)."
              (if new-value "on" "off")

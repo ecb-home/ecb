@@ -26,7 +26,7 @@
 # GNU Emacs; see the file COPYING.  If not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# $Id: Makefile,v 1.106 2005/04/19 15:29:31 berndl Exp $
+# $Id: Makefile,v 1.107 2006/01/27 18:21:48 berndl Exp $
 
 
 # ========================================================================
@@ -144,11 +144,11 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.106 2005/04/19 15:29:31 berndl Exp $
+# $Id: Makefile,v 1.107 2006/01/27 18:21:48 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
-ecb_VERSION=2.32beta3
+ecb_VERSION=2.32
 
 include ecb-makedef.mk
 
@@ -228,7 +228,7 @@ pdf: $(ecb_TEXI)
 
 install-help: $(ecb_INFO_DIR)/$(ecb_INFO)
 	@if test -x "$(INSTALLINFO)" -a -f "$(EMACSINFOPATH)/dir"; then\
-	   echo Installing the Online-help in $(INSTALLINFO)...; \
+	   echo Installing the Online-help in $(EMACSINFOPATH)...; \
 	   $(CP) $(ecb_INFO_DIR)/*info* $(EMACSINFOPATH); \
 	   $(INSTALLINFO) $< $(EMACSINFOPATH)/dir; \
 	else \
