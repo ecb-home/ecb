@@ -1,6 +1,17 @@
 * Changes for ECB version 2.33beta1
 
+** More user-responsible buffer-parsing based on the idle-mechanism of semantic
+
+   TODO: Describe here the changes
+
+   TODO: Adding this to the FAQ and Tips and Tricks section in the texi....
+
 ** Fixed Bugs
+
+*** Fixed problems with `ecb-fix-window-size' and active compile-windows
+    With Emacs >= 22 the bugs of Emacs 21.3.X concerning `window-size-fixed'
+    are fixed by the Emacs-team so now ECB supports this feature also with
+    active compile-window.
 
 *** Fixed problems with the internal download of newer ECB-versions
     Seems that two different URLs are needed:

@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.60 2006/01/27 18:21:48 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.61 2006/03/10 15:40:36 berndl Exp $
 
 ;;; Commentary:
 
@@ -2563,31 +2563,32 @@ directory. This function is only for use by `ecb-stealthy-updates'!"
                  (let ((lines-of-buffer (count-lines (point-min) (point-max)))
                        (curr-node nil)
                        (dir-empty-p nil))
-                   (save-excursion
-                     (while (and (not (input-pending-p))
-                                 (<= state lines-of-buffer))
-                       (goto-line state)
-                       (setq curr-node (tree-buffer-get-node-at-point))
-                       (when (and (ecb-directory-should-prescanned-p
-                                   (tree-node->data curr-node))
-                                  (ecb-file-exists-p
-                                   (tree-node->data curr-node)))
-                         (setq dir-empty-p
-                               (ecb-check-emptyness-of-dir (tree-node->data curr-node)))
-                         ;; we update the node only if we have an empty dir and the node is
-                         ;; still expandable
-                         (when (or (and dir-empty-p
-                                        (tree-node->expandable curr-node))
-                                   (and (not dir-empty-p)
-                                        (not (tree-node->expandable curr-node))))
-                           (tree-buffer-update-node nil
-                                                    'use-old-value
-                                                    'use-old-value
-                                                    'use-old-value
-                                                    'use-old-value
-                                                    (not dir-empty-p)
-                                                    t)))
-                       (setq state (1+ state))))
+                   (ecb-exit-on-input 'empty-dir-check-stealthy
+                     (save-excursion
+                       (while (<= state lines-of-buffer)
+                         (ecb-throw-on-input 'lines-of-buffer-loop)
+                         (goto-line state)
+                         (setq curr-node (tree-buffer-get-node-at-point))
+                         (when (and (ecb-directory-should-prescanned-p
+                                     (tree-node->data curr-node))
+                                    (ecb-file-exists-p
+                                     (tree-node->data curr-node)))
+                           (setq dir-empty-p
+                                 (ecb-check-emptyness-of-dir (tree-node->data curr-node)))
+                           ;; we update the node only if we have an empty dir and the node is
+                           ;; still expandable
+                           (when (or (and dir-empty-p
+                                          (tree-node->expandable curr-node))
+                                     (and (not dir-empty-p)
+                                          (not (tree-node->expandable curr-node))))
+                             (tree-buffer-update-node nil
+                                                      'use-old-value
+                                                      'use-old-value
+                                                      'use-old-value
+                                                      'use-old-value
+                                                      (not dir-empty-p)
+                                                      t)))
+                         (setq state (1+ state)))))
                    (if (> state lines-of-buffer)
                        (setq state 'done)))))
     (setq state 'done)))
@@ -2621,36 +2622,55 @@ when called. Return the new state-value."
                                            ecb-sources-buffer-name)
                                   ecb-sources-nodetype-sourcefile
                                 ecb-directories-nodetype-sourcefile)))
-      (save-excursion
-        (while (and (not (input-pending-p))
-                    (<= state lines-of-buffer))
-          (goto-line state)
-          (setq curr-node (tree-buffer-get-node-at-point))
-          (when (and (= (tree-node->type curr-node) node-type-to-check)
-                     (ecb-sources-read-only-check-p
-                      (ecb-file-name-directory (tree-node->data curr-node))))
-            (setq new-name (tree-node->name curr-node))
-            (setq read-only-p
-                  (not (ecb-file-writable-p (tree-node->data curr-node))))
-            (if read-only-p
-                (ecb-merge-face-into-text new-name
-                                          ecb-source-read-only-face))
-            ;; we update the node only if we have an empty dir and the node is
-            ;; still expandable
-            (when read-only-p
-              (tree-buffer-update-node
-               nil
-               new-name
-               'use-old-value
-               'use-old-value
-               'use-old-value
-               'use-old-value
-               t)))
-          (setq state (1+ state))))
+      (ecb-exit-on-input 'read-only-stealthy
+        (save-excursion
+          (while (<= state lines-of-buffer)
+            (ecb-throw-on-input 'lines-of-buffer-loop)
+            (goto-line state)
+            (setq curr-node (tree-buffer-get-node-at-point))
+            (when (and (= (tree-node->type curr-node) node-type-to-check)
+                       (ecb-sources-read-only-check-p
+                        (ecb-file-name-directory (tree-node->data curr-node))))
+              (setq new-name (tree-node->name curr-node))
+              (setq read-only-p
+                    (not (ecb-file-writable-p (tree-node->data curr-node))))
+              (if read-only-p
+                  (ecb-merge-face-into-text new-name
+                                            ecb-source-read-only-face))
+              ;; we update the node only if we have an empty dir and the node is
+              ;; still expandable
+              (when read-only-p
+                (tree-buffer-update-node
+                 nil
+                 new-name
+                 'use-old-value
+                 'use-old-value
+                 'use-old-value
+                 'use-old-value
+                 t)))
+            (setq state (1+ state)))))
       (if (> state lines-of-buffer)
           (setq state 'done)))
     state))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: The best would be using the
+;; new macro `while-no-input' with Emacs 22 but currently it seems not to work
+;; properly:
+;;
+;; (defun klaus-test-input ()
+;;   (interactive)
+;;   (let ((result nil)
+;;         (i 0))
+;;     (setq result (while-no-input
+;;                   (while t
+;;                     (setq i (1+ i)))))
+;;     (message "Klausi: %s" result)))
+;;
+;; What is wrong??
+;; Seems that it works on *nix but not an windows - have already filed a
+;; bug-report to the Emacs-team...
+; when it works also on windows then we should build in this macro in the
+; stealthy stuff - the best would be to use it within `ecb-exit-on-input'.
 
 (defecb-stealthy ecb-stealthy-ro-check-in-directories-buf
   "Check for all sourcefile-nodes in the directories-buffer if the associated
@@ -2662,6 +2682,23 @@ file is writable or not."
                            (ecb-stealthy-read-only-check--internal state))))
         (setq state 'done))
     (setq state 'done)))
+
+
+;; Test, if our new interrupt mechanism works...
+;; (defecb-stealthy ecb-stealthy-klaus-test
+;;   "test"
+;;   (setq state
+;;         (if (equal (ecb-exit-on-input 'testing
+;;                      (let ((inhibit-quit nil)
+;;                            (message-log-max nil))
+;;                        (while t
+;;                          (message "Looping ...")
+;;                          (ecb-throw-on-input 'user-input)
+;;                          )))
+;;                    'user-input)
+;;             'done
+;;           'Klaus)))
+
 
 (defecb-stealthy ecb-stealthy-ro-check-in-sources-buf
   "Check for all sourcefile-nodes in the sources-buffer if the associated file
@@ -3049,32 +3086,33 @@ state-value."
                                              ecb-history-buffer-name)
                                     ecb-history-nodetype-sourcefile
                                   ecb-directories-nodetype-sourcefile)))
-        (save-excursion
-          (while (and (not (input-pending-p))
-                      (<= state lines-of-buffer))
-            (goto-line state)
-            (setq curr-node (tree-buffer-get-node-at-point))
-            (setq curr-dir (ecb-file-name-directory (tree-node->data curr-node)))
-            (when (and (= (tree-node->type curr-node) node-type-to-check)
-                       (ecb-vc-directory-should-be-checked-p curr-dir)
-                       ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Move this
-                       ;; existing-check to outside this when-clause and then
-                       ;; do the same as in `ecb-stealthy-vc-check--sources'!
-                       (ecb-file-exists-p (tree-node->data curr-node)))
-              (setq vc-state-fcn (ecb-vc-get-state-fcn-for-dir curr-dir))
-              (when vc-state-fcn ;; file is under VC-control
-                (setq new-name (tree-node->name curr-node))
-                (setq new-state
-                      (ecb-vc-check-state (tree-node->data curr-node)
-                                          (buffer-name (current-buffer))
-                                          vc-state-fcn))
-                ;; we update the node only if the state has changed 
-                (when (not (equal 'unchanged new-state))
-                  (setq new-name (ecb-vc-generate-node-name new-name new-state))
-                  (tree-buffer-update-node
-                   nil new-name
-                   'use-old-value 'use-old-value 'use-old-value 'use-old-value t))))
-            (setq state (1+ state))))
+        (ecb-exit-on-input 'vc-check-dir-hist-stealthy
+          (save-excursion
+            (while (<= state lines-of-buffer)
+              (ecb-throw-on-input 'lines-of-buffer-loop)
+              (goto-line state)
+              (setq curr-node (tree-buffer-get-node-at-point))
+              (setq curr-dir (ecb-file-name-directory (tree-node->data curr-node)))
+              (when (and (= (tree-node->type curr-node) node-type-to-check)
+                         (ecb-vc-directory-should-be-checked-p curr-dir)
+                         ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Move this
+                         ;; existing-check to outside this when-clause and then
+                         ;; do the same as in `ecb-stealthy-vc-check--sources'!
+                         (ecb-file-exists-p (tree-node->data curr-node)))
+                (setq vc-state-fcn (ecb-vc-get-state-fcn-for-dir curr-dir))
+                (when vc-state-fcn ;; file is under VC-control
+                  (setq new-name (tree-node->name curr-node))
+                  (setq new-state
+                        (ecb-vc-check-state (tree-node->data curr-node)
+                                            (buffer-name (current-buffer))
+                                            vc-state-fcn))
+                  ;; we update the node only if the state has changed 
+                  (when (not (equal 'unchanged new-state))
+                    (setq new-name (ecb-vc-generate-node-name new-name new-state))
+                    (tree-buffer-update-node
+                     nil new-name
+                     'use-old-value 'use-old-value 'use-old-value 'use-old-value t))))
+              (setq state (1+ state)))))
         (if (> state lines-of-buffer)
             (setq state 'done)))
       state)))
@@ -3102,47 +3140,48 @@ stealthy-function has when called. Return the new state-value."
               (new-name nil)
               (new-state nil)
               (update-performed-for-dir nil))
-          (save-excursion
-            (while (and (not (input-pending-p))
-                        (<= state lines-of-buffer))
-              (goto-line state)
-              (setq curr-node (tree-buffer-get-node-at-point))
-              (if (ecb-file-exists-p (tree-node->data curr-node))
-                  (progn
-                    (setq new-name (tree-node->name curr-node))
-                    (setq new-state
-                          (ecb-vc-check-state (tree-node->data curr-node)
-                                              (buffer-name (current-buffer))
-                                              vc-state-fcn))
-                    ;; we update the node only if the state has changed 
-                    (when (not (equal 'unchanged new-state))
-                      (setq new-name (ecb-vc-generate-node-name new-name new-state))
-                      (or update-performed-for-dir
-                          (setq update-performed-for-dir ecb-path-selected-directory))
-                      (tree-buffer-update-node
-                       curr-node new-name
-                       'use-old-value 'use-old-value 'use-old-value
-                       'use-old-value t))
-                    (setq state (1+ state)))
+          (ecb-exit-on-input 'vc-check-sources-stealthy
+            (save-excursion
+              (while (<= state lines-of-buffer)
+                (ecb-throw-on-input 'lines-of-buffer-loop)
+                (goto-line state)
+                (setq curr-node (tree-buffer-get-node-at-point))
+                (if (ecb-file-exists-p (tree-node->data curr-node))
+                    (progn
+                      (setq new-name (tree-node->name curr-node))
+                      (setq new-state
+                            (ecb-vc-check-state (tree-node->data curr-node)
+                                                (buffer-name (current-buffer))
+                                                vc-state-fcn))
+                      ;; we update the node only if the state has changed 
+                      (when (not (equal 'unchanged new-state))
+                        (setq new-name (ecb-vc-generate-node-name new-name new-state))
+                        (or update-performed-for-dir
+                            (setq update-performed-for-dir ecb-path-selected-directory))
+                        (tree-buffer-update-node
+                         curr-node new-name
+                         'use-old-value 'use-old-value 'use-old-value
+                         'use-old-value t))
+                      (setq state (1+ state)))
                 
-                ;; file does no longer exist
+                  ;; file does no longer exist
                 
-                ;; reduce the number of lines/files
-                (setq lines-of-buffer (1- lines-of-buffer))
-                ;; remove the node from the tree and the tree-display
-                (tree-buffer-remove-node curr-node t)
-                ;; remove the current dir from the files-and-sub-dir-cache
-                (ecb-files-and-subdirs-cache-remove ecb-path-selected-directory)
-                ;; if there is currently only one line in the tree-buffer the
-                ;; directory will be probably empty now (we knowingly ignore
-                ;; here the possibility that some files can exists in the dir
-                ;; but they are not displayed in the tree-buffer cause of some
-                ;; filters for example), so it's a heuristic approach
-                (if (= lines-of-buffer 1)
-                    (ecb-directory-empty-cache-remove ecb-path-selected-directory))
-                ;; we must trigger that the sources-cache will be updated below
-                (setq update-performed-for-dir ecb-path-selected-directory)
-                )))
+                  ;; reduce the number of lines/files
+                  (setq lines-of-buffer (1- lines-of-buffer))
+                  ;; remove the node from the tree and the tree-display
+                  (tree-buffer-remove-node curr-node t)
+                  ;; remove the current dir from the files-and-sub-dir-cache
+                  (ecb-files-and-subdirs-cache-remove ecb-path-selected-directory)
+                  ;; if there is currently only one line in the tree-buffer the
+                  ;; directory will be probably empty now (we knowingly ignore
+                  ;; here the possibility that some files can exists in the dir
+                  ;; but they are not displayed in the tree-buffer cause of some
+                  ;; filters for example), so it's a heuristic approach
+                  (if (= lines-of-buffer 1)
+                      (ecb-directory-empty-cache-remove ecb-path-selected-directory))
+                  ;; we must trigger that the sources-cache will be updated below
+                  (setq update-performed-for-dir ecb-path-selected-directory)
+                  ))))
           ;; if we have performed at least one update then we must update the
           ;; SOURCES-cache.
           (when update-performed-for-dir

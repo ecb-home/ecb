@@ -23,7 +23,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.210 2006/01/27 18:21:47 berndl Exp $
+@c $Id: ecb.texi,v 1.211 2006/03/10 15:40:35 berndl Exp $
 
 @setfilename ecb.info
 
@@ -46,7 +46,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-2.32
+2.33beta1
 @end macro
 
 
@@ -4005,7 +4005,9 @@ argument then fixed sizes are stored.
 GNU Emacs 21 introduced a new feature which can fix the sizes of a
 window displaying a certain buffer even after resizing the frame. This
 new feature is driven by the new buffer-local variable
-@code{window-size-fixed}.
+@code{window-size-fixed}@footnote{Currently XEmacs does not support
+this feature therefore @code{ecb-fix-window-size} has no effect with
+XEmacs}.
 
 ECB offers an option @code{ecb-fix-window-size} for fixing the sizes
 of the special ECB-windows/buffers even after frame-resizing. The fix
@@ -4022,10 +4024,10 @@ because it makes less sense to fix the height of the ecb-windows in a
 left-, right- or leftright-layout. Same for fixing the width in a
 top-layout.
 
-Note: With current Emacs 21.2.X there seems to be no distinction
-between @code{width}, @code{height} and @code{t}. Therefore this
-option takes no effect (means all ecb-windows have always unfixed
-sizes) if @code{ecb-compile-window-height} is not @code{nil}.
+Note: With Emacs < 22 there seems to be no distinction between
+@code{width}, @code{height} and @code{t}. Therefore this option takes
+no effect (means all ecb-windows have always unfixed sizes) with Emacs
+< 22 if @code{ecb-compile-window-height} is not @code{nil}.
 
 @node Creating a new ECB-layout, , Fixing window sizes, The ECB-layout
 @subsection Interactively creating new layouts
@@ -7104,6 +7106,43 @@ Tag-classes which are completely hidden or excluded by the option
 regardless of the filters of this option!
 @end defopt
 
+@defopt disable-semantic-threshold-alist
+Threshold for disabling semantic-parsing Define a threshold fpr
+buffer-size. Exceeding this threshold disables parsing current buffer
+by semantic.
+
+This functionality is set on a major-mode base, i.e. for every
+major-mode a different setting can be used. The value of this option
+is a list of cons-cells:
+
+@itemize @minus
+@item
+The car is either a major-mode symbol or the special symbol 'default which
+means if no setting for a certain major-mode is defined then the cdr of
+the 'default cons-cell is used.
+@item
+The cdr is an integer which defines the threshold for the buffer-size for
+this major-mode.
+@end itemize
+
+Example:
+
+@example
+  ((default . 1000000)
+    (c-mode . 200000))
+@end example
+
+This example whould not parse c-mode buffers exceeding a buffer-size
+of 200000. And buffers of all other modes would be only parsed if
+smaller than 1000000.
+
+A setting of @code{((c-mode . 200000))} would only restrict c-mode
+buffers to a size of 200000 but would parse all other buffer
+regardless their size.
+@end defopt
+
+
+
 @defopt display-image-icons-for-semantic-tags
 Display nice and pretty icons for semantic-tags in the Methods-buffer.
 This option takes only effect if Emacs can display images and if
@@ -8092,12 +8131,16 @@ function.
 Fix size of the ECB-windows/buffers even after frame-resizing. The fix
 type (valid values are nil, t, width and height) can either be set on
 a layout-basis (means a different value for each layout) or one value
-can be set for all layouts.
+can be set for all layouts. For the latter case there is an additional
+value @code{auto} which choose autom. the senseful fix-type depending
+on the current layout-type: For top-layouts the fix-type @code{height}
+and for all other layout-types the fix-type @code{width}.
 
-For a detailed description of the valid values see description of
+For a detailed description of the valid values see documentation of
 @code{window-size-fixed} which is newly introduced in GNU Emacs 21 and
 is only available there. Therefore this option takes only effect with
-GNU Emacs 21.
+GNU Emacs >= 21. This option has no effect with XEmacs because it does
+not support the feature @code{window-size-fixed}.
 
 Note1: Manually resizing the ECB-windows via @code{enlarge-window},
 @code{shrink-window}, @code{mouse-drag-vertical-line} and
@@ -8105,16 +8148,17 @@ Note1: Manually resizing the ECB-windows via @code{enlarge-window},
 are fixed for frame-resizing!
 
 Note2: The description of @code{window-size-fixed} in the
-Elisp-info-manual is more detailed than the description offered by
+elisp-info-manual is more detailed than the description offered by
 @kbd{C-h v}!
 
-Note3: With current Emacs 21.2.X there seems to be no distinction
-between @code{width}, @code{height} and @code{t}. Therefore this
-option takes no effect (means all ecb-windows have always unfixed
-sizes) if @code{ecb-compile-window-height} is not @code{nil}.
+Note3: With Emacs < 22 there seems to be no distinction between
+'width, 'height and t. Therefore this option takes no effect (means
+all ecb-windows have always unfixed sizes) with Emacs < 22 if
+@code{ecb-compile-window-height} is not nil.
 
 Per default no window-size fixing has been done.
 @end defopt
+
 
 @defopt hide-ecb-windows-after-hook
 Hooks run direct after the ECB windows have been hidden. Hiding was
@@ -12741,7 +12785,7 @@ brave) but you want programming the new layout with Elisp then use the
 macro @code{ecb-layout-define} (the following definition has stripped
 the prefix ``ecb-'' for better indexing this manual):
 
-@defmac layout-define name type &rest create-code
+@defmac layout-define name type doc &rest create-code
 Creates a new ECB-layout with name @var{NAME}. @var{TYPE} is the type
 of the new layout and is literal, i.e. not evaluated. It can be left,
 right, top or left-right. @var{DOC} is the docstring for the new

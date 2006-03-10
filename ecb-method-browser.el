@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.76 2006/01/27 18:21:48 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.77 2006/03/10 15:40:35 berndl Exp $
 
 ;;; Commentary:
 
@@ -60,6 +60,8 @@
 (silentcomp-defvar hs-minor-mode)
 (silentcomp-defvar hs-block-start-regexp)
 (silentcomp-defvar imenu--index-alist)
+
+(silentcomp-defvar semantic-idle-scheduler-mode)
 
 (silentcomp-defun ecb-get-tags-for-non-semantic-files)
 (silentcomp-defun ecb-create-non-semantic-tree)
@@ -171,7 +173,6 @@ tag under point in the edit-window is invisible after
 node immediately visible and destroys the explicitly set expand-level."
   :group 'ecb-methods
   :type 'boolean)
-
 
 (defcustom ecb-auto-update-methods-after-save t
   "*Automatically updating the ECB method buffer after saving a source."
@@ -576,7 +577,7 @@ This option takes only effect if Emacs can display images and if
   "*Define mode-dependent post-processing for the semantic-taglist.
 This is an alist where the car is a major-mode symbol and the cdr is a list of
 function-symbols of functions which should be used for post-processing the
-taglist \(returned by `ecb--semantic-fetch-tags') for a buffer in this
+taglist returned by semantic. for a buffer in this
 major-mode. The first function in the list is called with current semantic
 taglist of current buffer and must return a valid taglist again. All other
 functions are called with the result-taglist of its preceding function and
@@ -1042,6 +1043,54 @@ For the guidelines for such a sorter-function see
                  (const :tag "No special sorting" :value nil)
                  (function :tag "Sort-function" :value identity)))
 
+;; Klaus Berndl <klaus.berndl@sdm.de>: We do ot implement an own mechanism but
+;; we use the semantic-idle-scheduler-* options...
+
+;; (defcustom ecb-disable-semantic-threshold-alist nil
+;;   "*Threshold for disabling semantic-parsing
+;; Define a threshold fpr buffer-size. Exceeding this threshold disables parsing
+;; current buffer by semantic.
+
+;; This functionality is set on a major-mode base, i.e. for every major-mode a
+;; different setting can be used. The value of this option is a list of
+;; cons-cells:
+;; - The car is either a major-mode symbol or the special symbol 'default which
+;;   means if no setting for a certain major-mode is defined then the cdr of
+;;   the 'default cons-cell is used.
+;; - The cdr is an integer which defines the threshold for the buffer-size for
+;;   this major-mode.
+
+;; Example:
+
+;;   \(\(default . 1000000)
+;;     \(c-mode . 200000))
+
+;; This example whould not parse c-mode buffers exceeding a buffer-size of
+;; 200000. And buffers of all other modes would be only parsed if smaller than
+;; 1000000.
+
+;; A setting of \(\(c-mode . 200000)) would only restrict c-mode buffers to a
+;; size of 200000 but would parse all other buffer regardless their size."
+;;   :group 'ecb-methods
+;;   :type '(repeat (cons (symbol :tag "Major-Mode")
+;;                        (integer :tag "Buffer-size"))))
+
+;; (defun ecb-get-max-buffer-size-for-parsing ()
+;;   "Threshold set in `ecb-disable-semantic-threshold-alist' for
+;; current major-mode"
+;;   (let ((mode-threshold (cdr (assoc major-mode ecb-disable-semantic-threshold-alist)))
+;;         (default-threshold (cdr (assoc 'default ecb-disable-semantic-threshold-alist))))
+;;     (or mode-threshold default-threshold)))
+
+;; (defun ecb-prevent-from-parsing-if-exceeding-threshold ()
+;;   "Prevents from parsing current buffer if exceeding the threshold
+;; defined in `ecb-disable-semantic-threshold-alist'."
+;;   (if (and (boundp 'ecb-minor-mode)
+;;            ecb-minor-mode
+;;            (ecb--semantic-active-p))
+;;       (let ((threshold (ecb-get-max-buffer-size-for-parsing)))
+;;         (not (and threshold (> (buffer-size) threshold))))
+;;     t))
 
 (defcustom ecb-methods-buffer-after-create-hook nil
   "*Local hook running after the creation of the methods-buffer.
@@ -2295,8 +2344,8 @@ SOURCE-BUFFER arguments are ignored."
           (save-restriction
             (widen)
             (ecb-rebuild-methods-buffer-with-tagcache
-             (ecb--semantic-fetch-tags t)))
-        (ecb-rebuild-methods-buffer)))
+             (ecb-fetch-semantic-tags)))
+        (ecb-rebuild-methods-buffer-fully)))
     (when (save-excursion
             (set-buffer ecb-methods-buffer-name)
             (tree-buffer-empty-p))
@@ -2502,8 +2551,7 @@ semantic-reparse. This function is added to the hook
   ;; to date at this time!) and then we rebuild the whole tree-buffer with
   ;; this cache-contents. This is for great sources slow. We should implement
   ;; a mechanism where only the UPDATED-TAGS are used and only this ones are
-  ;; updated. But for this we need also a tree-buffer-update which can update
-  ;; single nodes without refreshing the whole tree-buffer like now.
+  ;; updated.
 
   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: here we could check if
   ;; UPDATED-TAGS contains only one tag and if this tag contains no childrens
@@ -2529,8 +2577,8 @@ semantic-reparse. This function is added to the hook
       ;; :-( One possible solution: tempor. ordering the
       ;; semantic-tag-childrens by name and getting the position p of the
       ;; updated tag in that ordered tag-sequence...
-      (ecb-rebuild-methods-buffer-with-tagcache (ecb--semantic-fetch-tags t))
-    (ecb-rebuild-methods-buffer-with-tagcache (ecb--semantic-fetch-tags t))))
+      (ecb-rebuild-methods-buffer-with-tagcache (ecb-fetch-semantic-tags))
+    (ecb-rebuild-methods-buffer-with-tagcache (ecb-fetch-semantic-tags))))
 
 
 (defun ecb-semantic-active-for-file (filename)
@@ -2555,7 +2603,42 @@ current-buffer is saved."
              (equal (current-buffer)
                     (window-buffer ecb-last-edit-window-with-point)))
     (ecb-select-source-file ecb-path-selected-source)
-    (ecb-rebuild-methods-buffer)))
+    (if (ecb--semantic-active-p)
+        (ecb-update-methods-buffer--internal
+         nil nil
+         (<= (buffer-size)
+             ;; we must check both idle-vars (semantic 2.0 and 1.4.X)
+             ;; to avoid compiler complainings we use this ugly code
+             ;; We throw away this when cedet 1.0 is released (and also
+             ;; available as XEmacs package??)
+             (or (and (boundp 'semantic-idle-scheduler-max-buffer-size)
+                      (symbol-value 'semantic-idle-scheduler-max-buffer-size))
+                 (and (boundp 'semantic-auto-parse-max-buffer-size)
+                      (symbol-value 'semantic-auto-parse-max-buffer-size))
+                 0)))
+      (ecb-rebuild-methods-buffer-for-non-semantic))))
+
+(defun ecb-fetch-semantic-tags (&optional full)
+  "Get a taglist for current buffer.
+If optional arg FULL is not nil or if the `semantic-idle-scheduler-mode' is
+not enabled for current buffer then use `ecb--semantic-fetch-tags' otherwise
+use `ecb--semantic-fetch-available-tags'. The latter always returns just the
+currently available tags in the semantic-cache \(reparsing is done completely
+by the idle-scheduler of semantic if necessary). The former one triggers
+immediate parsing if necessary!"
+  (if (or full
+          ;; Klaus Berndl <klaus.berndl@sdm.de>: We do not force a full parse
+          ;; when the semantic-idle-scheduler-mode is off because then a user
+          ;; declines knowingly Emacs-driven parsing of code when he/she
+          ;; switches off the idle-mode of semantic (at least IMO). But this
+          ;; has also the consequence that the methods-buffer is only filed on
+          ;; demand via C-c . r! Therefore the next two lines are commented
+          ;; out.
+;;           (not (boundp 'semantic-idle-scheduler-mode))
+;;           (not (semantic-idle-scheduler-mode))
+          )
+      (ecb--semantic-fetch-tags t)
+    (ecb--semantic-fetch-available-tags)))
 
 
 (defvar ecb-method-buffer-needs-rebuild t
@@ -2565,7 +2648,8 @@ current-buffer is saved."
 
 
 (defun ecb-update-methods-buffer--internal (&optional scroll-to-top
-                                                      rebuild-non-semantic)
+                                                      rebuild-non-semantic
+                                                      full-semantic)
   "Updates the methods buffer with the current buffer. The only thing what
 must be done is to start the toplevel parsing of semantic, because the rest is
 done by `ecb-rebuild-methods-buffer-with-tagcache' because this function is in
@@ -2577,12 +2661,16 @@ If second optional argument REBUILD-NON-SEMANTIC is not nil then non-semantic
 sources are forced to be rescanned and reparsed by
 `ecb-rebuild-methods-buffer-with-tagcache'. The function
 `ecb-rebuild-methods-buffer-for-non-semantic' is the only one settings this
-argument to not nil!"
+argument to not nil!
+
+If third optional arg FULL-SEMANTIC is not nil then for semantic-sources an
+immediate parse-run is triggered - not an idle one! Has no effect for
+non-semantic-sources."
   (when (and (equal (selected-frame) ecb-frame)
              (get-buffer-window ecb-methods-buffer-name))
     ;; Set here `ecb-method-buffer-needs-rebuild' to t so we can see below if
     ;; `ecb-rebuild-methods-buffer-with-tagcache' was called auto. after
-    ;; `ecb--semantic-fetch-tags'.
+    ;; `ecb-fetch-semantic-tags'.
     (setq ecb-method-buffer-needs-rebuild t)
 
     (let ((current-tagcache (and (ecb--semantic-active-p)
@@ -2591,16 +2679,16 @@ argument to not nil!"
                                    (save-excursion
                                      (save-restriction
                                        (widen)
-                                       (ecb--semantic-fetch-tags t))))))
-      ;; If the `ecb--semantic-fetch-tags' has done no reparsing but only
-      ;; used it´s still valid `semantic-toplevel-bovine-cache' then neither
-      ;; the hooks of `semantic-after-toplevel-cache-change-hook' nor the
-      ;; hooks in `semantic-after-partial-cache-change-hook' are evaluated and
-      ;; therefore `ecb-rebuild-methods-buffer-with-tagcache' was not
-      ;; called. Therefore we call it here manually.
-      ;; `ecb-rebuild-methods-buffer-with-tagcache' is the only function
-      ;; which sets `ecb-method-buffer-needs-rebuild' to nil to signalize that
-      ;; a "manually" rebuild of the method buffer is not necessary.
+                                       (ecb-fetch-semantic-tags full-semantic))))))
+      ;; If the `ecb-fetch-semantic-tags' has done no reparsing but
+      ;; only used it´s still valid cache then neither the hooks of
+      ;; `semantic-after-toplevel-cache-change-hook' nor the hooks in
+      ;; `semantic-after-partial-cache-change-hook' are evaluated and
+      ;; therefore `ecb-rebuild-methods-buffer-with-tagcache' was not called.
+      ;; Therefore we call it here manually.
+      ;; `ecb-rebuild-methods-buffer-with-tagcache' is the only function which
+      ;; sets `ecb-method-buffer-needs-rebuild' to nil to signalize that a
+      ;; "manually" rebuild of the method buffer is not necessary.
       ;;
       ;; `ecb-update-methods-buffer--internal' is called by
       ;; `ecb-current-buffer-sync' and `ecb-set-selected-source' (depending on
@@ -2616,7 +2704,19 @@ argument to not nil!"
           (ecb-rebuild-methods-buffer-with-tagcache
            current-tagcache
            (ecb--semantic-active-p)
-           nil rebuild-non-semantic)))
+           ;; we force a rebuild also for an empty cache because an empty
+           ;; cache is returned by `ecb-fetch-semantic-tags' when a file
+           ;; exceeds the limit set in the option
+           ;; `semantic-idle-scheduler-max-buffer-size'. If we would not force
+           ;; a nil-cache rebuild the method-buffer would not be cleared out
+           ;; for such files. But for non-semantic-buffers we have to pass nil
+           ;; for this argument because otherwise the methods-buffer-contents
+           ;; would not be cached - see usage of arg force-nil-cache in
+           ;; `ecb-rebuild-methods-buffer-with-tagcache'. This is maybe a
+           ;; somehow clumsy and ugly dependence...but it works...maybe we
+           ;; should try in future to redesign this....
+           (ecb--semantic-active-p)
+           rebuild-non-semantic)))
     (when scroll-to-top
       (ecb-exec-in-window ecb-methods-buffer-name
         (ecb-scroll-window (point-min) (point-min))))))
@@ -2782,7 +2882,7 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
       ;; if either non-semantic-rebuild is true or no cache exists.
       ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Here we could evaluate an
       ;; option which would define which modes should be parsed by which
-      ;; parser (so a user could also parse semantic-anabled-files with
+      ;; parser (so a user could also parse semantic-enabled-files with
       ;; etags/imenu)
       (when (and ecb-process-non-semantic-files
                  (null updated-cache)                 
@@ -2910,29 +3010,41 @@ This function is called by the command `ecb-rebuild-methods-buffer'."
       (ecb-update-methods-buffer--internal nil t))))
 
 
-(defun ecb-rebuild-methods-buffer-for-semantic ()
+(defun ecb-rebuild-methods-buffer-for-semantic (&optional clear-cache)
   "Rebuild the ECB-method-buffer for current source-file of the edit-window.
 This function does nothing if point stays not in an edit-window of the
-ECB-frame or if current source-file is not supported by semantic!"
+ECB-frame or if current source-file is not supported by semantic!
+
+If optional arg CLEAR-CACHE is not nil the semantic-cache is cleared before
+reparsing."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame)
              (ecb--semantic-active-p)
              (ecb-point-in-edit-window))
-    ;; to force a really complete rebuild we must completely clear the
-    ;; semantic cache for semantic-files.
-    (ecb--semantic-clear-toplevel-cache)
-    (ecb-update-methods-buffer--internal)))
+    (and clear-cache (ecb--semantic-clear-toplevel-cache))
+    (ecb-update-methods-buffer--internal nil nil t)))
 
 
-(defun ecb-rebuild-methods-buffer ()
+(defun ecb-rebuild-methods-buffer (&optional clear-cache)
   "Updates the methods buffer with the current source-buffer.
-The complete previous parser-information is deleted before, means no
-semantic-cache is used! Point must stay in an edit-window otherwise nothing is
-done. This method is merely needed for semantic parsed buffers if semantic
-parses not the whole buffer because it reaches a not parse-able code or for
-buffers not supported by semantic but by imenu or etags.
+This means ECB asks the parsing-engine for tags for the current source-buffer
+and rebuilds its methods-buffer with the tag-set returned by the
+parsing-engine \(semantic for semantic-sources and imenu rsp. etags for
+non-semantic-sources). For semantic-sources this command ignores the
+`semantic-idle-scheduler-mode' and therefore also all settings in
+`semantic-idle-scheduler-max-buffer-size' \(rsp.
+`semantic-auto-parse-max-buffer-size' for semantic 1.4.X) so be aware that
+this command will also parse huge files!
 
-Examples when a call to this function can be necessary:
+If called with a prefix-arg \(ie. if optional arg CLEAR-CACHE is not nil) the
+complete previous parser-information is deleted before, means no
+semantic-cache is used! This argument takes only effect for semantic-sources.
+
+Point must stay in an edit-window otherwise nothing is done. This method is
+merely needed in the following situations:
+
++ To force parsing huge files with slow parsers when such files are excluded
+  from parsing via `semantic-idle-scheduler-max-buffer-size' - see above.
 
 + If an elisp-file is parsed which contains in the middle a defun X where the
   closing ) is missing then semantic parses only until this defun X is reached
@@ -2957,10 +3069,24 @@ last selected edit-window."
     (when (not (ecb-point-in-edit-window))
       (let ((ecb-mouse-click-destination 'last-point))
         (ecb-select-edit-window)))
-    (if (ecb--semantic-active-p)
-        (ecb-rebuild-methods-buffer-for-semantic)
-      (ecb-rebuild-methods-buffer-for-non-semantic))))
+    (ecb-rebuild-methods-buffer-fully clear-cache)))
 
+(defun ecb-rebuild-methods-buffer-fully (&optional clear-cache)
+  "Rebuilds the methods buffer with current content of the source-buffer.
+This can cause a full reparse! No idle-parsing but immediate parsing because
+the tags are fetched by `ecb--semantic-fetch-tags' for semantic-sources!
+
+If called with a prefix-arg \(ie. if optional arg CLEAR-CACHE is not nil) the
+complete previous parser-information is deleted before parsing, means no
+semantic-cache is used! This argument takes only effect for semantic-sources.
+
+Point must stay in an edit-window otherwise nothing is done."
+  (when (ecb-point-in-edit-window)
+    (if (ecb--semantic-active-p)
+        (let ((semantic-idle-scheduler-max-buffer-size 0)
+              (semantic-auto-parse-max-buffer-size 0))
+          (ecb-rebuild-methods-buffer-for-semantic clear-cache))
+      (ecb-rebuild-methods-buffer-for-non-semantic))))
 
 (defvar ecb-auto-expand-tag-tree-old 'expand-spec)
 
@@ -4253,7 +4379,7 @@ moved over it."
 (defun ecb-dump-semantic-toplevel ()
   "Dump the current semantic-tags in special buffer and display them."
   (interactive)
-  (let ((tags (ecb--semantic-fetch-tags))
+  (let ((tags (ecb-fetch-semantic-tags t))
         (source-buf (current-buffer)))
     (save-selected-window
       (set-buffer (get-buffer-create "*ecb-tag-dump*"))

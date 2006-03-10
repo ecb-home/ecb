@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.253 2005/06/20 14:34:20 berndl Exp $
+;; $Id: ecb-layout.el,v 1.254 2006/03/10 15:40:35 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -355,7 +355,9 @@ layout with `ecb-redraw-layout'"
   ;; parameter which decides if ecb-window-hidden should be used for
   ;; NO-ECB-WINDOWS or not.
   :set (function (lambda (symbol value)
-                   (ecb-set-window-size-fixed nil)
+                   ;; Emacs < 22 has some bugs concerning `windows-size-fixed'
+                   ;; so we must disable window-fixing.
+                   (and (not ecb-running-version-22) (ecb-set-window-size-fixed nil))
                    (set symbol value)
                    ;; we must check this because otherwise the layout would be
                    ;; drawn if we have changed the initial value regardless if
@@ -418,7 +420,9 @@ This option takes only effect if `ecb-compile-window-height' is not nil!"
   :group 'ecb-most-important
   :initialize 'custom-initialize-default
   :set (function (lambda (symbol value)
-                   (ecb-set-window-size-fixed nil)
+                   ;; Emacs < 22 has some bugs concerning `windows-size-fixed'
+                   ;; so we must disable window-fixing.
+                   (and (not ecb-running-version-22) (ecb-set-window-size-fixed nil))
                    (set symbol value)
                    ;; we must check this because otherwise the layout would be
                    ;; drawn if we have changed the initial value regardless if
@@ -701,14 +705,16 @@ If the number is less than 1.0 the width is a fraction of the frame height."
   "*Fix size of the ECB-windows/buffers even after frame-resizing.
 The fix type \(valid values are nil, t, width and height) can either be set on
 a layout-basis \(means a different value for each layout) or one value can be
-set for all layouts. In the latter case there is an additional value 'auto
+set for all layouts. For the latter case there is an additional value 'auto
 which choose autom. the senseful fix-type depending on the current
 layout-type: For top-layouts the fix-type 'height and for all other
 layout-types the fix-type 'width.
 
 For a detailed description of the valid values see documentation of
 `window-size-fixed' which is newly introduced in GNU Emacs 21 and is only
-available there. Therefore this option takes only effect with GNU Emacs 21.
+available there. Therefore this option takes only effect with GNU Emacs >= 21.
+This option has no effect with XEmacs because it does not support the feature
+`window-size-fixed'.
 
 Note1: Manually resizing the ECB-windows via `enlarge-window',
 `shrink-window', `mouse-drag-vertical-line' and `mouse-drag-mode-line' is
@@ -717,10 +723,10 @@ still possible even if the window-sizes are fixed for frame-resizing!
 Note2: The description of `window-size-fixed' in the elisp-info-manual is more
 detailed than the description offered by \[C-h v]!
 
-Note3: With current Emacs 21.2.X there seems to be no distinction between
-'width, 'height and t. Therefore this option takes no effect \(means all
-ecb-windows have always unfixed sizes) if `ecb-compile-window-height' is not
-nil.
+Note3: With Emacs < 22 there seems to be no distinction between 'width,
+'height and t. Therefore this option takes no effect \(means all ecb-windows
+have always unfixed sizes) with Emacs < 22 if `ecb-compile-window-height' is
+not nil.
 
 Per default no window-size fixing has been done."
   :group 'ecb-directories
@@ -758,16 +764,18 @@ of layout LAYOUT-NAME."
 
 (defun ecb-set-window-size-fixed (fix)
   "Set the buffer-local value of `window-size-fixed' in each visible
-ecb-window to FIX. If `ecb-compile-window-height' is not nil then set always
-nil!"
+ecb-window to FIX. For Emacs < 22: If `ecb-compile-window-height' is not nil
+then set always nil!"
   (unless ecb-running-xemacs
     (let ((l (ecb-canonical-ecb-windows-list)))
       (dolist (w l)
         (save-excursion
           (set-buffer (window-buffer w))
-          (setq window-size-fixed (if ecb-compile-window-height
+          (setq window-size-fixed (if (and (not ecb-running-version-22)
+                                           ecb-compile-window-height)
                                       nil
                                     fix)))))))
+
 
 (defmacro ecb-do-with-unfixed-ecb-buffers (&rest body)
   "Evaluate BODY with unfixed size of all current-visible ecb-buffers and
@@ -3678,6 +3686,13 @@ Otherwise it depends completely on the setting in `ecb-other-window-behavior'."
                                          o-w-s-b)))
       ad-do-it)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We need a new solution which
+;; temporally sets `window-size-fixed' to t for all current visible
+;; ecb-buffers and then calls ad-do-it - this is necessary because latest
+;; cvs-Emacs has reimplemented balance-windows so it is not longer based on
+;; walk-windows but uses a completely new mechanism based on a
+;; c-level-function `window-tree'! Probably the window-size-fixed version will
+;; also work with Emacs 21.3 and XEmacs - we will check this...
 (defadvice balance-windows (around ecb)
   "When called in the `ecb-frame' then only the edit-windows are balanced."
   (ecb-with-ecb-advice 'walk-windows 'around
@@ -4855,6 +4870,7 @@ emergency-redraw."
                                                (nth 2 compile-window-config)))
                  )
                (setq ecb-edit-window (selected-window)))
+
            ;; we have to redraw with ecb-windows
            ;; 1. Drawing the compile-window when it has frame-width
            (when (and ecb-compile-window-height
@@ -4863,9 +4879,11 @@ emergency-redraw."
              (ecb-draw-compile-window (and window-configuration-data
                                            compile-window-config
                                            (nth 2 compile-window-config))))
+
            ;; 2. Drawing the ecb-windows with the layout-function
            (funcall (intern (format "ecb-layout-function-%s" ecb-layout-name))
                     ecb-windows-creator)
+
            ;; 3. Drawing the compile-window when it has edit-area-width
            (when (and ecb-compile-window-height
                       (equal ecb-compile-window-width 'edit-window)
@@ -4873,7 +4891,6 @@ emergency-redraw."
              (ecb-draw-compile-window (and window-configuration-data
                                            compile-window-config
                                            (nth 2 compile-window-config)))))
-
          ;; Now we store the window-sizes of the ecb-windows but only if we
          ;; have drawn them either without a compile-window or with a
          ;; compile-window with height as specified in
@@ -4940,7 +4957,7 @@ emergency-redraw."
         (select-window ecb-edit-window))) ;; end of ecb-with-original-functions,
                                           ;; ecb-with-original-permanent-functions
 
-       ;; now we restore the edit-windows as before the redraw
+      ;; now we restore the edit-windows as before the redraw
       (if (and (not emergency)
                (= (length edit-win-data-before-redraw)
                   (ecb-edit-area-creators-number-of-edit-windows)))

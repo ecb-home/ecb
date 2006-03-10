@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-semantic-wrapper.el,v 1.25 2006/01/27 18:21:48 berndl Exp $
+;; $Id: ecb-semantic-wrapper.el,v 1.26 2006/03/10 15:40:35 berndl Exp $
 
 ;;; Commentary:
 
@@ -61,6 +61,8 @@
 (silentcomp-defvar semanticdb-search-system-databases)
 (silentcomp-defvar semantic-format-use-images-flag)
 (silentcomp-defvar ezimage-use-images)
+;; semantic 2.0 does not have this
+(silentcomp-defvar semantic-toplevel-bovine-cache)
 
 ;; -- getter functions for all variables of semantic currently used by ECB ---
 
@@ -101,6 +103,11 @@
 (defsubst ecb--semantic-after-partial-cache-change-hook ()
   "Return the hook-symbol `semantic-after-partial-cache-change-hook'."
   'semantic-after-partial-cache-change-hook)
+
+(defsubst ecb--semantic--before-fetch-tags-hook ()
+  (if (boundp 'semantic--before-fetch-tags-hook)
+      'semantic--before-fetch-tags-hook
+    'semantic-before-toplevel-bovination-hook))
 
 (defsubst ecb--ezimage-use-images ()
   (if (boundp 'ezimage-use-images)
@@ -266,6 +273,10 @@ unloaded buffer representation."
       (apply 'semantic-fetch-tags nil)
     (apply 'semantic-bovinate-toplevel (list check-cache))))
 
+(if (fboundp 'semantic-fetch-available-tags)
+    (defalias 'ecb--semantic-fetch-available-tags 'semantic-fetch-available-tags)
+  (defsubst ecb--semantic-fetch-available-tags ()
+    semantic-toplevel-bovine-cache))
 
 (if (fboundp 'semantic-tag-components)
     (defalias 'ecb--semantic-tag-components

@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.22 2006/01/27 18:21:48 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.23 2006/03/10 15:40:36 berndl Exp $
 
 
 ;;; History
@@ -1243,17 +1243,19 @@ variable `state' will be bound and initialized with the stealthy state. BODY
 can use and modify `state'. After evaluating BODY `state' will be
 automatically saved so its available at the runtime of this stealthy function.
 BODY will only be evaluated if `state' is not 'done. BODY should be designed
-to be interruptable by the user \(e.g. with `input-pending-p'). If BODY
-completes then BODY has to set `state' to the special value 'done! If BODY has
-been interrupted then `state' can have an arbitrary value which will be autom.
-stored and at next runtime of the stealthy function NAME `state' will be
-initialized with this stored value. If `state' is initialized with the special
-value 'restart then this means the stealthy function should start from scratch
-because an eventually stored state is not longer valid. If the stealthy
-function sets `state' to 'done then this function will first being called
-after the state for this function has been reset to something else than 'done
-\(mostly to 'restart)\; such a reset of the state for a stealthy function can
-be done by any code and must be done via `ecb-stealthy-function-state-init'!"
+to be interruptable by the user, so its recommended to use for this
+`ecb-exit-on-input' ans `ecb-throw-on-input' \(see example in
+`ecb-test-throw-on-input'). If BODY completes then BODY has to set `state' to
+the special value 'done! If BODY has been interrupted then `state' can have an
+arbitrary value which will be autom. stored and at next runtime of the
+stealthy function NAME `state' will be initialized with this stored value. If
+`state' is initialized with the special value 'restart then this means the
+stealthy function should start from scratch because an eventually stored state
+is not longer valid. If the stealthy function sets `state' to 'done then this
+function will first being called after the state for this function has been
+reset to something else than 'done \(mostly to 'restart)\; such a reset of the
+state for a stealthy function can be done by any code and must be done via
+`ecb-stealthy-function-state-init'!"
   `(progn
      (unless (fboundp (quote ,name))
        (ecb-stealthy-function-list-add (quote ,name))

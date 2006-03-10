@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.135 2005/06/20 14:34:22 berndl Exp $
+;; $Id: ecb-util.el,v 1.136 2006/03/10 15:40:35 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -94,13 +94,17 @@
 ;;; ----- Some constants -----------------------------------
 
 ;;;###autoload
-(defconst ecb-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
+;;(defconst ecb-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
 (defconst ecb-running-xemacs (featurep 'xemacs))
 
 (defconst ecb-running-unsupported-emacs (condition-case nil
                                             (<= emacs-major-version 20)
                                           (error t))
   "True if running XEmacs or Emacs < 21.")
+
+(defconst ecb-running-version-22 (and (not ecb-running-unsupported-emacs)
+                                      (>= emacs-major-version 22))
+  "True if running \(X)Emacs >= version 22")
 
 (defconst ecb-temp-dir
   (file-name-as-directory
@@ -1960,7 +1964,7 @@ defcustom-clause and has to be <= MAX-LEVEL."
                                     (ecb-create-menu-user-ext-type (1+ curr-level)
                                                                    max-level)))))))
 
-;;; byte-compiling stuff
+;;; ----- byte-compiling stuff ----------------------------
 
 (defun ecb-is-byte-compiling ()
   "Return non-nil if eval'ed during compilation.  Don't use outside
@@ -1971,7 +1975,51 @@ defcustom-clause and has to be <= MAX-LEVEL."
 (defun ecb-load-in-progress-p ()
   load-in-progress)
 
+;;; ----- User Interrupt handling -------------------------
 
+;; KB: stolen from semantic.....
+
+(defvar ecb-current-input-throw-symbol nil
+  "The current throw symbol for `ecb-exit-on-input'.")
+
+(defmacro ecb-exit-on-input (symbol &rest forms)
+  "Using SYMBOL as an argument to `throw', execute FORMS.
+If FORMS includes a call to `ecb-thow-on-input', then if a user presses any
+key during execution, this form macro will exit with the value passed to
+`ecb-throw-on-input'. If FORMS completes, then the return value is the same as
+`progn'."
+  `(let ((ecb-current-input-throw-symbol ,symbol))
+     (catch ,symbol
+       ,@forms)))
+(put 'ecb-exit-on-input 'lisp-indent-function 1)
+
+(defmacro ecb-throw-on-input (from &optional value)
+  "Exit with `throw' when in `ecb-exit-on-input' on user input.
+FROM is an indication of where this function is called. Optional arg VALUE is
+what should be thrown out and both are are combined in a cons-cell and passed
+to `throw'. It is recommended to add as FROM the name of the function calling
+this one or a descriptive symbol which indicates part of a code has been
+interrupted..
+
+Example: \(ecb-throw-on-input 'test-inner-loop \"test\") would throw a
+cons-cell \('test-inner-loop . \"test\")"
+  `(when (and ecb-current-input-throw-symbol (input-pending-p))
+     (throw ecb-current-input-throw-symbol (cons ,from ,value))))
+
+
+(defun ecb-test-throw-on-input ()
+  "Test that throw on input will work."
+  (interactive)
+  (ecb-throw-on-input 'done-die)
+  (message "Exit Code: %s"
+	   (ecb-exit-on-input 'testing
+	     (let ((inhibit-quit nil)
+		   (message-log-max nil))
+	       (while t
+		 (message "Looping ...")
+		 (ecb-throw-on-input 'test-inner-loop "test")
+                 )
+	       'exit))))
 
 
 ;;; ----- Provide ------------------------------------------

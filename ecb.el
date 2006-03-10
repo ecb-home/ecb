@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.430 2006/01/27 18:21:47 berndl Exp $
+;; $Id: ecb.el,v 1.431 2006/03/10 15:40:35 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -609,6 +609,10 @@ examples how to use this macro!"
 ;; post-command, like ecb-window-sync!) and a sync-function! Update the
 ;; docstring (and also texi) of this command! remove the internal-hook, i
 ;; think we do not need it anymore!
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We should design this function so
+;; it runs all the sync-funtions/hooks in an explicit loop (not with
+;; run-hooks) which is encapsulated in a call to `ecb-exit-on-input' ....
 (defun ecb-current-buffer-sync (&optional force)
   "Synchronizes all special ECB-buffers with current buffer.
 
@@ -1627,6 +1631,8 @@ If ECB detects a problem it is reported and then an error is thrown."
                         'ecb-update-after-partial-reparse t)
               (add-hook (ecb--semantic-after-toplevel-cache-change-hook)
                         'ecb-rebuild-methods-buffer-with-tagcache t)
+;;               (add-hook (ecb--semantic--before-fetch-tags-hook)
+;;                         'ecb-prevent-from-parsing-if-exceeding-threshold)              
               (ecb-activate-ecb-autocontrol-functions ecb-highlight-tag-with-point-delay
                                                       'ecb-tag-sync)
               (ecb-activate-ecb-autocontrol-functions ecb-window-sync-delay
@@ -1910,6 +1916,8 @@ does all necessary after finishing ediff."
                    'ecb-update-after-partial-reparse)
       (remove-hook (ecb--semantic-after-toplevel-cache-change-hook)
                    'ecb-rebuild-methods-buffer-with-tagcache)
+;;       (remove-hook (ecb--semantic--before-fetch-tags-hook)
+;;                 'ecb-prevent-from-parsing-if-exceeding-threshold)      
       (dolist (timer-elem ecb-idle-timer-alist)
         (ecb-cancel-timer (cdr timer-elem)))
       (setq ecb-idle-timer-alist nil)
@@ -2271,6 +2279,7 @@ performance-problem!"
                                    "ecb-layout-define"
                                    "when-ecb-running-xemacs"
                                    "when-ecb-running-emacs"
+                                   "ecb-exit-on-input"
                                    ))
                  (v-regexp (regexp-opt variable-defs t))
                  (f-regexp (regexp-opt function-defs t))
