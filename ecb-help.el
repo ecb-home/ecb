@@ -317,7 +317,7 @@ a backtrace-buffer and inserts the contents of that."
       (if tag-dump-buffer
           (progn
             (insert "The contents of the *ecb-tag-dump* buffer were\n\n")
-	    (insert-buffer tag-dump-buffer)
+	    (insert-buffer-substring tag-dump-buffer)
             ;; we must force the mark
 	    (goto-char (mark t))
             (insert "\nEnd Insert *ecb-tag-dump* buffer" ))
@@ -329,7 +329,7 @@ a backtrace-buffer and inserts the contents of that."
 ;;       (if tag-dump-buffer
 ;;           (progn
 ;;             (insert "The contents of the *ecb-tag-dump* buffer were\n\n")
-;; 	    (insert-buffer tag-dump-buffer)
+;; 	    (insert-buffer-substring tag-dump-buffer)
 ;;             ;; we must force the mark
 ;; 	    (goto-char (mark t))
 ;;             (insert "\nEnd Insert *ecb-tag-dump* buffer" ))
@@ -341,7 +341,7 @@ a backtrace-buffer and inserts the contents of that."
       (if backtrace-buffer
           (progn
             (insert "The contents of the *Backtrace* buffer were\n\n")
-	    (insert-buffer backtrace-buffer)
+	    (insert-buffer-substring backtrace-buffer)
             ;; we must force the mark
 	    (goto-char (mark t))
             (insert "\nEnd Insert *Backtrace* buffer" ))
@@ -353,7 +353,7 @@ a backtrace-buffer and inserts the contents of that."
       (if messages-buffer
           (progn
             (insert "The contents of the *Messages* buffer were\n\n")
-	    (insert-buffer messages-buffer)
+	    (insert-buffer-substring messages-buffer)
 	    (goto-char (mark t))
             (insert "\nEnd Insert *Messages* buffer" ))
         (insert "There was no *Messages* buffer" ))
