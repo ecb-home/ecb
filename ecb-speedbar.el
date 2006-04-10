@@ -193,8 +193,10 @@ the point was not set by `mouse-set-point'."
              (window-live-p ecb-last-edit-window-with-point)
              (equal (window-buffer ecb-last-edit-window-with-point)
                     ecb-last-source-buffer))
-    (select-window ecb-last-edit-window-with-point)
-    (set-buffer ecb-last-source-buffer)))
+;;     (select-window ecb-last-edit-window-with-point)
+;;     (set-buffer ecb-last-source-buffer)
+    nil
+    ))
 
 (defun ecb-speedbar-select-speedbar-window ()
   (ignore-errors
@@ -212,6 +214,7 @@ the point was not set by `mouse-set-point'."
 
 (defvar ecb-speedbar-verbosity-level-old nil)
 (defvar ecb-speedbar-select-frame-method-old nil)
+(defvar ecb-speedbar-update-flag-old -1)
 
 (defun ecb-speedbar-activate()
   "Make sure the speedbar is running. WARNING: This could be dependent on the
@@ -284,6 +287,11 @@ future this could break."
       (setq ecb-speedbar-verbosity-level-old speedbar-verbosity-level))
   (setq speedbar-verbosity-level 0)
 
+  ;; save old update-flag but only the first time
+  (if (equal ecb-speedbar-update-flag-old -1)
+      (setq ecb-speedbar-update-flag-old speedbar-update-flag))
+  (setq speedbar-update-flag nil)
+
   (add-hook 'ecb-current-buffer-sync-hook-internal
             'ecb-speedbar-current-buffer-sync)
 
@@ -310,6 +318,9 @@ future this could break."
   (if ecb-speedbar-verbosity-level-old
       (setq speedbar-verbosity-level ecb-speedbar-verbosity-level-old))
   (setq ecb-speedbar-verbosity-level-old nil)
+
+  (if (not (equal ecb-speedbar-update-flag-old -1))
+      (setq speedbar-update-flag ecb-speedbar-update-flag-old))
   
   (remove-hook 'ecb-current-buffer-sync-hook-internal
                'ecb-speedbar-current-buffer-sync)

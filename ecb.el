@@ -1560,7 +1560,7 @@ If ECB detects a problem it is reported and then an error is thrown."
         ;; checking the requirements
         (ecb-check-requirements)
 
-        (condition-case err-obj
+        ;;(condition-case err-obj
             (progn
 
               ;; initialize the navigate-library
@@ -1697,10 +1697,10 @@ If ECB detects a problem it is reported and then an error is thrown."
                           'menu-bar-update-hook)
                         'ecb-compilation-update-menu)
               )
-          (error
-           ;;          (backtrace)
-           (ecb-clean-up-after-activation-failure
-            "Errors during the basic setup of ECB." err-obj)))
+;;           (error
+;;            ;;          (backtrace)
+;;            (ecb-clean-up-after-activation-failure
+;;             "Errors during the basic setup of ECB." err-obj)))
 
         (condition-case err-obj
             ;; run personal hooks before drawing the layout

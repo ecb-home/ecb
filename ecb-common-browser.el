@@ -364,6 +364,8 @@ ECB again to take effect."
   :group 'ecb-most-important
   :type 'boolean)
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we should change this to a
+;; type analogous to ecb-tree-truncate-lines
 (defcustom ecb-tree-incremental-search 'prefix
   "*Enable incremental search in the ECB-tree-buffers.
 For a detailed explanation see the online help section \"Working with the
