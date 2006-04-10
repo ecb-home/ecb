@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.77 2006/03/10 15:40:35 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.78 2006/04/10 07:53:34 berndl Exp $
 
 ;;; Commentary:
 
@@ -2297,7 +2297,8 @@ is not nil then this filter will be applied inverse. FILTER-TYPE-DISPLAY and
 FILTER-DISPLAY are strings and specify how the FILTER of type FILTERTYPE
 should be displayed in the modeline of the methods-buffer. If REMOVE-LAST is
 not nil then the topmost filter will be removed and all other arguments unless
-SOURCE-BUFFER arguments are ignored."
+SOURCE-BUFFER arguments are ignored. Returns t if the filter has been applied
+otherwise nil."
   (save-excursion
     (set-buffer source-buffer)
     (if (and (not remove-last)
@@ -2346,11 +2347,14 @@ SOURCE-BUFFER arguments are ignored."
             (ecb-rebuild-methods-buffer-with-tagcache
              (ecb-fetch-semantic-tags)))
         (ecb-rebuild-methods-buffer-fully)))
-    (when (save-excursion
-            (set-buffer ecb-methods-buffer-name)
-            (tree-buffer-empty-p))
-      (ecb-methods-filter-apply nil nil nil "" "" source-buffer t)
-      (message "ECB has not applied this filter because it would filter out all nodes!"))))
+    (if (save-excursion
+          (set-buffer ecb-methods-buffer-name)
+          (tree-buffer-empty-p))
+        (progn
+          (ecb-methods-filter-apply nil nil nil "" "" source-buffer t)
+          (message "ECB has not applied this filter because it would filter out all nodes!")
+          nil)
+      t)))
         
   
 (defun ecb-methods-filter-modeline-prefix (buffer-name sel-dir sel-source)
@@ -4354,6 +4358,20 @@ moved over it."
    :tree-indent ecb-tree-indent
    :incr-search-p ecb-tree-incremental-search
    :incr-search-additional-pattern ecb-methods-incr-searchpattern-node-prefix
+   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add an option to make this customizable!
+   :reduce-tree-for-incr-search-fn
+   (lambda (search full-search-regexp)
+     (ecb-methods-filter-apply nil nil nil "" ""
+                               (ecb-methods-get-data-store 'source-buffer))
+     (if (and search full-search-regexp (> (length search) 0)
+              (ecb-methods-filter-apply 'regexp
+                                        (cons full-search-regexp nil)
+                                        nil
+                                        "Search"
+                                        search
+                                        (ecb-methods-get-data-store 'source-buffer)))
+         search
+       ""))
    :arrow-navigation ecb-tree-navigation-by-arrow
    :hor-scroll-step ecb-tree-easy-hor-scroll
    :default-images-dir (car ecb-tree-image-icons-directories)

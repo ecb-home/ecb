@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.61 2006/03/10 15:40:36 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.62 2006/04/10 07:53:34 berndl Exp $
 
 ;;; Commentary:
 
@@ -1894,11 +1894,14 @@ selected before this update."
                 (and node
                      (ecb-file-name-extension (tree-node->data node))))))
 
-(defun ecb-sources-filter-by-regexp ()
-  "Filter the sources by a regexp. Ask for the regexp."
-  (let ((regexp-str (read-string "Insert the filter-regexp: ")))
+(defun ecb-sources-filter-by-regexp (&optional regexp filter-display)
+  "Filter history entries by REGEXP. If the first optional argument REGEXP is
+nil then it asks for a regexp. If second argument FILTER-DISPLAY is not nil
+then it is displayed in the modeline of the history-buffer for current
+regexp-filter. Otherwise the regexp itself."
+(let ((regexp-str (or regexp (read-string "Insert the filter-regexp: "))))
     (if (> (length regexp-str) 0)
-        (ecb-apply-filter-to-sources-buffer regexp-str))))
+        (ecb-apply-filter-to-sources-buffer regexp-str filter-display))))
   
 (tree-buffer-defpopup-command ecb-popup-sources-filter-by-regexp
   "Filter the sources by regexp by popup."
@@ -1943,55 +1946,61 @@ the option `ecb-mode-line-prefixes'."
   "Apply the regular expression FILTER-REGEXP to the files of
 `ecb-path-selected-directory' and display only the filtered files in the
 Sources-buffer. If FILTER-REGEXP is nil then any applied filter is removed and
-all files are displayed."
-  (ecb-exec-in-window ecb-sources-buffer-name
-    (if (null filter-regexp)
-        ;; no filtering
-        (progn
-          ;; remove the filtered cache by setting it to nil
-          (ecb-sources-cache-add-filtered ecb-path-selected-directory nil)
-          ;; update the sources buffer - because the filtered cache is nil
-          ;; the full sources are displayed.
-          (ecb-update-sources-buffer ecb-path-selected-directory)
-          (tree-buffer-highlight-node-data ecb-path-selected-source))
-      ;; apply the filter-regexp
-      (let ((new-tree (tree-node-new-root))
-            (old-children (tree-node->children (tree-buffer-get-root)))
-            (all-files (car (ecb-get-files-and-subdirs ecb-path-selected-directory)))
-            (filtered-files nil))
-        (dolist (file all-files)
-          (if (string-match filter-regexp file)
-              (setq filtered-files
-                    (cons file filtered-files))))
-        (if (null filtered-files)
-            (message "ECB has not applied this filter because it would filter out all files!")
-          ;; building up the new files-tree
-          (ecb-tree-node-add-files
-           new-tree
-           ecb-path-selected-directory
-           (nreverse filtered-files)
-           ecb-sources-nodetype-sourcefile
-           ecb-show-source-file-extension old-children t)
+all files are displayed. Returns t if the filter has been applied otherwise
+nil. Returns 'window-not-visible if the ECB-sources-buffer is not visible."
+  (prog1
+      (ecb-exec-in-window ecb-sources-buffer-name
+        (if (null filter-regexp)
+            ;; no filtering
+            (progn
+              ;; remove the filtered cache by setting it to nil
+              (ecb-sources-cache-add-filtered ecb-path-selected-directory nil)
+              ;; update the sources buffer - because the filtered cache is nil
+              ;; the full sources are displayed.
+              (ecb-update-sources-buffer ecb-path-selected-directory)
+              (tree-buffer-highlight-node-data ecb-path-selected-source)
+              nil)
+          ;; apply the filter-regexp
+          (let ((new-tree (tree-node-new-root))
+                (old-children (tree-node->children (tree-buffer-get-root)))
+                (all-files (car (ecb-get-files-and-subdirs ecb-path-selected-directory)))
+                (filtered-files nil))
+            (dolist (file all-files)
+              (if (string-match filter-regexp file)
+                  (setq filtered-files
+                        (cons file filtered-files))))
+            (if (null filtered-files)
+                (progn
+                  (message "ECB has not applied this filter because it would filter out all files!")
+                  nil)
+              ;; building up the new files-tree
+              (ecb-tree-node-add-files
+               new-tree
+               ecb-path-selected-directory
+               (nreverse filtered-files)
+               ecb-sources-nodetype-sourcefile
+               ecb-show-source-file-extension old-children t)
 
-          ;; updating the buffer itself
-          (tree-buffer-set-root new-tree)
-          (tree-buffer-update)
-          (ecb-scroll-window (point-min) (point-min))
-          (tree-buffer-highlight-node-data ecb-path-selected-source)
+              ;; updating the buffer itself
+              (tree-buffer-set-root new-tree)
+              (tree-buffer-update)
+              (ecb-scroll-window (point-min) (point-min))
+              (tree-buffer-highlight-node-data ecb-path-selected-source)
 
-          ;; add the new filter to the cache, so the next call to
-          ;; `ecb-update-sources-buffer' displays the filtered sources.
-          (ecb-sources-cache-add-filtered ecb-path-selected-directory
-                                          (list (tree-buffer-get-root)
-                                                (tree-buffer-displayed-nodes-copy)
-                                                (ecb-buffer-substring (point-min)
-                                                                      (point-max))
-                                                (cons filter-regexp
-                                                      (or filter-display
-                                                          filter-regexp))))))))
-  ;; now we update the mode-lines so the current filter (can be no filter) is
-  ;; displayed in the mode-line. See `ecb-sources-filter-modeline-prefix'.
-  (ecb-mode-line-format))
+              ;; add the new filter to the cache, so the next call to
+              ;; `ecb-update-sources-buffer' displays the filtered sources.
+              (ecb-sources-cache-add-filtered ecb-path-selected-directory
+                                              (list (tree-buffer-get-root)
+                                                    (tree-buffer-displayed-nodes-copy)
+                                                    (ecb-buffer-substring (point-min)
+                                                                          (point-max))
+                                                    (cons filter-regexp
+                                                          (or filter-display
+                                                              filter-regexp))))
+              t))))
+    ;; now we update the mode-lines so the current filter (can be no filter) is
+    ;; displayed in the mode-line. See `ecb-sources-filter-modeline-prefix'.
+    (ecb-mode-line-format)))
 
 (defun ecb-matching-source-paths (path-to-match &optional sorted)
   "Return all source-paths of `ecb-source-path' which match PATH-TO-MATCH. If
@@ -2171,10 +2180,12 @@ buffers at the bottom."
   (ecb-reset-history-filter)
   (ecb-add-buffers-to-history))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: return t if filter applied else nil
 (defun ecb-add-buffers-to-history ()
   "Add exactly these currently existing file-buffers to the history-buffer
-which are not filtered out by current value of `ecb-history-filter'."
-    ;; first we clear out the history buffer
+which are not filtered out by current value of `ecb-history-filter'. Returns t
+if the filter has been applied otherwise nil."
+  ;; first we clear out the history buffer
   (save-excursion
     (set-buffer ecb-history-buffer-name)
     (tree-buffer-clear-tree))
@@ -2185,14 +2196,18 @@ which are not filtered out by current value of `ecb-history-filter'."
         (reverse (buffer-list)))
   (ecb-sort-history-buffer)
   (ecb-update-history-window (buffer-file-name ecb-last-source-buffer))
-  (when (and (save-excursion
-               (set-buffer ecb-history-buffer-name)
-               (tree-buffer-empty-p))
-             (not (ecb-history-filter-reset-p)))
-    (ecb-add-all-buffers-to-history)
-    (message "ECB has not applied this filter because it would filter out all entries!"))
-  ;; now the modeline has to display the current filter
-  (ecb-mode-line-format))
+  (prog1
+      (if (and (save-excursion
+                 (set-buffer ecb-history-buffer-name)
+                 (tree-buffer-empty-p))
+               (not (ecb-history-filter-reset-p)))
+          (progn
+            (ecb-add-all-buffers-to-history)
+            (message "ECB has not applied this filter because it would filter out all entries!")
+            nil)
+        t)
+    ;; now the modeline has to display the current filter
+    (ecb-mode-line-format)))
 
   
 (defun ecb-history-filter-modeline-prefix (buffer-name sel-dir sel-source)
@@ -3996,7 +4011,8 @@ edit-windows. Otherwise return nil."
       (kill-buffer (get-file-buffer data)))))
 
 (defun ecb-history-filter-by-ext (ext-str)
-  "Filter history entries by extension."
+  "Filter history entries by extension. Returns t if the filter has been
+applied otherwise nil."
   (if (= (length ext-str) 0)
       (setq ecb-history-filter
             (cons `(lambda (filename)
@@ -4018,15 +4034,19 @@ edit-windows. Otherwise return nil."
                                    (ecb-file-name-extension (tree-node->data node))))))
     (ecb-history-filter-by-ext ext-str)))
 
-(defun ecb-history-filter-by-regexp ()
-  "Filter history entries by regexp."
-  (let ((regexp-str (read-string "Insert the filter-regexp: ")))
+(defun ecb-history-filter-by-regexp (&optional regexp filter-display)
+  "Filter history entries by REGEXP. If the first optional argument REGEXP is
+nil then it asks for a regexp. If second argument FILTER-DISPLAY is not nil
+then it is displayed in the modeline of the history-buffer for current
+regexp-filter. Otherwise the regexp itself. Returns t if the filter has been
+applied otherwise nil."
+  (let ((regexp-str (or regexp (read-string "Insert the filter-regexp: "))))
     (if (> (length regexp-str) 0)
         (setq ecb-history-filter
               (cons `(lambda (filename)
                        (save-match-data
                          (string-match ,regexp-str filename)))
-                    regexp-str))))
+                    (or filter-display regexp-str)))))
   (ecb-add-buffers-to-history))
 
 (tree-buffer-defpopup-command ecb-popup-history-filter-by-regexp

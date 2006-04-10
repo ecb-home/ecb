@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.170 2005/06/27 17:02:29 berndl Exp $
+;; $Id: tree-buffer.el,v 1.171 2006/04/10 07:53:33 berndl Exp $
 
 ;;; Commentary:
 
@@ -656,6 +656,7 @@ The value is buffer-local in current tree-buffer.")
   (general-face nil :read-only t)
   (incr-search-additional-pattern nil :read-only t)
   (incr-search-p nil :read-only t)
+  (reduce-tree-for-incr-search-fn :read-only t)
   (hor-scroll-step nil :read-only t)
   (default-images-dir nil :read-only t)
   (additional-images-dir nil :read-only t)
@@ -684,6 +685,7 @@ The value is buffer-local in current tree-buffer.")
                               general-face
                               incr-search-additional-pattern
                               incr-search-p
+                              reduce-tree-for-incr-search-fn
                               hor-scroll-step
                               default-images-dir
                               additional-images-dir
@@ -721,6 +723,10 @@ See `tree-buffer-create' for a description of the arguments."
                            :general-face general-face
                            :incr-search-additional-pattern incr-search-additional-pattern
                            :incr-search-p incr-search-p
+                           :reduce-tree-for-incr-search-fn
+                           (or (and (functionp reduce-tree-for-incr-search-fn)
+                                    reduce-tree-for-incr-search-fn)
+                               'ignore)
                            :hor-scroll-step hor-scroll-step
                            :default-images-dir default-images-dir
                            :additional-images-dir additional-images-dir
@@ -759,6 +765,10 @@ The value is buffer-local in current tree-buffer.")
 Used to compared with the value of `tree-buffer-incr-searchpattern'.
 The value is buffer-local in current tree-buffer.")
 
+;; This can not be part of `tree-buffer-spec' because then a call to
+;; `tree-buffer-gen-searchpattern-indent-prefix' would be necessary *before*
+;; the tree-buffer-spec object is created and this would cause a cyclic
+;; dependency in `tree-buffer-real-style'.
 (defvar tree-buffer-incr-searchpattern-indent-prefix nil
   "Prefix-pattern which ignores all not interesting basic stuff of a displayed
 tag at incr. search. The following contents of a displayed tag are ignored
@@ -1962,7 +1972,8 @@ Do NOT call this function directly. It works only if called from the binding
 mentioned above!"
   (interactive)
   (unless (not (equal (selected-frame) tree-buffer-frame))
-    (let ((last-comm (tree-buffer-event-to-key last-command-event)))
+    (let ((last-comm (tree-buffer-event-to-key last-command-event))
+          (full-search-regexp nil))
       (case last-comm
         ((delete backspace)
          ;; reduce by one from the end
@@ -1990,6 +2001,22 @@ mentioned above!"
          (setq tree-buffer-incr-searchpattern
                (concat tree-buffer-incr-searchpattern
                        (char-to-string last-comm)))))
+      (setq full-search-regexp
+            (concat tree-buffer-incr-searchpattern-indent-prefix
+                    tree-buffer-incr-searchpattern-expand-prefix
+                    (car (tree-buffer-spec->incr-search-additional-pattern
+                          tree-buffer-spec))
+                    (if (equal (tree-buffer-spec->incr-search-p tree-buffer-spec)
+                               'substring)
+                        "[^()\n]*"
+                      "")
+                    (regexp-quote tree-buffer-incr-searchpattern)))
+      (setq tree-buffer-incr-searchpattern
+            (or (funcall (tree-buffer-spec->reduce-tree-for-incr-search-fn tree-buffer-spec)
+                         tree-buffer-incr-searchpattern full-search-regexp)
+                ;; Only if the reduce-function is 'ignore we get nil and then
+                ;; we do not change the `tree-buffer-incr-searchpattern'
+                tree-buffer-incr-searchpattern))
       (tree-buffer-nolog-message
        "%s node search: [%s]%s"
        (buffer-name (current-buffer))
@@ -1999,16 +2026,7 @@ mentioned above!"
                            (string= tree-buffer-incr-searchpattern
                                     tree-buffer-last-incr-searchpattern)))
                  (goto-char (point-min)))
-             (re-search-forward
-              (concat tree-buffer-incr-searchpattern-indent-prefix
-                      tree-buffer-incr-searchpattern-expand-prefix
-                      (car (tree-buffer-spec->incr-search-additional-pattern
-                            tree-buffer-spec))
-                      (if (equal (tree-buffer-spec->incr-search-p tree-buffer-spec)
-                                 'substring)
-                          "[^()\n]*"
-                        "")
-                      (regexp-quote tree-buffer-incr-searchpattern)) nil t))
+             (re-search-forward full-search-regexp nil t))
            ;; we have found a matching ==> jump to it
            (progn
              (goto-char (match-end 0))
@@ -2417,6 +2435,7 @@ determines when the command is triggered, values can be 'button-press and
                             tree-indent
                             incr-search-p
                             incr-search-additional-pattern
+                            reduce-tree-for-incr-search-fn
                             arrow-navigation
                             hor-scroll-step
                             default-images-dir
@@ -2586,6 +2605,31 @@ INCR-SEARCH-ADDITIONAL-PATTERN: Every search-pattern is prefixed at least with
                                 basic-prefix pattern and both of them prefix
                                 the incr-search-pattern. The cdr is the number
                                 of subexpressions in this pattern.
+REDUCE-TREE-FOR-INCR-SEARCH-FN: Nil or a function which is called
+                                directly after changing the current
+                                incremental search-pattern by typing and
+                                directly before the tree-buffer performes this
+                                new search. The function gets two arguments:
+                                The current search-pattern as typed in by the
+                                user and the full serch-regexp build by
+                                tree-buffer based on the plain search-pattern.
+                                The purpose of such a function is to apply the
+                                passed search-pattern as a filter to the
+                                tree-contents to reduce the tree to tree-nodes
+                                matching this filter. The passed full
+                                search-regexp \(the second argument) is build
+                                and used by tree-buffer itself to exclude some
+                                stuff not relevant for the search \(e.g.
+                                guide-lines etc..., see also the argument
+                                INCR-SEARCH-ADDITIONAL-PATTERN above). The
+                                function can change the search-pattern typed
+                                in by the user \(the first argument) if this
+                                is necessary. So the function must always
+                                return the finaly applied search-pattern based
+                                on the first argument passed to the function.
+                                The returned value must be a string but can be
+                                the empty string \(means no filter has been
+                                applied). Current buffer is the tree-buffer.
 ARROW-NAVIGATION: If not nil then a smart navigation with arrow keys is offered.
 HOR-SCROLL-STEP: Number of columns a hor. scroll in the tree-buffer should scroll.
                  If not nil then M-mouse-1 and M-mouse-2 scroll left and right
@@ -2723,6 +2767,7 @@ See Info node `(ecb)tree-buffer' for all details of using tree-buffers."
                                 :general-face general-face
                                 :incr-search-p incr-search-p
                                 :incr-search-additional-pattern incr-search-additional-pattern
+                                :reduce-tree-for-incr-search-fn reduce-tree-for-incr-search-fn
                                 :hor-scroll-step hor-scroll-step
                                 :default-images-dir default-images-dir
                                 :additional-images-dir additional-images-dir

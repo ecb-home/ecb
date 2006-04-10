@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.431 2006/03/10 15:40:35 berndl Exp $
+;; $Id: ecb.el,v 1.432 2006/04/10 07:53:33 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1560,7 +1560,7 @@ If ECB detects a problem it is reported and then an error is thrown."
         ;; checking the requirements
         (ecb-check-requirements)
 
-        (condition-case err-obj
+        ;;(condition-case err-obj
             (progn
 
               ;; initialize the navigate-library
@@ -1697,10 +1697,10 @@ If ECB detects a problem it is reported and then an error is thrown."
                           'menu-bar-update-hook)
                         'ecb-compilation-update-menu)
               )
-          (error
-           ;;          (backtrace)
-           (ecb-clean-up-after-activation-failure
-            "Errors during the basic setup of ECB." err-obj)))
+;;           (error
+;;            ;;          (backtrace)
+;;            (ecb-clean-up-after-activation-failure
+;;             "Errors during the basic setup of ECB." err-obj)))
 
         (condition-case err-obj
             ;; run personal hooks before drawing the layout
