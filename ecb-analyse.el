@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.14 2006/01/27 18:21:48 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.15 2006/05/12 15:52:30 berndl Exp $
 
 
 ;;; Commentary:
@@ -30,6 +30,8 @@
 ;;
 
 ;;; Code:
+
+;;; Test Klaus
 
 (require 'semantic-analyze)
 (require 'ecb-layout)
