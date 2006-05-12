@@ -833,6 +833,7 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
 ;; -- end of canonical filenames
 
 ;; -- interactors synchronizers
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Has to be done!!!
 
 (defvar ecb-interactor-synchronizers nil)
 

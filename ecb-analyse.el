@@ -31,8 +31,6 @@
 
 ;;; Code:
 
-;;; Test Klaus
-
 (require 'semantic-analyze)
 (require 'ecb-layout)
 (require 'ecb-common-browser)
