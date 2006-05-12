@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.171 2006/04/10 07:53:33 berndl Exp $
+;; $Id: tree-buffer.el,v 1.172 2006/05/12 16:03:11 berndl Exp $
 
 ;;; Commentary:
 
@@ -74,6 +74,7 @@
 (silentcomp-defun count-screen-lines)
 (silentcomp-defun tmm-prompt)
 (silentcomp-defun font-lock-add-keywords)
+(silentcomp-defvar cursor-in-non-selected-windows)
 ;; timer stuff for XEmacs
 (silentcomp-defun delete-itimer)
 (silentcomp-defun start-itimer)
@@ -343,8 +344,8 @@ A tree-node can have the following slots:
   SHRINK-NAME.
 
 For all parameters except NOT-EXPANDABLE the description is available in the
-slot-list above. If NOT-EXPANDABLE is set to not nil then the slot EXPANDABLE
-will be set to nil; otherwise to t.
+slot-list above. If the first optional argument NOT-EXPANDABLE is set to not
+nil then the slot EXPANDABLE will be set to nil; otherwise to t.
 
 See Info node `(ecb)tree-buffer' for all details of using tree-nodes."
   (let ((n (-tree-node-new :name name
@@ -2730,6 +2731,8 @@ See Info node `(ecb)tree-buffer' for all details of using tree-buffers."
     (make-local-variable 'truncate-partial-width-windows)
     (setq truncate-lines trunc-lines)
     (setq truncate-partial-width-windows trunc-lines)
+
+    (setq cursor-in-non-selected-windows nil)
 
     (setq buffer-read-only read-only)
 

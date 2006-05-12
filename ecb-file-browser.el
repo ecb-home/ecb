@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.62 2006/04/10 07:53:34 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.63 2006/05/12 16:03:11 berndl Exp $
 
 ;;; Commentary:
 
@@ -1950,7 +1950,7 @@ all files are displayed. Returns t if the filter has been applied otherwise
 nil. Returns 'window-not-visible if the ECB-sources-buffer is not visible."
   (prog1
       (ecb-exec-in-window ecb-sources-buffer-name
-        (if (null filter-regexp)
+        (if (or (null filter-regexp) (= (length filter-regexp) 0))
             ;; no filtering
             (progn
               ;; remove the filtered cache by setting it to nil
@@ -1971,6 +1971,7 @@ nil. Returns 'window-not-visible if the ECB-sources-buffer is not visible."
                         (cons file filtered-files))))
             (if (null filtered-files)
                 (progn
+                  (ecb-apply-filter-to-sources-buffer nil)
                   (message "ECB has not applied this filter because it would filter out all files!")
                   nil)
               ;; building up the new files-tree
@@ -4219,6 +4220,15 @@ So you get a better overlooking. There are three choices:
    :tree-indent ecb-tree-indent
    :incr-search-p ecb-tree-incremental-search
    :incr-search-additional-pattern ecb-vc-incr-searchpattern-node-prefix
+   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: make an option for this
+   :reduce-tree-for-incr-search-fn
+   (lambda (search full-search-regexp)
+     (if (ecb-apply-filter-to-sources-buffer (and search
+                                                  (> (length search) 0)
+                                                  full-search-regexp)
+                                             search)
+         search
+       ""))
    :arrow-navigation ecb-tree-navigation-by-arrow
    :hor-scroll-step ecb-tree-easy-hor-scroll
    :default-images-dir (car ecb-tree-image-icons-directories)

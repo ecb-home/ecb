@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.78 2006/04/10 07:53:34 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.79 2006/05/12 16:03:11 berndl Exp $
 
 ;;; Commentary:
 
@@ -4358,7 +4358,11 @@ moved over it."
    :tree-indent ecb-tree-indent
    :incr-search-p ecb-tree-incremental-search
    :incr-search-additional-pattern ecb-methods-incr-searchpattern-node-prefix
-   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add an option to make this customizable!
+   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add an option to make this
+   ;; customizable! Define the docstring as follows: reducing the node-list by
+   ;; typing always(!) removes frist any filter applied before so it always
+   ;; starts from the full unfiltered list. (KB: So this mechanism is
+   ;; consistent for all buffers, sources, history and methods)
    :reduce-tree-for-incr-search-fn
    (lambda (search full-search-regexp)
      (ecb-methods-filter-apply nil nil nil "" ""

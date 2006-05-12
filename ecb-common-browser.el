@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.24 2006/04/10 07:53:34 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.25 2006/05/12 16:03:11 berndl Exp $
 
 
 ;;; History
@@ -833,6 +833,7 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
 ;; -- end of canonical filenames
 
 ;; -- interactors synchronizers
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Has to be done!!!
 
 (defvar ecb-interactor-synchronizers nil)
 
