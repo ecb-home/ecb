@@ -475,7 +475,8 @@ in exactly this sequence."
                         (get option 'standard-value))))))
     (cond ((not (listp val)) val)
           ((equal 'quote (car val)) (car (cdr val)))
-          (t (car val)))))
+;;          (t (car val)))))
+          (t (eval val)))))
 
 ;;; ----- Assoc helpers ------------------------------------
 
