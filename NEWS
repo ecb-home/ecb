@@ -13,6 +13,11 @@
     are fixed by the Emacs-team so now ECB supports this feature also with
     active compile-window.
 
+*** Small bug in the `switch-to-buffer-other-window'-advice.
+    In forthcoming Emacs 22 this command ignores the settings in
+    `same-window-*'. Now ECB adopts this behavior also for its adviced
+    version.
+
 *** Fixed problems with the internal download of newer ECB-versions
     Seems that two different URLs are needed:
     - "ftp://ftp1.sourceforge.net/pub/sourceforge/e/ec/ecb/" (see variable
