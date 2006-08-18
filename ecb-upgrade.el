@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.106 2006/03/10 15:40:35 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.107 2006/08/18 14:49:43 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -159,6 +159,9 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
+;; (defconst ecb-version "2.33beta1"
+;;   "Current ECB version.")
+
 (defconst ecb-version "2.33beta1"
   "Current ECB version.")
 
@@ -1359,7 +1362,8 @@ which is parsed by ECB. For the real download see `ecb-download-ecb-url'.")
   "Url used to get a list of available versions of CEDET.
 wget is called with this url so a list of all available files is downloaded
 which is parsed by ECB. For the real download see `ecb-download-cedet-url'.")
-  
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Is this still the right address??
 (defcustom ecb-download-ecb-url "http://ftp1.sourceforge.net/ecb/"
   "*URL where download-able ECB-versions are located.
 The ECB-archive-file \(e.g. ecb-1.70.tar.gz\) will be appended to this URL and
@@ -1484,7 +1488,8 @@ Note: Normally this URL should never change but who knows..."
 
 
 (defcustom ecb-wget-setup (cons (if (fboundp 'executable-find)
-                                    (executable-find "wget")
+                                    (or (executable-find "wget")
+                                        "Please_add_wget_to_your_path_or_set_the_fullpath_to_wget")
                                   "wget")
                                 (case system-type
                                   (cygwin32 'cygwin)
@@ -1507,8 +1512,10 @@ Value is a cons-cell where:
                        (const :tag "Cygwin" :value cygwin)
                        (const :tag "Other" :value other))))
 
+
 (defcustom ecb-gzip-setup (cons (if (fboundp 'executable-find)
-                                    (executable-find "gzip")
+                                    (or (executable-find "gzip")
+                                        "Please_add_gzip_to_your_path_or_set_the_fullpath_to_gzip")
                                   "gzip")
                                 (case system-type
                                   (cygwin32 'cygwin)
@@ -1526,7 +1533,8 @@ For a description about the possible settings see `ecb-wget-setup'."
                        (const :tag "Other" :value other))))
 
 (defcustom ecb-tar-setup (cons (if (fboundp 'executable-find)
-                                   (executable-find "tar")
+                                   (or (executable-find "tar")
+                                       "Please_add_tar_to_your_path_or_set_the_fullpath_to_tar")
                                  "tar")
                                (case system-type
                                  (cygwin32 'cygwin)
@@ -2076,9 +2084,6 @@ for details about using \"wget\"."
         )
       ;; now we return the version-list
       version-list)))
-
-
-
 
 (silentcomp-provide 'ecb-upgrade)
 

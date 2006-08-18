@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.136 2006/03/10 15:40:35 berndl Exp $
+;; $Id: ecb-util.el,v 1.137 2006/08/18 14:49:43 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -475,7 +475,8 @@ in exactly this sequence."
                         (get option 'standard-value))))))
     (cond ((not (listp val)) val)
           ((equal 'quote (car val)) (car (cdr val)))
-          (t (car val)))))
+;;          (t (car val)))))
+          (t (eval val)))))
 
 ;;; ----- Assoc helpers ------------------------------------
 
