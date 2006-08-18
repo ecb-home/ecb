@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.254 2006/03/10 15:40:35 berndl Exp $
+;; $Id: ecb-layout.el,v 1.255 2006/08/18 14:51:03 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1020,7 +1020,7 @@ otherwise either an error is reported or some other special reaction (depends
 on `ecb-advice-window-functions-signal-error'); see the documentation of the
 adviced functions for this.
 
-For `other-window', `other-window-for-scrolling', `display-buffer' and
+For `other-window', `other-window-for-scrolling' and
 `switch-to-buffer-other-window' this makes no sense, therefore you can not
 enable this for them.
 
@@ -3592,7 +3592,9 @@ for compilation-buffers \(if a compile-window is used, see above)."
         ad-do-it))
     (if (equal (ecb-where-is-point) 'ecb)
         (ecb-select-edit-window))
-    (let ((pop-up-windows t))
+    (let ((pop-up-windows t)
+          ;; Don't let these interfere...
+          same-window-buffer-names same-window-regexps)          
       (pop-to-buffer (ad-get-arg 0) t
                      (if ecb-running-xemacs
                          (selected-frame)
@@ -3600,9 +3602,9 @@ for compilation-buffers \(if a compile-window is used, see above)."
 
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: We can not use pop-to-buffer here
-;; because with XEmacs there is an error max-lisp-eval-depth exceeded. Seems
-;; that XEmacs implements pop-to-buffer somewhere internally with
-;; switch-to-buffer so there is an bidirectional dependency.
+;; because with XEmacs there is an error max-lisp-eval-depth exceeded. XEmacs
+;; implements display-buffer (which is called by pop-to-buffer) internally
+;; with switch-to-buffer so there is an bidirectional dependency - ugly :-(
 (defadvice switch-to-buffer (around ecb)
   "The ECB-version of `switch-to-buffer'. Works exactly like the original but
 with the following enhancements for ECB:
