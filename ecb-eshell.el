@@ -131,14 +131,11 @@ Background: `eshell' creates new eshell-buffers with `generate-new-buffer' if
 called with an prefix arg!")
 
 
-(defconst ecb-eshell-adviced-functions '((eshell . around))
+(defecb-advice-set ecb-eshell-adviced-functions
   "These functions of eshell are adviced if ehsell is active during ECB is
-active. Each element of the list is a cons-cell where the car is the
-function-symbol and the cdr the advice-class \(before, around or after). If a
-function should be adviced with more than one class \(e.g. with a before and
-an after-advice) then for every class a cons must be added to this list.")
+active.")
 
-(defadvice eshell (around ecb)
+(defecb-advice eshell around ecb-eshell-adviced-functions
   "Ensure that ehsell is running in the ECB-compile-window if any."
   ;; we tell ECB to handle the eshell-buffers as compilation-buffers so they
   ;; will be displayed in the compile-window (if any). We must add this as
@@ -211,10 +208,10 @@ an after-advice) then for every class a cons must be added to this list.")
 (defun ecb-eshell-activate-integration ()
   "Does all necessary to activate the eshell-integration. But this doesn not
 load or activate eshell - it just prepares ECB to work perfectly with eshell."
-  (ecb-enable-advices ecb-eshell-adviced-functions))
+  (ecb-enable-advices 'ecb-eshell-adviced-functions))
 
 (defun ecb-eshell-deactivate-integration ()
-  (ecb-disable-advices ecb-eshell-adviced-functions)
+  (ecb-disable-advices 'ecb-eshell-adviced-functions)
   (remove-hook 'ecb-current-buffer-sync-hook-internal
                'ecb-eshell-current-buffer-sync)
   (remove-hook 'eshell-post-command-hook 'ecb-eshell-recenter)

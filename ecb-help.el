@@ -241,7 +241,7 @@ this."
   (when (or ecb-minor-mode
             (y-or-n-p "ECB should be active when submitting a problem-report. Force report? "))
     (if (and (equal ecb-frame (selected-frame))
-             (not (ecb-point-in-edit-window)))
+             (not (ecb-point-in-edit-window-number)))
         (ecb-select-edit-window))
     (if (not (locate-library "reporter"))
         (ecb-error "You need the reporter.el package to submit a bugreport for ECB!")

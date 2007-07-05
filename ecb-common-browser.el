@@ -617,7 +617,7 @@ associated symbol which contains this name.")
   "Cache used for the filebrowser to cache all necessary informations
 associated to file- or directory-names.
 
-Currently there are three subcaches managed within this cache:
+Currently there are the following subcaches managed within this cache:
 
   FILES-AND-SUBDIRS:
   
