@@ -2,21 +2,80 @@
 
 ** More user-responsible buffer-parsing based on the idle-mechanism of semantic
 
-   TODO: Describe here the changes
+   Force a reparse of the semantic-source if the idle-scheduler is off.
+   Generally ECB calls semantic to get the list of tags for current
+   source-file of current edit-window. Per default ECB does never
+   automatically force a reparse of the source-file - this is only done on
+   demand by calling `ecb-rebuild-methods-buffer'. So per default the
+   idle-scheduler of semantic is responsible for reparsing the source-file and
+   when this is necessary (see `semantic-idle-scheduler-mode' for further
+   details). This is the most user-resonsible and therefore the recommended
+   approach.
 
-   TODO: Adding this to the FAQ and Tips and Tricks section in the texi....
+   So it's strongly recommended to enable `semantic-idle-scheduler-mode'
+   because then reparsing is always done during idle-time of Emacs and is also
+   interruptable.
 
-** Fixed Bugs
+   But if this idle-scheduler is switched off then ECB offers now two
+   possibilities (via `ecb-force-reparse-when-semantic-idle-scheduler-off'):
+   
+   - Not forcing itself a reparse when tags are needed by ECB: then a user
+     declines knowingly Emacs/semantic-driven parsing of code when he/she
+     switches off the idle-mode of semantic. This is the default behavior of
+     ECB and the default value of this option. But this has also the
+     consequence that the methods-buffer is only filed on demand via
+     `ecb-rebuild-methods-buffer' (bound to \[C-c . r])!
+
+     This means also in consequence that the methods-buffer is not
+     automatically filled when a source-file is opened but first on demand
+     after calling the command `ecb-rebuild-methods-buffer'!
+     
+   - Forcing a reparse when tags are needed: Then ECB forces semantic to parse
+     the source-file when ECB needs tags to display. For this behavior this
+     option has to be set to not nil.
+
+   The term "forcing a reparse by semantic" is a simplification: ECB uses then
+   the function `semantic-fetch-tags' which can decide that the cached tags
+   are up-to-date so no real reparsing is necessary - but it can also run a
+   full reparse and this reparse is not being done when Emacs is idle but
+   immediatelly and not interruptable (as with the idle-scheduler of
+   semantic), which can be quite annoying with big source-files.
+
+** Much saver advice-backbone for all advices needed by ECB
+
+   This is not a user-visible change but enhances the stability of ECB by
+   using now a new advice-backbone which guarantes that all ecb-advices are
+   enabled rsp. disabled correctly depending on the surrounding context.
+   Introdusing three new macros `defecb-advice-set', `defecb-advice' and
+   `ecb-with-original-adviced-function-set'.
+   
+** New features rsp. commands
+
+*** New command `ecb-goto-window-edit-by-smart-selection'
+
+*** New command `ecb-goto-window-ecb-by-smart-selection'
+      
+** More compatibility with Emacs 22
+
+*** `balance-windows' now works also with Emacs 22
+    Cause of the completely new implemantation based on `window-tree' ECB
+    uses a new machanism for enabling balance-windows to work properly with
+    active ECB, so only the edit-windows are balanced but all ecb-windows
+    remain on their sizes.
 
 *** Fixed problems with `ecb-fix-window-size' and active compile-windows
     With Emacs >= 22 the bugs of Emacs 21.3.X concerning `window-size-fixed'
     are fixed by the Emacs-team so now ECB supports this feature also with
     active compile-window.
 
-*** Small bug in the `switch-to-buffer-other-window'-advice.
-    In forthcoming Emacs 22 this command ignores the settings in
-    `same-window-*'. Now ECB adopts this behavior also for its adviced
-    version.
+*** Fixed small lack in the `switch-to-buffer-other-window'-advice.
+    In Emacs 22 this command ignores the settings in `same-window-*'. Now ECB
+    adopts this behavior also for its adviced version so the command works
+    in a smart manner optimzed for ECB.
+   
+** Fixed Bugs
+
+*** Fixed a serious bug which prevented `ecb-rebuild-methods-buffer' to work
 
 *** Fixed problems with the internal download of newer ECB-versions
     Seems that two different URLs are needed:

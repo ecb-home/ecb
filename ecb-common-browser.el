@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.25 2006/05/12 16:03:11 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.26 2007/07/05 11:08:24 berndl Exp $
 
 
 ;;; History
@@ -617,7 +617,7 @@ associated symbol which contains this name.")
   "Cache used for the filebrowser to cache all necessary informations
 associated to file- or directory-names.
 
-Currently there are three subcaches managed within this cache:
+Currently there are the following subcaches managed within this cache:
 
   FILES-AND-SUBDIRS:
   

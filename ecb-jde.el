@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-jde.el,v 1.15 2005/04/19 15:18:59 berndl Exp $
+;; $Id: ecb-jde.el,v 1.16 2007/07/05 11:08:24 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -86,7 +86,7 @@ Works only for classes where the source-code \(i.e. the *.java-file) is
 available."
   (interactive)
   (when (and ecb-minor-mode
-             (ecb-point-in-edit-window)
+             (ecb-point-in-edit-window-number)
              (equal major-mode 'jde-mode))
     (if (jde-open-functions-exist)
         (let* (
@@ -133,18 +133,6 @@ occurs."
           (jde-show-class-source unqual-class)
           t)
       (error nil))))
-
-
-(defun ecb-jde-open-class-at-point-ff-function (filename &optional wildcards)
-  "Special handling of the class opening at point JDE feature. This function
-calls the value of `jde-open-class-at-point-find-file-function' with activated
-ECB-adviced functions."
-  (ecb-with-adviced-functions
-   (if (and (boundp 'jde-open-class-at-point-find-file-function)
-            (fboundp jde-open-class-at-point-find-file-function))
-       (funcall jde-open-class-at-point-find-file-function
-                filename wildcards))))
-
 
 (defun ecb-jde-gen-class-buffer (dir filename)
   "Calls `jde-gen-class-buffer' for the file FILENAME in DIR. If this function

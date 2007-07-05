@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.432 2006/04/10 07:53:33 berndl Exp $
+;; $Id: ecb.el,v 1.433 2007/07/05 11:08:23 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -623,7 +623,7 @@ edit-window.
 Running the hooks in `ecb-current-buffer-sync-hook'."  
   (when (and ecb-minor-mode
              (not ecb-windows-hidden)
-             (ecb-point-in-edit-window))
+             (ecb-point-in-edit-window-number))
     (ignore-errors
       (ecb-directories-sources-history-buffer-sync force))
 
@@ -794,7 +794,7 @@ That is remove the unsupported :help stuff."
     [ "Synchronize ECB windows"
       (ecb-window-sync)
       :active (and (equal (selected-frame) ecb-frame)
-                   (ecb-point-in-edit-window))
+                   (ecb-point-in-edit-window-number))
       :help "Synchronize the ECB windows with the current edit-window."
       ])
    (ecb-menu-item
@@ -1560,16 +1560,19 @@ If ECB detects a problem it is reported and then an error is thrown."
         ;; checking the requirements
         (ecb-check-requirements)
 
-        ;;(condition-case err-obj
+        (condition-case err-obj
             (progn
-
+              
               ;; initialize the navigate-library
               (ecb-nav-initialize)
 
               ;; enable basic advices (we need the custom-save-all advice
               ;; already here! Maybe it would be better to remove this advice
               ;; from the basic-advices and add it to upgrade-advices.....)
-              (ecb-enable-advices ecb-basic-adviced-functions)
+              ;;(ecb-enable-advices 'ecb-basic-adviced-functions)
+
+              ;; we need the custom-all advice here!
+              (ecb-enable-advices 'ecb-methods-browser-advices)
 
               ;; maybe we must upgrade some not anymore compatible or even renamed
               ;; options
@@ -1590,13 +1593,13 @@ If ECB detects a problem it is reported and then an error is thrown."
               ;; deactivated after first activation of ECB unless
               ;; `ecb-split-edit-window-after-start' is not 'before-activation
               ;; (see `ecb-deactivate-internal')
-              (ecb-enable-advices ecb-permanent-adviced-functions)
+              (ecb-enable-advices 'ecb-permanent-adviced-functions)
 
               ;; enable advices for not supported window-managers
-              (ecb-enable-advices ecb-winman-not-supported-function-advices)
+              (ecb-enable-advices 'ecb-winman-not-supported-function-advices)
 
               ;; enable advices for the compatibility with other packages
-              (ecb-enable-advices ecb-compatibility-advices)
+              (ecb-enable-advices 'ecb-compatibility-advices)
             
               ;; set the ecb-frame
               (let ((old-ecb-frame ecb-frame))
@@ -1697,10 +1700,10 @@ If ECB detects a problem it is reported and then an error is thrown."
                           'menu-bar-update-hook)
                         'ecb-compilation-update-menu)
               )
-;;           (error
-;;            ;;          (backtrace)
-;;            (ecb-clean-up-after-activation-failure
-;;             "Errors during the basic setup of ECB." err-obj)))
+          (error
+           ;;          (backtrace)
+           (ecb-clean-up-after-activation-failure
+            "Errors during the basic setup of ECB." err-obj)))
 
         (condition-case err-obj
             ;; run personal hooks before drawing the layout
@@ -1727,6 +1730,7 @@ If ECB detects a problem it is reported and then an error is thrown."
               (if use-last-win-conf                     
                   (setq ecb-edit-area-creators
                         (nth 4 ecb-last-window-config-before-deactivation)))
+
               (ecb-redraw-layout-full 'no-buffer-sync
                                       nil
                                       (if use-last-win-conf
@@ -1734,6 +1738,7 @@ If ECB detects a problem it is reported and then an error is thrown."
                                       (if use-last-win-conf
                                           (nth 5 ecb-last-window-config-before-deactivation)
                                         nil))
+
               ;; if there was no compile-window before deactivation then we have
               ;; to hide the compile-window after activation
               (if (and use-last-win-conf
@@ -1742,21 +1747,21 @@ If ECB detects a problem it is reported and then an error is thrown."
 
               (when (member ecb-split-edit-window-after-start
                             '(vertical horizontal nil))
-                (ecb-with-adviced-functions
-                 (delete-other-windows)
-                 (case ecb-split-edit-window-after-start
-                   (horizontal (split-window-horizontally))
-                   (vertical (split-window-vertically)))))
+                (delete-other-windows)
+                (case ecb-split-edit-window-after-start
+                  (horizontal (split-window-horizontally))
+                  (vertical (split-window-vertically))))
             
               ;; now we synchronize all ECB-windows
               (ecb-window-sync)
             
               ;; now update all the ECB-buffer-modelines
-              (ecb-mode-line-format))
+              (ecb-mode-line-format)
+              )
           (error
            (ecb-clean-up-after-activation-failure
             "Errors during the layout setup of ECB." err-obj)))
-
+        
         (condition-case err-obj
             (let ((edit-window (car (ecb-canonical-edit-windows-list))))
               (when (and ecb-display-default-dir-after-start
@@ -1823,6 +1828,8 @@ If ECB detects a problem it is reported and then an error is thrown."
         (ignore-errors
           (ecb-show-tip-of-the-day))
 
+        (ecb-enable-advices 'ecb-basic-adviced-functions)
+        
         (condition-case err-obj
             ;;now take a snapshot of the current window configuration
             (setq ecb-activated-window-configuration
@@ -1866,8 +1873,7 @@ does all necessary after finishing ediff."
               (ecb-toggle-ecb-windows -1)
               (ecb-toggle-compile-window -1))
           (if (not ecb-windows-hidden)
-              (ecb-with-adviced-functions
-               (delete-other-windows (car (ecb-canonical-edit-windows-list)))))))
+              (delete-other-windows (car (ecb-canonical-edit-windows-list))))))
     (setq ecb-before-ediff-window-config nil)))
 
 (defun ecb-deactivate ()
@@ -1886,15 +1892,10 @@ does all necessary after finishing ediff."
             (ecb-current-window-configuration))
       
       ;; deactivating the adviced functions
-      (ecb-activate-adviced-functions nil)
-      (ecb-disable-advices ecb-basic-adviced-functions)
-      (ecb-disable-advices ecb-speedbar-adviced-functions)
-      (ecb-disable-advices ecb-eshell-adviced-functions)
-      (ecb-disable-advices ecb-winman-not-supported-function-advices)
-      (ecb-disable-advices ecb-compatibility-advices)
-      (ecb-enable-ecb-advice 'walk-windows 'around -1)
-      (ecb-enable-ecb-advice 'one-window-p 'around -1)
-      ;; we disable the permanent advices later
+      (dolist (adviced-set-elem ecb-adviced-function-sets)
+        ;; we disable the permanent advices later
+        (unless (equal (car adviced-set-elem) 'ecb-permanent-adviced-functions)
+          (ecb-disable-advices (car adviced-set-elem))))
 
       (ecb-enable-own-temp-buffer-show-function nil)      
 
@@ -2035,7 +2036,7 @@ does all necessary after finishing ediff."
       ;; `ecb-permanent-adviced-functions' unless the user don't want
       ;; preserving the split-state after reactivating ECB.
       (when (not (equal ecb-split-edit-window-after-start 'before-activation))
-        (ecb-disable-advices ecb-permanent-adviced-functions)
+        (ecb-disable-advices 'ecb-permanent-adviced-functions)
         (ecb-edit-area-creators-init))
 
       ;; we can safely do the kills because killing non existing buffers
@@ -2167,7 +2168,7 @@ performance-problem!"
                    ;; major-mode must be dired-mode
                    (when (or (not (ecb-edit-window-splitted edit-win-list))
                              (equal last-mode 'dired-mode))
-                     (and (ecb-point-in-edit-window edit-win-list)
+                     (and (ecb-point-in-edit-window-number edit-win-list)
                           ecb-windows-hidden
                           (ecb-show-ecb-windows)))))
                 ((member major-mode (cdr ecb-major-modes-show-or-hide))
@@ -2176,7 +2177,7 @@ performance-problem!"
                    ;; major-mode must be dired-mode
                    (when (or (not (ecb-edit-window-splitted edit-win-list))
                              (equal last-mode 'dired-mode))
-                     (and (ecb-point-in-edit-window edit-win-list)
+                     (and (ecb-point-in-edit-window-number edit-win-list)
                           (not ecb-windows-hidden)
                           (ecb-hide-ecb-windows))))))))))
   )
@@ -2213,6 +2214,8 @@ performance-problem!"
       (when (fboundp 'semantic-elisp-setup-form-parser)
         ;; defecb-multicache
         (semantic-elisp-reuse-form-parser defvar defecb-multicache)
+        ;; defecb-advice-set
+        (semantic-elisp-reuse-form-parser defvar defecb-advice-set)        
         ;; defecb-stealthy and tree-buffer-defpopup-command
         (semantic-elisp-setup-form-parser
             (lambda (read-lobject start end)
@@ -2231,6 +2234,16 @@ performance-problem!"
                :documentation (semantic-elisp-do-doc (nth 3 read-lobject))))
           defecb-tree-buffer-creator
           defecb-window-dedicator)
+        ;; defecb-advice
+        (semantic-elisp-setup-form-parser
+            (lambda (read-lobject start end)
+              (semantic-tag-new-function
+               (symbol-name (nth 1 read-lobject)) nil
+               (semantic-elisp-desymbolify
+                (list 'ecb-advice: (nth 2 read-lobject) (nth 3 read-lobject)))
+               :user-visible-flag nil
+               :documentation (semantic-elisp-do-doc (nth 4 read-lobject))))
+          defecb-advice)
         ;; ecb-layout-define
         (semantic-elisp-setup-form-parser
             (lambda (read-lobject start end)
@@ -2258,18 +2271,18 @@ performance-problem!"
                  ;; Function declarations and exec-with-macros
                  (variable-defs '(
                                   "defecb-multicache"
+                                  "defecb-advice-set"
                                   ))
                  (function-defs '(
                                   "defecb-stealthy"
                                   "defecb-tree-buffer-creator"
                                   "defecb-window-dedicator"
+                                  "defecb-advice"
                                   ))
                  (plain-keywords '(
                                    "ecb-exec-in-window"
                                    "ecb-do-with-unfixed-ecb-buffers"
-                                   "ecb-with-original-functions"
-                                   "ecb-with-adviced-functions"
-                                   "ecb-with-some-adviced-functions"
+                                   "ecb-do-with-fixed-ecb-buffers"
                                    "ecb-with-original-permanent-functions"
                                    "ecb-with-dedicated-window"
                                    "ecb-with-original-basic-functions"
@@ -2341,14 +2354,9 @@ performance-problem!"
 ;; the advice-package we must disable at load-time all these advices!!
 ;; Otherwise would just loading ecb (not activating!) activate each advice
 ;; AFTER the FIRST usage of our advices!!
-(ecb-disable-advices ecb-basic-adviced-functions)
-(ecb-disable-advices ecb-speedbar-adviced-functions)
-(ecb-disable-advices ecb-eshell-adviced-functions)
-(ecb-disable-advices ecb-permanent-adviced-functions)
-(ecb-disable-advices ecb-vc-advices)
-(ecb-activate-adviced-functions nil)
-(ecb-enable-ecb-advice 'walk-windows 'around -1)
-(ecb-enable-ecb-advice 'one-window-p 'around -1)
+
+(dolist (adviced-set-elem ecb-adviced-function-sets)
+  (ecb-disable-advices (car adviced-set-elem)))
 
 ;; init the method- and file-browser at load-time
 (ecb-file-browser-initialize)

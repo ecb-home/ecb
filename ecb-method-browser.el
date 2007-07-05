@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.79 2006/05/12 16:03:11 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.80 2007/07/05 11:08:23 berndl Exp $
 
 ;;; Commentary:
 
@@ -648,6 +648,41 @@ by semantic!"
   :group 'ecb-methods
   :type 'boolean)
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add this to texi
+(defcustom ecb-force-reparse-when-semantic-idle-scheduler-off nil
+  "*Force a reparse of the semantic-source if the idle-scheduler is off.
+Generally ECB calls semantic to get the list of tags for current source-file
+of current edit-window. Per default ECB does never automatically force a
+reparse of the source-file - this is only done on demand by calling
+`ecb-rebuild-methods-buffer'. So per default the idle-scheduler of semantic is
+responsible for reparsing the source-file and when this is necessary \(see
+`semantic-idle-scheduler-mode' for further details). This is the most
+user-resonsible and therefore the recommended approach. So it's strongly
+recommended to enable `semantic-idle-scheduler-mode' because then reparsing is
+always done during idle-time of Emacs and is also interruptable.
+
+But if this idle-scheduler is switched off then ECB offers two possibilities
+\(with this option):
+- Not forcing itself a reparse when tags are needed by ECB: then a user
+  declines knowingly Emacs/semantic-driven parsing of code when he/she
+  switches off the idle-mode of semantic. This is the default behavior of ECB
+  and the default value of this option. But this has also the consequence that
+  the methods-buffer is only filed on demand via `ecb-rebuild-methods-buffer'
+  \(bound to \[C-c . r])!
+- Forcing a reparse when tags are needed: Then ECB forces semantic to parse
+  the source-file when ECB needs tags to display. For this behavior this
+  option has to be set to not nil.
+
+Note 1: This option takes only effect when `semantic-idle-scheduler-mode' is
+not enabled!
+
+Note 2: The term \"forcing a reparse by semantic\" is a simplification:
+It uses the function `semantic-fetch-tags' which can decide that the cached
+tags are up-to-date so no real reparsing is necessary - but it can also run a
+full reparse and this reparse is not being done when Emacs is idle but
+immediatelly and not interruptable \(as with the idle-scheduler of semantic)!"
+  :group 'ecb-methods
+  :type 'boolean)
 
 (defcustom ecb-show-tags
   '((default . ((include collapsed nil)
@@ -1306,7 +1341,7 @@ check the result if `ecb-debug-mode' is nil in which case the function
   (condition-case nil
       (ecb--semantic-current-tag)
     (error (message "ecb--semantic-current-tag has problems --> reparsed is performed!")
-           (when (ecb-point-in-edit-window)
+           (when (ecb-point-in-edit-window-number)
              (ecb--semantic-clear-toplevel-cache)
              (ecb-update-methods-buffer--internal)
              (ecb--semantic-current-tag)))))
@@ -2089,7 +2124,7 @@ argument INVERSE is ignored here."
                                  (save-excursion
                                    (set-buffer source-buffer)
                                    (ecb-get-type-tag-of-tag tag)))
-                            (cond ((ecb-point-in-edit-window)
+                            (cond ((ecb-point-in-edit-window-number)
                                    (if (ecb--semantic-active-p)
                                        (save-excursion
                                          (set-buffer source-buffer)
@@ -2124,7 +2159,7 @@ argument INVERSE is ignored here."
 
 (defun ecb-get-source-buffer-for-tag-filter ()
   "Return the source-buffer of the tag-list which should be filtered."
-  (cond ((ecb-point-in-edit-window)
+  (cond ((ecb-point-in-edit-window-number)
          (current-buffer))
         ((equal (current-buffer)
                 (get-buffer ecb-methods-buffer-name))
@@ -2375,16 +2410,16 @@ the option `ecb-mode-line-prefixes'."
                              (format "(%d)" (length filters))
                            "")
                          filter-str)))
-        (put-text-property 0 (length str) 'help-echo
-                           (mapconcat (function
-                                       (lambda (f-elem)
-                                         (let ((f-type-str (nth 3 f-elem) )
-                                               (f-str (nth 4 f-elem)))
-                                           (format "[%s: %s]"
-                                                   f-type-str f-str))))
-                                      filters
-                                      ", ")
-                           str)
+        (put-text-property
+         0 (length str) 'help-echo
+         (concat "Filter-Stack: "
+                 (mapconcat 'identity
+                            (loop for f-elem being the elements of filters using (index f-elem-index)
+                                  collect (let ((f-type-str (nth 3 f-elem) )
+                                                (f-str (nth 4 f-elem)))
+                                            (format "%d. [%s: %s]" (1+ f-elem-index) f-type-str f-str)))
+                            ", "))
+         str)
         str))))
 
 (defun ecb-default-tag-filter-for-current-file ()
@@ -2553,7 +2588,7 @@ semantic-reparse. This function is added to the hook
 `semantic-after-partial-cache-change-hook'."
   ;; TODO: Currently we get simply the whole cache from semantic (already up
   ;; to date at this time!) and then we rebuild the whole tree-buffer with
-  ;; this cache-contents. This is for great sources slow. We should implement
+  ;; this cache-contents. This is slow for big sources. We should implement
   ;; a mechanism where only the UPDATED-TAGS are used and only this ones are
   ;; updated.
 
@@ -2625,21 +2660,17 @@ current-buffer is saved."
 (defun ecb-fetch-semantic-tags (&optional full)
   "Get a taglist for current buffer.
 If optional arg FULL is not nil or if the `semantic-idle-scheduler-mode' is
-not enabled for current buffer then use `ecb--semantic-fetch-tags' otherwise
-use `ecb--semantic-fetch-available-tags'. The latter always returns just the
-currently available tags in the semantic-cache \(reparsing is done completely
-by the idle-scheduler of semantic if necessary). The former one triggers
-immediate parsing if necessary!"
+not enabled for current source-buffer and the option
+`ecb-force-reparse-when-semantic-idle-scheduler-off' is not nil then use
+`ecb--semantic-fetch-tags' otherwise use `ecb--semantic-fetch-available-tags'.
+The latter always returns just the currently available tags in the
+semantic-cache \(reparsing is done completely by the idle-scheduler of
+semantic if necessary). The former one triggers immediate parsing if
+necessary!"
   (if (or full
-          ;; Klaus Berndl <klaus.berndl@sdm.de>: We do not force a full parse
-          ;; when the semantic-idle-scheduler-mode is off because then a user
-          ;; declines knowingly Emacs-driven parsing of code when he/she
-          ;; switches off the idle-mode of semantic (at least IMO). But this
-          ;; has also the consequence that the methods-buffer is only filed on
-          ;; demand via C-c . r! Therefore the next two lines are commented
-          ;; out.
-;;           (not (boundp 'semantic-idle-scheduler-mode))
-;;           (not (semantic-idle-scheduler-mode))
+          (and (or (not (boundp 'semantic-idle-scheduler-mode))
+                   (not semantic-idle-scheduler-mode))
+               ecb-force-reparse-when-semantic-idle-scheduler-off)
           )
       (ecb--semantic-fetch-tags t)
     (ecb--semantic-fetch-available-tags)))
@@ -2707,7 +2738,14 @@ non-semantic-sources."
           ;; the hook was not called therefore here manually
           (ecb-rebuild-methods-buffer-with-tagcache
            current-tagcache
-           (ecb--semantic-active-p)
+           ;; set the argument NO-UPDATE-SEMANTIC as follows:
+           ;; - no-sematic-sources: always nil
+           ;; - semantic-sources: If we want a complete rebuild of the
+           ;;   methods-buffer based on current tag-list of current buffer
+           ;;   (i.e. FULL-SEMANTIC is not nil) then we have to set this arg
+           ;;   to nil... if we just want the cached tree-content of the
+           ;;   methods-buffer then we set this arg to t.
+           (and (ecb--semantic-active-p) (not full-semantic))
            ;; we force a rebuild also for an empty cache because an empty
            ;; cache is returned by `ecb-fetch-semantic-tags' when a file
            ;; exceeds the limit set in the option
@@ -2996,7 +3034,7 @@ This function is called by the command `ecb-rebuild-methods-buffer'."
              (equal (selected-frame) ecb-frame)
              (not (ecb--semantic-active-p))
              (not (member major-mode ecb-non-semantic-exclude-modes))
-             (ecb-point-in-edit-window))
+             (ecb-point-in-edit-window-number))
     (when (run-hook-with-args-until-failure
            'ecb-rebuild-non-semantic-methods-before-hook
            (buffer-file-name))
@@ -3024,7 +3062,7 @@ reparsing."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame)
              (ecb--semantic-active-p)
-             (ecb-point-in-edit-window))
+             (ecb-point-in-edit-window-number))
     (and clear-cache (ecb--semantic-clear-toplevel-cache))
     (ecb-update-methods-buffer--internal nil nil t)))
 
@@ -3070,7 +3108,7 @@ command rebuids the methods-buffer with the contents of the source-buffer the
 last selected edit-window."
   (interactive)
   (save-selected-window
-    (when (not (ecb-point-in-edit-window))
+    (when (not (ecb-point-in-edit-window-number))
       (let ((ecb-mouse-click-destination 'last-point))
         (ecb-select-edit-window)))
     (ecb-rebuild-methods-buffer-fully clear-cache)))
@@ -3085,7 +3123,7 @@ complete previous parser-information is deleted before parsing, means no
 semantic-cache is used! This argument takes only effect for semantic-sources.
 
 Point must stay in an edit-window otherwise nothing is done."
-  (when (ecb-point-in-edit-window)
+  (when (ecb-point-in-edit-window-number)
     (if (ecb--semantic-active-p)
         (let ((semantic-idle-scheduler-max-buffer-size 0)
               (semantic-auto-parse-max-buffer-size 0))
@@ -3346,7 +3384,7 @@ the setting in `ecb-mouse-click-destination' and the value of
 OTHER-EDIT-WINDOW \(for this see `ecb-combine-ecb-button/edit-win-nr')."
   (select-window (ecb-get-edit-window other-edit-window))
   (ecb-nav-save-current)
-  (ecb-with-original-functions
+  (ecb-with-original-basic-functions
    (find-file filename))
   (ecb-nav-add-item (ecb-nav-file-history-item-new)))
 
@@ -3585,7 +3623,7 @@ is a full filename and cdr is a tag for TYPENAME. "
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: When cedet-1.0 is stable and
 ;; released (and also included as default XEmacs-package) we should use here
 ;; the function `semantic-go-to-tag' because a) it has already buildin most of
-;; tghe intelligency we need here and b) it is overloadable! The we can
+;; the intelligency we need here and b) it is overloadable! The we can
 ;; probably write `ecb-method-clicked' and `ecb-jump-to-tag' much more
 ;; simpler!
 
@@ -4360,7 +4398,7 @@ moved over it."
    :incr-search-additional-pattern ecb-methods-incr-searchpattern-node-prefix
    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add an option to make this
    ;; customizable! Define the docstring as follows: reducing the node-list by
-   ;; typing always(!) removes frist any filter applied before so it always
+   ;; typing always(!) removes first any filter applied before so it always
    ;; starts from the full unfiltered list. (KB: So this mechanism is
    ;; consistent for all buffers, sources, history and methods)
    :reduce-tree-for-incr-search-fn
@@ -4428,6 +4466,73 @@ moved over it."
                                            tag)
                                        source-buffer
                                        (+ 2 indent)))))
+
+(defun semantic--format-tag-arguments (args formatter color)
+  "Format the argument list ARGS with FORMATTER.
+FORMATTER is a function used to format a tag.
+COLOR specifies if color should be used."
+  (let ((out nil))
+    (while args
+      (push (if (semantic-tag-p (car args))
+                (unless (equal (semantic-tag-type (car args)) "void")
+                  (semantic-format-tag-prototype (car args) nil color))
+              (semantic-format-tag-name-from-anything (car args) nil color
+                                                      'variable))
+            out)
+      (setq args (cdr args)))
+    (mapconcat 'identity (nreverse out) semantic-function-argument-separator)
+    ))
+
+(defecb-advice-set ecb-methods-browser-advices
+  "Adviced functions needed by the methods-browser of ECB.")
+
+(defecb-advice custom-save-all around ecb-methods-browser-advices
+  "Save the customized options completely in the background, i.e. the
+file-buffer where the value is saved \(see option `custom-file') is not parsed
+by semantic and also killed afterwards."
+  (if ecb-minor-mode
+      (let ( ;; XEmacs 21.4 does not set this so we do it here, to ensure that
+            ;; the custom-file is loadede in an emacs-lisp-mode buffer, s.b.
+            (default-major-mode 'emacs-lisp-mode)
+            (ecb-window-sync nil)
+            (kill-buffer-hook nil)
+            ;; we prevent parsing the custom-file
+            (semantic-before-toplevel-bovination-hook (lambda ()
+                                                        nil))
+            (semantic--before-fetch-tags-hook (lambda ()
+                                                nil))
+            (semantic-after-toplevel-cache-change-hook nil)
+            (semantic-after-partial-cache-change-hook nil))
+        ;; Klaus Berndl <klaus.berndl@sdm.de>: we must ensure that the
+        ;; current-buffer has a lisp major-mode when the kernel of
+        ;; `custom-save-all' is called because cause of a bug (IMHO) in the
+        ;; `custom-save-delete' of GNU Emacs (which loads the file returned by
+        ;; `custom-file' with `default-major-mode' set to nil which in turn
+        ;; causes that new buffer will get the major-mode of the
+        ;; current-buffer) the file `custom-file' will get the major-mode of
+        ;; the current-buffer. So when the current-buffer has for example
+        ;; major-mode `c++-mode' then the file `custom-file' will be loaded
+        ;; into a buffer with major-mode c++-mode. The function
+        ;; `custom-save-delete' then parses this buffer with (forward-sexp
+        ;; (buffer-size)) which of course fails because forward-sexp tries to
+        ;; parse the custom-file (which is an emacs-lisp-file) as a c++-file
+        ;; with c++-paren-syntax.
+        ;; Solution: Ensure that the buffer *scratch* is current when calling
+        ;; custom-save-all so we have surely a lispy-buffer and therefore we
+        ;; can be sure that custom-file is loaded as lispy-buffer.
+        (save-excursion
+          (set-buffer (get-buffer-create "*scratch*"))
+          ;; now we do the standard task
+          ad-do-it)
+        ;; now we have to kill the custom-file buffer otherwise semantic would
+        ;; parse the buffer of custom-file and the method-buffer would be
+        ;; updated with the contents of custom-file which is definitely not
+        ;; desired.
+        (ignore-errors
+          (kill-buffer (find-file-noselect (ecb-custom-file)))))
+    ad-do-it))
+
+(ecb-disable-advices 'ecb-methods-browser-advices)
 
 (silentcomp-provide 'ecb-method-browser)
 

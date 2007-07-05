@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.67 2006/04/10 07:53:34 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.68 2007/07/05 11:08:23 berndl Exp $
 
 ;;; Commentary:
 
@@ -97,17 +97,8 @@ Example: \(speedbar-change-initial-expansion-list \"buffers\")."
   :group 'ecb-speedbar
   :type 'hook)
 
-(defconst ecb-speedbar-adviced-functions '((speedbar-click . around)
-                                           (speedbar-frame-mode . around)
-                                           (dframe-select-attached-frame . after)
-                                           (speedbar-get-focus . around)
-                                           ;; we have to fix a bug there
-                                           (dframe-mouse-set-point . around))
-  "These functions of speedbar are always adviced if ECB is active. Each
-element of the list is a cons-cell where the car is the function-symbol and
-the cdr the advice-class \(before, around or after). If a function should be
-adviced with more than one class \(e.g. with a before and an after-advice)
-then for every class a cons must be added to this list.")
+(defecb-advice-set ecb-speedbar-adviced-functions 
+  "These functions of speedbar are always adviced if ECB is active.")
 
 (defconst ecb-speedbar-buffer-name " SPEEDBAR"
   "Name of the ECB speedbar buffer.")
@@ -115,7 +106,7 @@ then for every class a cons must be added to this list.")
 (defun ecb-speedbar-buffer-selected ()
   (equal (current-buffer) (get-buffer ecb-speedbar-buffer-name)))
 
-(defadvice speedbar-click (around ecb)
+(defecb-advice speedbar-click around ecb-speedbar-adviced-functions
   "Makes the function compatible with ECB. If ECB is active and the window of
 `ecb-speedbar-buffer-name' is visible \(means a layouts uses the
 speedbar-integration) and the clicked node in speedbar is a file then the
@@ -138,7 +129,7 @@ after clicking onto a filename in the speedbar."
         (ecb-select-edit-window))))
 
 
-(defadvice speedbar-frame-mode (around ecb)
+(defecb-advice speedbar-frame-mode around ecb-speedbar-adviced-functions
   "During running speedbar within ECB this command is disabled!"
   (if ecb-minor-mode
       (when (interactive-p)
@@ -146,7 +137,7 @@ after clicking onto a filename in the speedbar."
     ad-do-it))
 
 
-(defadvice speedbar-get-focus (around ecb)
+(defecb-advice speedbar-get-focus around ecb-speedbar-adviced-functions
   "During running speedbar within ECB this function behaves like follows:
 Change window focus to or from the ECB-speedbar-window. If the selected window
 is not speedbar-window, then the speedbar-window is selected. If the
@@ -160,7 +151,7 @@ speedbar-window is active, then select the edit-window."
 ;; Klaus Berndl <klaus.berndl@sdm.de>: This implementation is done to make
 ;; clear where the bug is fixed...a better impl. can be seen in
 ;; tree-buffer-mouse-set-point (does the same but better code - IMHO).
-(defadvice dframe-mouse-set-point (around ecb)
+(defecb-advice dframe-mouse-set-point around ecb-speedbar-adviced-functions
   "Fixes a bug in the original implementation: if clicked onto an image then
 the point was not set by `mouse-set-point'."
   (if (and (fboundp 'event-over-glyph-p) (event-over-glyph-p e))
@@ -181,7 +172,7 @@ the point was not set by `mouse-set-point'."
 ;; inline compiled into all users of this function. So our advice would never
 ;; take effect. But dframe-select-attached-frame is a defun so we can advice
 ;; it!
-(defadvice dframe-select-attached-frame (after ecb)
+(defecb-advice dframe-select-attached-frame after ecb-speedbar-adviced-functions
   "Run `ecb-speedbar-dframe-select-attached-window' but only if
 `dframe-after-select-attached-frame-hook' is not available."
   (unless (boundp 'dframe-after-select-attached-frame-hook)
@@ -223,7 +214,7 @@ speedbar versions >= 0.14beta1. But be aware: If the speedbar impl changes in
 future this could break."
 
   ;; enable the advices for speedbar
-  (ecb-enable-advices ecb-speedbar-adviced-functions)
+  (ecb-enable-advices 'ecb-speedbar-adviced-functions)
   
   (run-hooks 'ecb-speedbar-before-activate-hook)
 
@@ -301,7 +292,7 @@ future this could break."
 
 (defun ecb-speedbar-deactivate ()
   "Reset things as before activating speedbar by ECB"
-  (ecb-disable-advices ecb-speedbar-adviced-functions)
+  (ecb-disable-advices 'ecb-speedbar-adviced-functions)
   
   (remove-hook 'dframe-after-select-attached-frame-hook
                'ecb-speedbar-dframe-select-attached-window)

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.111 2006/03/10 15:40:36 berndl Exp $
+;; $Id: ecb-help.el,v 1.112 2007/07/05 11:08:24 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -241,7 +241,7 @@ this."
   (when (or ecb-minor-mode
             (y-or-n-p "ECB should be active when submitting a problem-report. Force report? "))
     (if (and (equal ecb-frame (selected-frame))
-             (not (ecb-point-in-edit-window)))
+             (not (ecb-point-in-edit-window-number)))
         (ecb-select-edit-window))
     (if (not (locate-library "reporter"))
         (ecb-error "You need the reporter.el package to submit a bugreport for ECB!")

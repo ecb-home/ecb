@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.63 2006/05/12 16:03:11 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.64 2007/07/05 11:08:24 berndl Exp $
 
 ;;; Commentary:
 
@@ -2727,6 +2727,9 @@ is writable or not."
 
 ;; version control support
 
+(defecb-advice-set ecb-vc-advices 
+  "All advices needed for the builtin VC-support of ECB.")
+
 ;; We use a cache which stores for
 ;; + a directory: either the function used to check the VC-state of its files
 ;;   (if the directory is managed by a VC-backend) or the symbol 'NO-VC (if
@@ -3005,7 +3008,7 @@ and 'unlocked-changes."
      ((eq action 'checkin)
       'edited))))
 
-(defadvice clearcase-sync-from-disk (after ecb)
+(defecb-advice clearcase-sync-from-disk after ecb-vc-advices
   "Ensures that the ECB-cache is reset and the entry for the currently
 checked-in/out or added file is cleared. Does nothing if the function
 `ecb-vc-dir-managed-by-CC' is not contained in `ecb-vc-supported-backends'!"
@@ -3278,11 +3281,6 @@ display an appropriate icon in front of the file."
 ;;   with a good documentation what a user has to do.... ;-)
 
 
-(defvar ecb-vc-advices '((vc-checkin . after)
-                         (clearcase-sync-from-disk . after))
-  "All advices needed for the builtin VC-support of ECB. Same format as
-`ecb-basic-adviced-functions'.")
-
 (defvar ecb-checkedin-file nil
   "Stored the filename of the most recent checked-in file. Is only set by the
 after-advice of `vc-checkin' and `ecb-vc-checkin-hook' \(resets it to nil).
@@ -3292,7 +3290,7 @@ This is the communication-channel between `vc-checkin' and
 `ecb-vc-checkin-hook' so this hook-function gets the filename of the
 checked-in file.")
 
-(defadvice vc-checkin (after ecb)
+(defecb-advice vc-checkin after ecb-vc-advices
   "Simply stores the filename of the checked-in file in `ecb-checkedin-file'
 so it is available in the `vc-checkin-hook'."
   (setq ecb-checkedin-file (ecb-fix-filename (ad-get-arg 0))))
@@ -3320,11 +3318,11 @@ reverted file-buffer is cleared."
         (remove-hook 'after-revert-hook 'ecb-vc-after-revert-hook)
         (remove-hook 'write-file-hooks 'ecb-vc-reset-vc-stealthy-checks)
         (remove-hook 'vc-checkin-hook 'ecb-vc-checkin-hook)
-        (ecb-disable-advices ecb-vc-advices))
+        (ecb-disable-advices 'ecb-vc-advices))
     (add-hook 'after-revert-hook 'ecb-vc-after-revert-hook)
     (add-hook 'write-file-hooks 'ecb-vc-reset-vc-stealthy-checks)
     (add-hook 'vc-checkin-hook 'ecb-vc-checkin-hook)
-    (ecb-enable-advices ecb-vc-advices)))
+    (ecb-enable-advices 'ecb-vc-advices)))
 
 ;; -- end of vc-support ---------------
 
@@ -3742,11 +3740,10 @@ the help-text should be printed here."
                            'identity
                          'ecb-file-name-directory)
                        (tree-node->data node)))))
-    (ecb-with-adviced-functions
-     (funcall (if other
-                  'dired-other-window
-                'dired)
-              dir))))
+    (funcall (if other
+                 'dired-other-window
+               'dired)
+             dir)))
 
 
 (tree-buffer-defpopup-command ecb-dired-directory

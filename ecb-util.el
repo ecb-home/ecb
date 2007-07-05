@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.137 2006/08/18 14:49:43 berndl Exp $
+;; $Id: ecb-util.el,v 1.138 2007/07/05 11:08:23 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -309,97 +309,197 @@ Uses the `derived-mode-parent' property of the symbol to trace backwards."
 
 ;;; ----- advice stuff -------------------------------------
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Attention. Current mechanism of
-;; (de)activating the basic advices and the intelligent window advices of
-;; `ecb-advice-window-functions' independent from each other works only if
-;; both sets of functions are disjunct (because ad-activate always activates
-;; ALL advices of a function if they are not disabled!)
-(defconst ecb-basic-adviced-functions (if ecb-running-xemacs
-                                          '((delete-frame . around)
-                                            (compilation-set-window-height . around)
-                                            (shrink-window-if-larger-than-buffer . around)
-                                            (show-temp-buffer-in-current-frame . around)
-                                            (pop-to-buffer . around)
-                                            (current-window-configuration . after)
-                                            (set-window-configuration . after)
-                                            (scroll-other-window . around)
-                                            (custom-save-all . around)
-                                            (count-windows . around)
-                                            (scroll-all-mode . after))
-                                        '((delete-frame . around)
-                                          (compilation-set-window-height . around)
-                                          (resize-temp-buffer-window . around)
-                                          (shrink-window-if-larger-than-buffer . around)
-                                          (mouse-drag-vertical-line . around)
-                                          (mouse-drag-mode-line . around)
-                                          (pop-to-buffer . around)
-                                          (current-window-configuration . after)
-                                          (set-window-configuration . after)
-                                          (enlarge-window . around)
-                                          (shrink-window . around)
-                                          (tmm-prompt . around)
-                                          (scroll-other-window . around)
-                                          (custom-save-all . around)
-                                          (count-windows . around)
-                                          (scroll-all-mode . after)))
-  "These functions are always adviced if ECB is active. Each element of the
-list is a cons-cell where the car is the function-symbol and the cdr the
-advice-class \(before, around or after). If a function should be adviced with
-more than one class \(e.g. with a before and an after-advice) then for every
-class a cons must be added to this list.
+(defvar ecb-adviced-function-sets nil
+  "A list of adviced-function sets defined with `defecb-advice-set'.
+Each element is a cons-cell where car is the advice-set-var and cdr is an
+indicator if the caller of `ecb-with-original-adviced-function-set' is the
+outmost caller.
 
-Every basic advice of ECB must be registered in this constant but can be
-implemented in another file!")
+DO NOT CHANGE THIS!")
 
-(defun ecb-enable-advices (advice-list)
-  "Enable all advices of ADVICE-LIST. ADVICE-LIST must have the format of
-`ecb-basic-adviced-functions'."
-  (dolist (elem advice-list)
-    (ad-enable-advice (car elem) (cdr elem) 'ecb)
-    (ad-activate (car elem))))
-  
-(defun ecb-disable-advices (advice-list)
-  "Disable all advices of ADVICE-LIST. ADVICE-LIST must have the format of
-`ecb-basic-adviced-functions'."
-  (dolist (elem advice-list)
-    (ad-disable-advice (car elem) (cdr elem) 'ecb)
-    (ad-activate (car elem))))
-  
+(defvar ecb-adviced-functions nil
+  "A list of all advices defined with `defecb-advice'.
+This list is the set union of the values of all function-sets of
+`ecb-adviced-function-sets'.
 
-(defmacro ecb-with-original-basic-functions (&rest body)
-  "Evaluates BODY with all adviced basic-functions of ECB deactivated \(means
-with their original definition). Restores always the previous state of the ECB
-adviced basic-functions, means after evaluating BODY it activates the advices
-of exactly the functions in `ecb-basic-adviced-functions'!"
-  `(unwind-protect
-       (progn
-         (ecb-disable-advices ecb-basic-adviced-functions)
-         ,@body)
-     (ecb-enable-advices ecb-basic-adviced-functions)))
+DO NOT CHANGE THIS!")
 
-(defun ecb-enable-ecb-advice (function-symbol advice-type arg)
+(defmacro defecb-advice-set (advice-set docstring)
+  "Defines an advice-set for ECB.
+This defines a variable which will contain adviced functions defined by
+`defecb-advice-set'. This is a set of advices which can be enabled or disabled
+\"en block\" which must be done either by `ecb-enable-advices',
+`ecb-disable-advices' or `ecb-with-original-adviced-function-set'.
+
+Before defining a new advice-set it's recommended to take a look at the value
+of `ecb-adviced-function-sets' if there is already a suitable advice-set.
+
+IMPORTANT: Each advice in ECB must be defined by `defecb-advice' and must
+belong to an advice-set previously defined by `defecb-advice-set'!
+
+All advice-sets of ECB will be automatically\(!) disabled at load-time of the
+ecb-library and at deactivation-time of ECB. But: Enabling of a certain
+advice-set must be done appropriately.
+
+Example:
+
+\(defecb-advice-set ecb-always-disabled-advices
+  \"These advices are always disabled.\")"
+  `(eval-and-compile
+     (add-to-list 'ecb-adviced-function-sets (cons (quote ,advice-set), nil))
+     (defvar ,advice-set nil ,docstring)))
+
+(put 'defecb-advice-set 'lisp-indent-function 1)
+
+(defmacro defecb-advice (adviced-function advice-class advice-set advice-docstring &rest body)
+  "Defines an advice for ADVICED-FUNCTION with ADVICE-CLASS for ADVICE-SET.
+ADVICED-FUNCTION must be an advicable object \(e.g. a function, a subr
+etc...). ADVICE-CLASS must be one of around, after or before. ADVICE-SET must
+ba an advice-set previously defined by `defecb-advice-set'. ADVICE-DOCSTRING
+ist the docstring for the advice. BODY is the program-code for the advice as
+it would be written with `defadvice'.
+
+Do not quote ADVICED-FUNCTION, ADVICE-CLASS and ADVICE-SET.
+
+Example:
+
+\(defecb-advice delete-frame around ecb-basic-adviced-functions
+  \"If FRAME is equal to the ECB frame then...\"
+  \(let \(\(frame \(or \(ad-get-arg 0) \(selected-frame))))
+    \(if \(and ecb-minor-mode
+             \(equal frame ecb-frame))
+        \(when \(ecb-confirm \"Attempt to delete the ECB-frame....Proceed? \")
+	  \(ecb-deactivate-internal) 
+	  ad-do-it)
+      ad-do-it)))"
+  `(progn
+     (if (assoc (quote ,advice-set) ecb-adviced-function-sets)
+         (add-to-list (quote ,advice-set)
+                      (cons (quote ,adviced-function) (quote ,advice-class)))
+       (error "The advice-set %s does not exist!"
+              (symbol-name (quote ,advice-set))))
+     (if (not (member (quote ,advice-class)
+                      '(around after before)))
+         (error "The advice-class %s is not allowed - only around, after and before!"
+                (symbol-name (quote ,advice-class))))
+     (add-to-list 'ecb-adviced-functions (cons (quote ,adviced-function) (quote ,advice-class)))
+     (eval-and-compile
+       (defadvice ,adviced-function (,advice-class ecb)
+         ,advice-docstring
+         ,@body))))
+
+(put 'defecb-advice 'lisp-indent-function 3)
+
+(defun ecb-enable-ecb-advice (function-symbol advice-class arg)
   "If ARG is greater or equal zero then enable the adviced version of
-FUNCTION-SYMBOL. The advice must be of type of the ADVICE-TYPE which can be
-'around, 'before or 'after."
+FUNCTION-SYMBOL. Otherwise disable the adviced version. The advice must be
+defined with class ADVICE-CLASS by `defecb-advice'.
+
+IMPORTANT: Do not use the function directly. Always use `ecb-enable-advices',
+ecb-disable-advices or `ecb-with-original-adviced-function-set'!."
   (if (< arg 0)
       (progn
-        (ad-disable-advice function-symbol advice-type 'ecb)
+        (ad-disable-advice function-symbol advice-class 'ecb)
         (ad-activate function-symbol))
-    (ad-enable-advice function-symbol advice-type 'ecb)
+    (ad-enable-advice function-symbol advice-class 'ecb)
     (ad-activate function-symbol)))
 
-(defmacro ecb-with-ecb-advice (function-symbol advice-type &rest body)
+(defun ecb-enable-advices (adviced-function-set-var)
+  "Enable all advices of ADVICED-FUNCTION-SET-VAR, which must be defined by
+`defecb-advice-set'."
+  (if (eq adviced-function-set-var 'ecb-always-disabled-advices)
+      (error "The advice-set ecb-always-disabled-advices must not be enabled!"))
+  (if (not (assq adviced-function-set-var ecb-adviced-function-sets))
+      (error "The adviced function set %s is not defined by defecb-advice-set!"
+             (symbol-name adviced-function-set-var)))
+  (dolist (elem (symbol-value adviced-function-set-var))
+    (ecb-enable-ecb-advice (car elem) (cdr elem) 1)))
+  
+(defun ecb-disable-advices (adviced-function-set-var)
+  "Disable all advices of ADVICED-FUNCTION-SET-VAR, which must be defined by
+`defecb-advice-set'"
+  (if (not (assq adviced-function-set-var ecb-adviced-function-sets))
+      (error "The adviced function set %s is not defined by defecb-advice-set!"
+             (symbol-name adviced-function-set-var)))
+  (dolist (elem (symbol-value adviced-function-set-var))
+    (ecb-enable-ecb-advice (car elem) (cdr elem) -1)))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Generally we have here the same
+;; problem as we had for `ecb-with-original-adviced-function-set' concerning
+;; nested calls. But for now we do nothing because...
+(defmacro ecb-with-ecb-advice (function-symbol advice-class &rest body)
   "Evaluates BODY with the adviced version of FUNCTION-SYMBOL. The advice must
-be of type of the ADVICE-TYPE which can be 'around, 'before or 'after. Such an
-advice has to ensure that it behaves as its original version when called for
-another frame than the `ecb-frame'."
-  `(unwind-protect
-       (progn
-         (ecb-enable-ecb-advice ,function-symbol ,advice-type 1)
-         ,@body)
-     (ecb-enable-ecb-advice ,function-symbol ,advice-type -1)))
+be defined by `defecb-advice' with class ADVICE-CLASS for the advice-set
+`ecb-always-disabled-advices'. Otherwise an error occurs. The advice is only
+active during BODY. BODY is protected by `unwind-protect' so in each
+case the advice will be disabled after finishing this macro.
+Returns the value of BODY.
+
+Example where this macro is used for `walk-windows' within another advice:
+
+\(ecb-with-ecb-advice 'walk-windows 'around
+   ad-do-it)"
+  `(progn
+     (if (not (member (cons ,function-symbol ,advice-class)
+                      ecb-always-disabled-advices))
+         (error "Advice for %s with class %s not registered in ecb-always-disabled-advices!"
+                (symbol-name ,function-symbol)
+                (symbol-name ,advice-class)))
+     (unwind-protect
+         (progn
+           (ecb-enable-ecb-advice ,function-symbol ,advice-class 1)
+           ,@body)
+       (ecb-enable-ecb-advice ,function-symbol ,advice-class -1))))
 
 (put 'ecb-with-ecb-advice 'lisp-indent-function 2)
+
+(defmacro ecb-with-original-adviced-function-set (adviced-function-set-var &rest body)
+  "Evaluates BODY with all adviced functions of ADVICED-FUNCTION-SET-VAR
+being disabled \(means with their original definition). Restores always \(even
+if an error occurs during evaluating BODY) the previous state of the adviced
+functions, means it depends if the call to this macro is the outermost call:
+Only if it is the outermost-call the advices of the used advice-set will be
+disabled after finishing. So full BODY is guaranted being evaluated with
+disabled advices of ADVICED-FUNCTION-SET-VAR.
+
+ADVICED-FUNCTION-SET-VAR must be defined by `defecb-advice-set' and all
+advices of this set must be defined by `defecb-advice'. Otherwise an error
+occurs.
+
+Example:
+
+\(ecb-with-original-adviced-function-set 'ecb-basic-adviced-functions
+   \(do-something..))"
+  (let ((outmost-caller-p (make-symbol "outmost-caller-p")))
+    `(let ((,outmost-caller-p 
+            (unless (equal (cdr (assq ,adviced-function-set-var ecb-adviced-function-sets))
+                           'outmost-caller)
+              ;; if we are the outmost caller of this macro we store this
+              ;; for
+              ;; a) following callers
+              ;; b) ourself, so we can later reset is
+              (setcdr (assq ,adviced-function-set-var ecb-adviced-function-sets) 'outmost-caller))
+            ))
+       (unwind-protect
+           (progn
+             (when ,outmost-caller-p
+               (ecb-disable-advices ,adviced-function-set-var))
+             ,@body)
+         (when ,outmost-caller-p
+           ;; Only if we are the outmost caller we are allowed to re-enable the
+           ;; disabled advice-set
+           (setcdr (assq ,adviced-function-set-var ecb-adviced-function-sets) nil)
+           (ecb-enable-advices ,adviced-function-set-var))))))
+
+
+(put 'ecb-with-original-adviced-function-set 'lisp-indent-function 1)
+
+(defecb-advice-set ecb-always-disabled-advices
+  "These advices are always disabled.
+This advice-set will never be enabled by `ecb-enable-advices' but such an
+advice has to be activated 'on demand' by the caller. Such an advice must be
+used with the macro `ecb-with-ecb-advice'.")
+
 
 
 ;;; ----- Customize stuff ----------------------------------
@@ -413,52 +513,6 @@ started with -q) nil is returned."
       custom-file
     (require 'cus-edit)
     (ignore-errors (custom-file))))
-
-(defadvice custom-save-all (around ecb)
-  "Save the customized options completely in the background, i.e. the
-file-buffer where the value is saved \(see option `custom-file') is not parsed
-by semantic and also killed afterwards."
-  (if ecb-minor-mode
-      (let (;; XEmacs 21.4 does not set this so we do it here, to ensure that
-            ;; the custom-file is loadede in an emacs-lisp-mode buffer, s.b.
-            (default-major-mode 'emacs-lisp-mode)
-            (ecb-window-sync nil)
-            (kill-buffer-hook nil)
-            ;; we prevent parsing the custom-file
-            (semantic-before-toplevel-bovination-hook (lambda ()
-                                                        nil))
-            (semantic--before-fetch-tags-hook (lambda ()
-                                                nil))
-            (semantic-after-toplevel-cache-change-hook nil)
-            (semantic-after-partial-cache-change-hook nil))
-        ;; Klaus Berndl <klaus.berndl@sdm.de>: we must ensure that the
-        ;; current-buffer has a lisp major-mode when the kernel of
-        ;; `custom-save-all' is called because cause of a bug (IMHO) in the
-        ;; `custom-save-delete' of GNU Emacs (which loads the file returned by
-        ;; `custom-file' with `default-major-mode' set to nil which in turn
-        ;; causes that new buffer will get the major-mode of the
-        ;; current-buffer) the file `custom-file' will get the major-mode of
-        ;; the current-buffer. So when the current-buffer has for example
-        ;; major-mode `c++-mode' then the file `custom-file' will be loaded
-        ;; into a buffer with major-mode c++-mode. The function
-        ;; `custom-save-delete' then parses this buffer with (forward-sexp
-        ;; (buffer-size)) which of course fails because forward-sexp tries to
-        ;; parse the custom-file (which is an emacs-lisp-file) as a c++-file
-        ;; with c++-paren-syntax.
-        ;; Solution: Ensure that the buffer *scratch* is current when calling
-        ;; custom-save-all so we have surely a lispy-buffer and therefore we
-        ;; can be sure that custom-file is loaded as lispy-buffer.
-        (save-excursion
-          (set-buffer (get-buffer-create "*scratch*"))
-          ;; now we do the standard task
-          ad-do-it)
-        ;; now we have to kill the custom-file buffer otherwise semantic would
-        ;; parse the buffer of custom-file and the method-buffer would be
-        ;; updated with the contents of custom-file which is definitely not
-        ;; desired.
-        (ignore-errors
-          (kill-buffer (find-file-noselect (ecb-custom-file)))))
-    ad-do-it))
 
 (defun ecb-option-get-value (option &optional type)
   "Return the value of a customizable ECB-option OPTION with TYPE, where TYPE
@@ -1765,43 +1819,55 @@ of `next-window'. If omitted, WINDOW defaults to the selected window. FRAME and
 WINDOW default to the selected ones. Optional second arg MINIBUF t means count
 the minibuffer window even if not active. If MINIBUF is neither t nor nil it
 means not to count the minibuffer even if it is active."
-  (if (not ecb-running-xemacs)
-      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: There seems to be
-      ;; mysterious behavior when running our own window-list version with
-      ;; GNU Emacs >= 21.3 - especially when running an igrep when the
-      ;; igrep-buffer is already in another window. We can here savely use the
-      ;; function `window-list' because it returns an ordered list
-      (window-list frame minibuf window)
-    (setq window (or window (selected-window))
-          frame (or frame (selected-frame)))
-    (if (not (eq (window-frame window) frame))
-        (error "Window must be on frame."))
-    (let ((current-frame (selected-frame))
-          (current-point (point))
-          list)
-      (unwind-protect
-          (save-window-excursion
-            (select-frame frame)
-            ;; this is needed for correct start-point
-            (select-window window)
-            (walk-windows
-             (function (lambda (cur-window)
-                         (if (not (eq window cur-window))
-                             (setq list (cons cur-window list)))))
-             minibuf
-             'selected)
-            ;; This is needed to get the right canonical windows-order, i.e. the
-            ;; same order of windows than `walk-windows' walks through!
-            (setq list (nreverse list))
-            (setq list (cons window list)))
-        (select-frame current-frame)
-        ;; we must reset the point of the buffer which was current at call-time
-        ;; of this function
-        (goto-char current-point)))))
+  ;; At least under XEmacs 21.5 there's a problem with the advice on
+  ;; current-window-configuration -- that advice calls
+  ;; ecb-window-configuration-data, which in turn involves ecb-windows-list,
+  ;; which uses save-windows-excursion, which in 21.5-b28 is. . . a macro
+  ;; which uses current-window-configuration!
+  ;; To avoid this we run the body of this function with deactivated basic
+  ;; advices of ecb.
+   (if (not ecb-running-xemacs)
+       ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: There seems to be
+       ;; mysterious behavior when running our own window-list version with
+       ;; GNU Emacs >= 21.3 - especially when running an igrep when the
+       ;; igrep-buffer is already in another window. We can here savely use the
+       ;; function `window-list' because it returns an ordered list
+       (window-list frame minibuf window)
+     ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: the following is needed for
+     ;; XEmacs >= 21.5 - but the best would be if we would not need
+     ;; implementing window-list, means the best would be if window-list
+     ;; returns an ordered list!
+     (ecb-with-original-basic-functions
+      (setq window (or window (selected-window))
+            frame (or frame (selected-frame)))
+      (if (not (eq (window-frame window) frame))
+          (error "Window must be on frame."))
+      (let ((current-frame (selected-frame))
+            (current-point (point))
+            list)
+        (unwind-protect
+            (save-window-excursion
+              (select-frame frame)
+              ;; this is needed for correct start-point
+              (select-window window)
+              (walk-windows
+               (function (lambda (cur-window)
+                           (if (not (eq window cur-window))
+                               (setq list (cons cur-window list)))))
+               minibuf
+               'selected)
+              ;; This is needed to get the right canonical windows-order, i.e. the
+              ;; same order of windows than `walk-windows' walks through!
+              (setq list (nreverse list))
+              (setq list (cons window list)))
+          (select-frame current-frame)
+          ;; we must reset the point of the buffer which was current at call-time
+          ;; of this function
+          (goto-char current-point))))))
 
 (defun ecb-canonical-windows-list ()
   "Return a list of all current visible windows in the `ecb-frame' \(starting
-from the left-most top-most window) in the order `other-window' would walk
+from the left-most top-most window) in the order `next-window' would walk
 through these windows."
   (ecb-window-list ecb-frame 0 (frame-first-window ecb-frame)))
 
@@ -2018,6 +2084,13 @@ cons-cell \('test-inner-loop . \"test\")"
 		   (message-log-max nil))
 	       (while t
 		 (message "Looping ...")
+                 ;; with the following line it isn't interruptable... so if
+                 ;; you call a funtion which do not return you never reach the
+                 ;; throw-part and no interruption takes place (could be if you
+                 ;; run external processes!)
+                 ;; So this mechanism is better than nothing but not really
+                 ;; good... we need the `while-no-input'-macro...
+                 ;;(while t nil)
 		 (ecb-throw-on-input 'test-inner-loop "test")
                  )
 	       'exit))))

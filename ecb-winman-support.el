@@ -21,7 +21,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-winman-support.el,v 1.13 2005/02/28 11:31:54 berndl Exp $
+;; $Id: ecb-winman-support.el,v 1.14 2007/07/05 11:08:23 berndl Exp $
 
 ;;; Commentary
 ;;
@@ -127,13 +127,9 @@ configurations with deactivated ECB!"
 
 ;; support for the library escreen.el ----------------------------------------
 
-(defconst ecb-winman-escreen-adviced-functions
-  '((escreen-save-current-screen-configuration . before))
+(defecb-advice-set ecb-winman-escreen-adviced-functions
   "These functions of escreen are adviced if escreen is active during ECB is
-active. Each element of the list is a cons-cell where the car is the
-function-symbol and the cdr the advice-class \(before, around or after). If a
-function should be adviced with more than one class \(e.g. with a before and
-an after-advice) then for every class a cons must be added to this list.")
+active.")
 
 
 (defun ecb-winman-escreen-enable-support ()
@@ -146,7 +142,7 @@ escreen.el!"
       (condition-case nil
           (progn
             (require 'escreen)
-            (ecb-enable-advices ecb-winman-escreen-adviced-functions)
+            (ecb-enable-advices 'ecb-winman-escreen-adviced-functions)
             (add-hook 'escreen-goto-screen-hook
                       'ecb-winman-escreen-goto-escreen-hook)
             (ecb-info-message "Support for escreen enabled."))
@@ -159,7 +155,7 @@ escreen.el!"
 (defun ecb-winman-escreen-disable-support ()
   "Disable the escreen-support of ECB."
   (interactive)
-  (ecb-disable-advices ecb-winman-escreen-adviced-functions)
+  (ecb-disable-advices 'ecb-winman-escreen-adviced-functions)
   (when (featurep 'escreen)
     (remove-hook 'escreen-goto-screen-hook
                  'ecb-winman-escreen-goto-escreen-hook)))
@@ -174,7 +170,9 @@ escreen.el!"
       (let ((ecb-split-edit-window-after-start 'before-deactivation))
         (ecb-activate))))
 
-(defadvice escreen-save-current-screen-configuration (before ecb)
+(defecb-advice escreen-save-current-screen-configuration
+    before
+    ecb-winman-escreen-adviced-functions
   "escreen can only handle screen-configurations if ECB is deactivated. This
 is because ECB handles its window-creation completely by itself and because it
 uses dedicated windows. So we deactivate ECB before running this function."
@@ -186,17 +184,9 @@ uses dedicated windows. So we deactivate ECB before running this function."
 
 ;; support for the library winring.el ---------------------------------------
 
-(defconst ecb-winman-winring-adviced-functions
-  '((winring-save-current-configuration . before)
-    (winring-initialize . after)
-    (winring-duplicate-configuration . before)
-    (winring-restore-configuration . before)
-    (winring-set-name . after))
-     "These functions of winring are adviced if winring is active during ECB is
-active. Each element of the list is a cons-cell where the car is the
-function-symbol and the cdr the advice-class \(before, around or after). If a
-function should be adviced with more than one class \(e.g. with a before and
-an after-advice) then for every class a cons must be added to this list.")
+(defecb-advice-set ecb-winman-winring-adviced-functions
+  "These functions of winring are adviced if winring is active during ECB is
+active.")
 
 (defun ecb-winman-winring-enable-support ()
   "Load the winring-library and enable the ECB-support for it.
@@ -208,7 +198,7 @@ winring.el!"
       (condition-case nil
           (progn
             (require 'winring)
-            (ecb-enable-advices ecb-winman-winring-adviced-functions)
+            (ecb-enable-advices 'ecb-winman-winring-adviced-functions)
             (ecb-info-message "Support for winring enabled."))
         (error
          (ecb-winman-winring-disable-support)
@@ -218,13 +208,13 @@ winring.el!"
 (defun ecb-winman-winring-disable-support ()
   "Disable the winring-support of ECB."
   (interactive)
-  (ecb-disable-advices ecb-winman-winring-adviced-functions))
+  (ecb-disable-advices 'ecb-winman-winring-adviced-functions))
 
 
 (defvar ecb-winman-winring-ecb-frame nil
   "Frame for which the ECB-window-configuration was set first time.")
 
-(defadvice winring-set-name (after ecb)
+(defecb-advice winring-set-name after ecb-winman-winring-adviced-functions
   "Store frame if name is equal with `ecb-winman-winring-name' and activate
 ECB if we set the name `ecb-winman-winring-name'."
   ;; Because this is an after advice of winring-name-of-current returns here
@@ -242,12 +232,12 @@ ECB if we set the name `ecb-winman-winring-name'."
       (let ((ecb-split-edit-window-after-start 'before-deactivation))
         (ecb-activate)))))
 
-(defadvice winring-duplicate-configuration (before ecb)
+(defecb-advice winring-duplicate-configuration before ecb-winman-winring-adviced-functions
   "Prevent the ECB-window-configuration from being duplicated."
   (if (ecb-string= (winring-name-of-current) ecb-winman-winring-name)
       (ecb-error "The ECB-window-configuration can not be duplicated!")))
 
-(defadvice winring-restore-configuration (before ecb)
+(defecb-advice winring-restore-configuration before ecb-winman-winring-adviced-functions
   "Deactivates ECB if the ECB-window-configuration is active."
   (if (and (ecb-string= (winring-name-of-current) ecb-winman-winring-name)
            (boundp 'ecb-minor-mode)
@@ -256,7 +246,7 @@ ECB if we set the name `ecb-winman-winring-name'."
         (ecb-deactivate))))
   
 
-(defadvice winring-save-current-configuration (before ecb)
+(defecb-advice winring-save-current-configuration before ecb-winman-winring-adviced-functions
   "winring can only handle window-configurations if ECB is deactivated. This
 is because ECB handles its window-creation completely by itself and because it
 uses dedicated windows. So we deactivate ECB before running this function."
@@ -267,7 +257,7 @@ uses dedicated windows. So we deactivate ECB before running this function."
         (ecb-deactivate))))
 
   
-(defadvice winring-initialize (after ecb)
+(defecb-advice winring-initialize after ecb-winman-winring-adviced-functions
   "If ECB is active when winring is initialized then this initial
 window-configuration gets always the name `ecb-winman-winring-name'."
   (if (and (boundp 'ecb-minor-mode)
@@ -278,45 +268,37 @@ window-configuration gets always the name `ecb-winman-winring-name'."
 
 ;; not supported window-managing functions------------------------------------
 
-(defconst ecb-winman-not-supported-function-advices
-  (if ecb-running-xemacs
-      '((winner-mode . before)
-        (winner-redo . before)
-        (winner-undo . before)
-        (push-window-configuration . before)
-        (pop-window-configuration . before)
-        (unpop-window-configuration . before))
-    '((winner-mode . before)
-      (winner-redo . before)
-      (winner-undo . before))))
+(defecb-advice-set ecb-winman-not-supported-function-advices
+  "These function will be adviced so an error is reported when executed in the
+ecb-frame.")
 
-(defadvice winner-mode (before ecb)
+(defecb-advice winner-mode before ecb-winman-not-supported-function-advices
   "Prevents `winner-mode' from being activated for the ECB-frame."
   (if (equal (selected-frame) ecb-frame)
       (ecb-error "Can't use winner-mode functions in the ecb-frame.")))
 
-(defadvice winner-redo (before ecb)
+(defecb-advice winner-redo before ecb-winman-not-supported-function-advices
   "Prevents `winner-redo' from being used within the ECB-frame."
   (if (equal (selected-frame) ecb-frame)
       (ecb-error "Can't use winner-mode functions in the ecb-frame.")))
 
-(defadvice winner-undo (before ecb)
+(defecb-advice winner-undo before ecb-winman-not-supported-function-advices
   "Prevents `winner-undo' from being used within the ECB-frame."
   (if (equal (selected-frame) ecb-frame)
       (ecb-error "Can't use winner-mode functions in the ecb-frame.")))
 
-(when ecb-running-xemacs
-  (defadvice push-window-configuration (before ecb)
+(when-ecb-running-xemacs
+  (defecb-advice push-window-configuration before ecb-winman-not-supported-function-advices
     (if (and (equal (selected-frame) ecb-frame)
              (interactive-p))
         (ecb-error "Can't use interactive push-window-configuration in the ecb-frame.")))
 
-  (defadvice pop-window-configuration (before ecb)
+  (defecb-advice pop-window-configuration before ecb-winman-not-supported-function-advices
     (if (and (equal (selected-frame) ecb-frame)
              (interactive-p))
         (ecb-error "Can't use interactive pop-window-configuration in the ecb-frame.")))
   
-  (defadvice unpop-window-configuration (before ecb)
+  (defecb-advice unpop-window-configuration before ecb-winman-not-supported-function-advices
     (if (and (equal (selected-frame) ecb-frame)
              (interactive-p))
         (ecb-error "Can't use interactive unpop-window-configuration in the ecb-frame.")))
@@ -324,9 +306,9 @@ window-configuration gets always the name `ecb-winman-winring-name'."
 
 ;; we disable all advices per default.
 
-(ecb-disable-advices ecb-winman-winring-adviced-functions)
-(ecb-disable-advices ecb-winman-escreen-adviced-functions)
-(ecb-disable-advices ecb-winman-not-supported-function-advices)
+(ecb-disable-advices 'ecb-winman-winring-adviced-functions)
+(ecb-disable-advices 'ecb-winman-escreen-adviced-functions)
+(ecb-disable-advices 'ecb-winman-not-supported-function-advices)
 
 (silentcomp-provide 'ecb-winman-support)
 
