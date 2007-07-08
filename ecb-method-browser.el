@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.80 2007/07/05 11:08:23 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.81 2007/07/08 16:42:04 berndl Exp $
 
 ;;; Commentary:
 
@@ -3647,6 +3647,10 @@ is a full filename and cdr is a tag for TYPENAME. "
 should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
   (if shift-mode
       (ecb-mouse-over-method-node node nil nil 'force))
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: this prevents from jumping to
+  ;; the clicked tag!! Why???
+;;   (when (ecb-buffer-is-maximized-p (buffer-name))
+;;     (ecb-undo-maximize-ecb-buffer t))
   (let ((data (tree-node->data node))
         (type (tree-node->type node))
         (filename ecb-path-selected-source)

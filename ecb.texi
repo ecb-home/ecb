@@ -23,7 +23,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.211 2006/03/10 15:40:35 berndl Exp $
+@c $Id: ecb.texi,v 1.212 2007/07/08 16:42:04 berndl Exp $
 
 @setfilename ecb.info
 
@@ -2086,23 +2086,23 @@ edit-windows of the edit-area would be the only windows of the
 ECB-frame.
 
 @cindex Adviced functions
-ECB offers you to advice the following functions so they work best with ECB:
+ECB advices the following user-commands so they work best with ECB:
 
 @itemize @minus
-@item @code{other-window}
-@item @code{delete-window}
+@item @code{balance-windows}
 @item @code{delete-other-windows}
+@item @code{delete-window}
 @item @code{delete-windows-on}
+@item @code{display-buffer}
+@item @code{shrink-window-if-larger-than-buffer}
+@item @code{split-window}
 @item @code{split-window-horizontally}
 @item @code{split-window-vertically}
-@item @code{split-window}
-@item @code{display-buffer}
 @item @code{switch-to-buffer}
 @item @code{switch-to-buffer-other-window}
+@item @code{other-window}
 @item @code{other-window-for-scrolling}
-@item @code{balance-windows}
 @end itemize
-
 
 The behavior of the adviced functions is (slightly simplified):
 
@@ -2127,14 +2127,8 @@ If called in another frame than the ECB-frame these functions behave
 exactly like the not adviced original versions!
 @end itemize
 
-ATTENTION: If you want to work within the edit-area with splitting and
-unsplitting (i.e. deleting) the edit-window(s) it is highly
-recommended to use the adviced-functions of ECB instead of the
-original Emacs-functions (see above). Per default ECB advices all of
-the functions mentioned above but with the option
-@code{ecb-advice-window-functions} you can customizes which functions
-should be adviced by ECB. Please read carefully the documentation of
-this option!
+@strong{Please note}: All these advices are only enabled when ECB is
+enabled.
 
 Another interesting option in the context of the edit-window and these
 adviced functions is @code{ecb-layout-always-operate-in-edit-window}!
@@ -5311,7 +5305,6 @@ the following options @strong{MUST NOT} be changed via @code{setq} or
 Elisp-code but only with the customize-feature!
 
 @itemize @minus
-@item @code{ecb-advice-window-functions}
 @item @code{ecb-bucket-node-display}
 @item @code{ecb-compile-window-height}
 @item @code{ecb-compile-window-temporally-enlarge}
@@ -8033,91 +8026,14 @@ Normal hook run before the new ECB-frame is created if
 evaluated).
 @end defopt
 
-@defopt advice-window-functions
-Advice functions to be more intelligent if used with ECB. You can
-choose the following functions to be adviced by ECB so they behave as
-if the edit-window(s) of ECB would be the only windows(s) of the
-ECB-frame:
-
-@itemize @bullet
-@item @code{other-window}
-For this one see also the option @code{ecb-other-window-behavior}!
-@item @code{delete-window}
-@item @code{delete-other-windows}
-@item @code{delete-windows-on}
-@item @code{split-window-horizontally}
-@item @code{split-window-vertically}
-@item @code{split-window}
-If this advice is enabled then @code{split-window-vertically} and
-@code{split-window-horizontally} are autom. enabled too!
-@item @code{switch-to-buffer}
-@item @code{switch-to-buffer-other-window}
-@item @code{display-buffer}
-Especially if @code{ecb-compile-window-height} is not nil it is
-strongly recommended not to disable this advice!
-@item @code{other-window-for-scrolling}
-If this advice is enabled then the behavior of the following functions
-depends on @code{ecb-other-window-behavior}:
-@itemize @minus
-@item @code{scroll-other-window}
-@item @code{scroll-other-window-down}
-@item @code{beginning-of-buffer-other-window}
-@item @code{end-of-buffer-other-window}
-@end itemize
-@item @code{balance-windows}:
-Only the edit-windows are balanced
-@end itemize
-
-For working most conveniently with ECB it is the best to advice all
-these functions, because then all the standard shortcuts of these
-functions are also usable with ECB without doing anything else. Also
-other packages can interact best with ECB if these functions are all
-adviced. If these adviced functions are called in another frame than
-the ECB-frame they behave all exactly like the not adviced versions!
-
-But please read also the following:
-
-Normally all packages should work correct with ECB and it´s adviced
-functions but if there occur problems with a package cause of some of
-these adviced functions ECB offers the following fall-back solution:
-
-@enumerate
-@item
-Deactivate in @code{ecb-advice-window-functions} all the
-adviced-functions which make problems with other packages.
-@item
-For every of the advice-able functions <adv-func> ECB offers a
-interactively function named ``ecb-<adv-func>'' which does exactly the
-same as the adviced version of <adv-func>. Use ``ecb-<adv-func>''
-instead the original one to get the proper ECB behavior even if the
-function is not adviced anymore.
-@item
-You can bind in @code{ecb-activate-hook} the standard-shortcut of
-<adv-func> to ``ecb-<adv-func>'' and rebind it in
-@code{ecb-deactivate-hook} to <adv-func>.
-@item 
-Now you have the best of both worlds: The problematic package works
-and you have the ECB-behavior of <adv-func> as if it would be adviced.
-@end enumerate
-
-Here is an example: Suppose you must deactivating the advice for
-@code{switch-to-buffer-other-window}. Then you deactivate this
-function with this option and you can use
-@code{ecb-switch-to-buffer-other-window} instead. Bind the shortcut
-you normally use for @code{switch-to-buffer-other-window} to
-@code{ecb-switch-to-buffer-other-window} (use @code{ecb-activate-hook}
-for this) and rebind it to the original function in the
-@code{ecb-deactivate-hook}.
-@end defopt
-
 @defopt advice-window-functions-signal-error
 Signal an error if an adviced function can not do its job. If not nil
-then an error is signaled if one of the adviced functions (see
-@code{ecb-advice-window-functions}) can not do its job. So for example
-if the user tries to split the compile-window or an ecb-tree-window or
-if one tries to switch to another buffer in one of the
-ecb-tree-windows. For details see the documentation of each of the
-adviced functions to get info when an error is signaled.
+then an error is signaled if one of the adviced user-commands can not
+do its job. So for example if the user tries to split the
+compile-window or an ecb-tree-window or if one tries to switch to
+another buffer in one of the ecb-tree-windows. For details see the
+documentation of each of the adviced functions to get info when an
+error is signaled.
 
 If this option is nil then no error is signaled but the called adviced
 function does simply nothing.
@@ -8189,14 +8105,13 @@ is analogous to that described in
 
 @defopt ignore-display-buffer-function
 Adviced @code{display-buffer} ignores @code{display-buffer-function}.
-This means, that the adviced version of @code{display-buffer} (see
-@code{ecb-advice-window-functions}) ignores the value of
-@code{display-buffer-function} when called for the @code{ecb-frame}.
-If this variable should not be ignored then the function of
-@code{display-buffer-function} is completely responsible which window
-is used for the buffer to display - no smart ECB-logic will help to
-deal best with the ECB-window-layout! You can define if and when
-@code{display-buffer-function} should be ignored:
+This means, that the adviced version of @code{display-buffer} ignores
+the value of @code{display-buffer-function} when called for the
+@code{ecb-frame}. If this variable should not be ignored then the
+function of @code{display-buffer-function} is completely responsible
+which window is used for the buffer to display - no smart ECB-logic
+will help to deal best with the ECB-window-layout! You can define if
+and when @code{display-buffer-function} should be ignored:
 
 @itemize @minus
 @item
@@ -8242,29 +8157,22 @@ options @code{special-display-function},
 @defopt layout-always-operate-in-edit-window
 Adviced window functions work always in the edit-window. If we are in
 an ECB special buffer (methods, directories, etc), and any of the
-adviced windowing functions is called interactively (see
-@code{ecb-advice-window-functions}), we will select first an
-edit-window according to the value of
+adviced windowing functions is called interactively, we will select
+first an edit-window according to the value of
 @code{ecb-mouse-click-destination}. This is useful if you have any
 functions that use such functions and you don't want them to fail with
 an error complaining that the current buffer can not be split, or
 something similar.
 
 Because this may not be desirable in all situations and for all
-adviced functions this can be enabled separately for every advicable
-function (see also @code{ecb-advice-window-functions}). If the symbol
-of an adviced function is contained in the value of this option, then
-a edit-window is first selected otherwise either an error is
-reported or some other special reaction (depends on
+adviced functions this can be enabled separately for function where it
+is senseful. If the symbol of an adviced function is contained in the
+value of this option, then the edit-window is first selected otherwise
+either an error is reported or some other special reaction (depends on
 @code{ecb-advice-window-functions-signal-error}); see the
 documentation of the adviced functions for this.
 
-For @code{other-window}, @code{other-window-for-scrolling} and
-@code{switch-to-buffer-other-window} this makes no sense, therefore
-you can not enable this for them.
-
-Per default this is enabled for @code{switch-to-buffer} and
-@code{display-buffer}.
+Per default this is only enabled for @code{switch-to-buffer}.
 @end defopt
 
 
@@ -8445,11 +8353,8 @@ Create a new frame at activation time of ECB.
 @end defopt
 
 @defopt other-window-behavior
-The behavior of ECB concerning getting an ``other window''. This has
-an effect if either @code{other-window} or
-@code{other-window-for-scrolling} is adviced by ECB, see
-@code{ecb-advice-window-functions}. The following settings are
-possible:
+The behavior of ECB concerning getting an ``other window''. The
+following settings are possible:
 
 @code{all}:
 
@@ -12715,22 +12620,62 @@ Here is an example:
 @end enumerate
 
 @node Adviced functions, The layout-engine, tree-buffer, Elisp programming
-@section How to deal with the adviced window-functions
+@section How to deal with the adviced functions
 
-ECB offers three macros for packages which work during an activated
-ECB. They allow an easy temporally@footnote{I.e. regardless of the
-settings in @code{ecb-advice-window-functions}!} usage of either all
-original-functions, all adviced functions or only some adviced
-functions:
+ECB needs a bunch of advices so ECB can work correctly. ECB has a
+powerful advice-backbone which allows defining sets of adviced
+functions whereas a set means, that all advices of a certain set are
+always enabled or disabled together.
+
+For this ECB contains three macros:
 
 @itemize @minus
-@item @code{ecb-with-original-functions}
-@item @code{ecb-with-adviced-functions}
-@item @code{ecb-with-some-adviced-functions}
+@item @code{defecb-advice-set}
+@item @code{defecb-advice}
+@item @code{ecb-with-original-adviced-function-set}
 @end itemize
 
 For a detailed explanation of each macro read the documentation with
 @code{describe-function}!
+
+An advice in ECB must not being defined by @code{defadvice} but only
+with @code{defecb-advice} which in turn needs a previously defined
+advice-set defined by @code{defecb-advice-set}.
+
+So ECB has always full control of all advices. For example ECB
+automatically disables all advices of all advice-sets at load-time of
+ECB and also at deactivation time of ECB. So you can be sure that
+after deactivating ECB all ecb-advices are deactivated/disabled too.
+
+In addition to the three macros above ECB offers two further macros
+for running code with disabled some ecb-advices:
+
+@itemize @minus
+@item @code{ecb-with-original-basic-functions}
+@item @code{ecb-with-original-permanent-functions}
+@end itemize
+
+The advice set @code{ecb-basic-adviced-functions} contains most of the
+ecb-advices. See the contents of this variable to see which advices
+are contained in this set. Use
+@code{ecb-with-original-basic-functions} when you want evaluating
+elisp-code with disabled basic-advices.
+@code{ecb-with-original-basic-functions} is only a shortcut for
+@code{ecb-with-original-adviced-function-set} called for the
+@code{ecb-basic-adviced-functions}-set.
+
+Same for @code{ecb-with-original-permanent-functions} which is a
+shortcut for the advice-set @code{ecb-permanent-adviced-functions}.
+
+Last but not least ECB contains an advice-set
+@code{ecb-always-disabled-advices}. These advices are always disabled.
+This advice-set can not be enabled by @code{ecb-enable-advices} but
+such an advice has to be activated 'on demand' by the caller. Such an
+advice must be used with the macro @code{ecb-with-ecb-advice} (see the
+docstring).
+
+ECB contains some more advice-sets but don't bother about it.
+
 
 @node The layout-engine, , Adviced functions, Elisp programming
 @section How to program new layouts and new special windows
@@ -12815,8 +12760,8 @@ selected for types left, right and top. For type left-right the left
 column-window is selected
 
 @item
-All ECB-advices for the functions in
-@code{ecb-advice-window-functions} are disabled!
+All ECB-advices of the advice-sets @code{ecb-basic-adviced-functions}
+and @code{ecb-permanent-adviced-functions} are disabled.
 @end enumerate
 
 Things @var{CREATE-CODE} has to do:

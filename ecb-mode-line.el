@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-mode-line.el,v 1.34 2005/05/23 15:44:22 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.35 2007/07/08 16:42:04 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -308,7 +308,8 @@ as \"W-<number>\"."
                       (not no-win-nr))
                  ;; With :eval we must not use a list
                  '(:eval (car (ecb-mode-line-make-modeline-str
-                               (format " W-%d" (ecb-window-number))
+                               (format " W-%d"
+                                       (1- (ecb-window-in-window-list-number (ecb-canonical-windows-list))))
                                ecb-mode-line-win-nr-face)))
                "")
              (ecb-mode-line-make-modeline-str shown-prefix

@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.75 2006/01/27 18:21:47 berndl Exp $
+;; $Id: ecb-html.el,v 1.76 2007/07/08 16:42:03 berndl Exp $
 
 ;;; Code:
 
@@ -58,9 +58,9 @@
 (defvar ecb-gz-name nil)
 (setq ecb-gz-name (concat ecb-dirname ".tar.gz"))
 (defvar ecb-zip-url nil)
-(setq ecb-zip-url (concat ecb-download-url ecb-zip-name))
+(setq ecb-zip-url (concat ecb-download-ecb-url ecb-zip-name))
 (defvar ecb-gz-url nil)
-(setq ecb-gz-url (concat ecb-download-url ecb-gz-name))
+(setq ecb-gz-url (concat ecb-download-ecb-url ecb-gz-name))
 (defvar ecb-pdf-name nil)
 (setq ecb-pdf-name (concat ecb-dirname ".pdf"))
 (defvar ecb-pdf-zip-name nil)
@@ -68,9 +68,9 @@
 (defvar ecb-pdf-gz-name nil)
 (setq ecb-pdf-gz-name (concat ecb-pdf-name ".gz"))
 (defvar ecb-pdf-zip-url nil)
-(setq ecb-pdf-zip-url (concat ecb-download-url ecb-pdf-zip-name))
+(setq ecb-pdf-zip-url (concat ecb-download-ecb-url ecb-pdf-zip-name))
 (defvar ecb-pdf-gz-url nil)
-(setq ecb-pdf-gz-url (concat ecb-download-url ecb-pdf-gz-name))
+(setq ecb-pdf-gz-url (concat ecb-download-ecb-url ecb-pdf-gz-name))
 
 
 (defvar ecb-latest-news nil
@@ -387,7 +387,7 @@
 	 ("NEWS.html" "History")
 	 ("downloads.html" "Downloads")
 	 ("http://lists.sourceforge.net/lists/listinfo/ecb-list" "Mailing List")
-	 ("http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ecb/ecb/" "CVS")
+	 ("http://ecb.cvs.sourceforge.net/ecb/ecb/" "CVS")
 	 ("screenshots/index.html" "Screenshots")
 	 ("links.html" "Links")
 	 )
@@ -439,7 +439,7 @@
       (h-bullet-link-list
        ecb-bullet
        (list
-        '("http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ecb/ecb/" "Full CVS repository" "Browse the CVS repository of ECB for downloading single files.")
+        '("http://ecb.cvs.sourceforge.net/ecb/ecb/" "Full CVS repository" "Browse the CVS repository of ECB for downloading single files.")
         '("cvs_snapshots/ecb.tar.gz" "Latest CVS-shapshot" "Download the latest stable CVS-snapshot of ECB")
         )
        "_top"))

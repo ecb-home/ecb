@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compatibility.el,v 1.7 2007/07/05 11:08:24 berndl Exp $
+;; $Id: ecb-compatibility.el,v 1.8 2007/07/08 16:42:06 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -121,26 +121,46 @@ BUFFER is displayed in an edit-window!"
 
 (defecb-advice electric-buffer-list after ecb-compatibility-advices
   "Ensures that the electric-* commands work well with ECB."
-  (if (get-buffer "*Buffer List*")
-      (bury-buffer (get-buffer "*Buffer List*"))))
+  (when (and ecb-minor-mode
+             (equal (selected-frame) ecb-frame))
+    (if (get-buffer "*Buffer List*")
+        (bury-buffer (get-buffer "*Buffer List*")))))
 
-;; package master.el
+;; package master.el (only Emacs >= 22.X)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
 ;; The adviced version of switch-to-buffer-other-window can redraw the layout
-;; (e.g. if the compile-window has been made visible), so <window> in the code
-;; below can be a destroyed window-object! we have to prevent from this (e.g.
-;; by selecting the edit-window before by number).
+;; (e.g. if the buffer in the compile-window is the slave and the
+;; compile-window has been made visible), so <window> in the code below can be
+;; a destroyed window-object! we have to prevent from this (e.g. by selecting
+;; the window before by number).
 (when-ecb-running-emacs
  (defecb-advice master-says around ecb-compatibility-advices
    "Makes the function compatible with ECB."
-   (if (null (buffer-live-p (get-buffer master-of)))
-       (error "Slave buffer has disappeared")
-     (let ((window  (selected-window)))
-       (if (not (eq (window-buffer window) (get-buffer master-of)))
-           (switch-to-buffer-other-window master-of))
-       (if command (condition-case nil (apply command arg) (error nil)))
-       (select-window window)))))
+   (if (or (not ecb-minor-mode)
+           (not (equal (selected-frame) ecb-frame)))
+       (ecb-with-original-basic-functions ad-do-it)
+     (if (null (buffer-live-p (get-buffer master-of)))
+         (error "Slave buffer has disappeared")
+       (let ((window  (selected-window))
+             (point-loc (ecb-where-is-point))
+             (p (point)))
+         (if (not (eq (window-buffer window) (get-buffer master-of)))
+         (switch-to-buffer-other-window master-of))
+         (if (ad-get-arg 0)
+             (condition-case nil
+                 (apply (ad-get-arg 0) (ad-get-arg 1))
+               (error nil)))
+         (select-window (case (car point-loc)
+                          (ecb
+                           (ecb-get-ecb-window-by-number (cdr point-loc)))
+                          (edit
+                           (ecb-get-edit-window-by-number (cdr point-loc)))
+                          (compile
+                           ecb-compile-window)
+                          (minibuf
+                           (minibuffer-window ecb-frame))))
+         (goto-char (point))))))
+   )
 
 ;; package scroll-all.el
 
@@ -162,10 +182,13 @@ if `scroll-all-mode' is nil return the number of visible windows."
 
 (defecb-advice scroll-all-function-all around ecb-compatibility-advices
   "Make it compatible with ECB."
-  (let (;; This runs the `other-window'-calls in the body in the right mode
-        (ecb-other-window-behavior 'only-edit))
-    (ecb-with-ecb-advice 'count-windows 'around
-      ad-do-it)))
+  (if (or (not ecb-minor-mode)
+          (not (equal (selected-frame) ecb-frame)))
+      (ecb-with-original-basic-functions ad-do-it)
+    (let (;; This runs the `other-window'-calls in the body in the right mode
+          (ecb-other-window-behavior 'only-edit))
+      (ecb-with-ecb-advice 'count-windows 'around
+        ad-do-it))))
 
 
 ;; package tmm.el
@@ -179,8 +202,7 @@ if `scroll-all-mode' is nil return the number of visible windows."
    "Make it compatible with ECB."
    (if (or (not ecb-minor-mode)
            (not (equal (selected-frame) ecb-frame)))
-       (ecb-with-original-basic-functions
-        ad-do-it)
+       (ecb-with-original-basic-functions ad-do-it)
      ;; we set temporally `ecb-other-window-behavior' to a function which
      ;; always selects the "next" window after the
      ;; `ecb-last-edit-window-with-point'
@@ -193,7 +215,8 @@ if `scroll-all-mode' is nil return the number of visible windows."
            (ecb-compilation-buffer-names nil)
            (ecb-compilation-major-modes nil)
            (ecb-compilation-predicates nil))
-       ad-do-it))))
+       ad-do-it)))
+ )
 
   
 

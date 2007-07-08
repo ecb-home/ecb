@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.256 2007/07/05 11:08:23 berndl Exp $
+;; $Id: ecb-layout.el,v 1.257 2007/07/08 16:42:05 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -488,8 +488,6 @@ mouse-button or the popup-menu of that tree-buffer has been opened."
   :group 'ecb-layout
   :type 'boolean)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add to texi and also a general
-;; description to that texi-section which topics the maximizing stuff.
 (defcustom ecb-maximize-next-after-maximized-select nil
   "*Maximizes the next logical tree-window after a maximized node-selection.
 Selecting a node in a maximized tree-window is handled very smart by ECB:
@@ -1662,7 +1660,7 @@ for current layout."
                            (current-buffer) (selected-window) (selected-frame))
    (if (or (not ecb-minor-mode)
            (not (equal (selected-frame) ecb-frame))
-           (equal (ecb-where-is-point) 'ecb))
+           (equal (car (ecb-where-is-point)) 'ecb))
        (ecb-with-original-basic-functions
         ad-do-it)
      (if (and (equal (selected-window) ecb-compile-window)
@@ -2151,22 +2149,68 @@ the advices of exactly the functions in `ecb-permanent-adviced-functions'!"
   `(ecb-with-original-adviced-function-set 'ecb-permanent-adviced-functions
                                            ,@body))
 
-(defun ecb-where-is-point (&optional edit-windows-list)
-  "Return either the number of the edit-window when point is in an edit-window
-\(see `ecb-point-in-edit-window-number') or the symbol 'compile if in
-compile-window or the symbol 'minibuf if in the minibuffer of the `ecb-frame'
-or the symbol 'ecb if in any special ecb-window. Return nil if in a window of
-a frame not equal the `ecb-frame'. If EDIT-WINDOWS-LIST is not nil then it
-must be a current list of edit-windows \(got by
-`ecb-canonical-edit-windows-list'). If EDIT-WINDOWS-LIST is nil then a new
-edit-window-list is computed via `ecb-canonical-edit-windows-list'."
-  (or (ecb-point-in-edit-window-number edit-windows-list)
-      (and (ecb-point-in-compile-window)
-           'compile)
-      (and (equal (selected-window) (minibuffer-window ecb-frame))
-           'minibuf)
-      (and (equal (selected-frame) ecb-frame)
-           'ecb)))
+(defun ecb-where-is-point (&optional win-list)
+  "Return a cons-cell with the exact location of point in the ecb-frame.
+The car is one of 'ecb \(point in a special ecb-window), 'edit \(point in an
+edit-window of the edit-area), 'compile \(point in the compile window) or
+'minibuf \(the minibuffer is the selected window). The cdr is the number of
+the window in the related window-list in canonical order \(means top-left-most
+window in the related window-list has number 1 and so on...).
+
+If the compile-window or the minibuffer is the selected window then the window
+number is always 1.
+
+If the ecb-frame is not the selected frame then nil is returned.
+
+If WIN-LIST is nil then a new window-list is computed via
+`ecb-canonical-windows-list'.
+
+Examples:
+
+If point stays in the second special-window list, then \('ecb . 2) is
+returned, even in layouts of type 'right'.
+
+If there are 3 edit windows and point stays in the third one, then \(edit . 3)
+is returned, even in layouts of type 'left'.
+
+If the compile-window or the minibuffer is the selected window then
+\('compile . 1) rsp. \(minibuf . 1) is returned."
+  (when (equal (selected-frame) ecb-frame)
+    (let ((win-list (or win-list (ecb-canonical-windows-list)))
+          (type (cond ((memq (selected-window)
+                             (ecb-canonical-ecb-windows-list win-list))
+                       'ecb)
+                      ((memq (selected-window)
+                             (ecb-canonical-edit-windows-list win-list))
+                       'edit)
+                      ((equal (selected-window) (minibuffer-window ecb-frame))
+                       'minibuf)
+                      ((ecb-point-in-compile-window)
+                       'compile))))
+      (cons type (case type
+                   (ecb (ecb-point-in-ecb-window-number
+                         (ecb-canonical-ecb-windows-list win-list)))
+                   (edit (ecb-point-in-edit-window-number
+                          (ecb-canonical-edit-windows-list win-list)))
+                   (otherwise 1))))))
+
+;; Do not use the following two functions in pre- or post-command hook because
+;; XEmacs has no builtin c-function but only an elisp one for this and
+;; therefore using it within post-command-hook or pre-command-hook would
+;; dramatically slow down XEmacs.
+
+(defun ecb-point-in-ecb-window-number (&optional ecb-windows-list)
+  "Return nil if point stays not in an special ecb-window otherwise return 1
+if point is in the left/topmost ecb-window or 2 if in the next ecb-window and
+so on. Return the number of the ecb-window \(if point is in an ecb-window) in
+the order `walk-windows' would go through the ecb-windows. If ECB-WINDOWS-LIST
+is not nil then it must be a current list of ecb-windows \(got by
+`ecb-canonical-ecb-windows-list'). If ECB-WINDOWS-LIST is nil then a new
+ecb-window-list is computed via `ecb-canonical-ecb-windows-list'."
+  (when (equal (selected-frame) ecb-frame)
+    (ignore-errors (ecb-window-in-window-list-number
+                    (or ecb-windows-list (ecb-canonical-ecb-windows-list))))))
+
 
 (defun ecb-point-in-edit-window-number (&optional edit-windows-list)
   "Return nil if point stays not in an edit-window otherwise return 1 if point
@@ -2177,10 +2221,8 @@ is not nil then it must be a current list of edit-windows \(got by
 `ecb-canonical-edit-windows-list'). If EDIT-WINDOWS-LIST is nil then a new
 edit-window-list is computed via `ecb-canonical-edit-windows-list'."
   (when (equal (selected-frame) ecb-frame)
-    (let* ((edit-win-list (or edit-windows-list
-                              (ecb-canonical-edit-windows-list)))
-           (edit-win-number (ecb-position edit-win-list (selected-window))))
-      (if edit-win-number (1+ edit-win-number) nil))))
+    (ignore-errors (ecb-window-in-window-list-number
+                    (or edit-windows-list (ecb-canonical-edit-windows-list))))))
 
 (defun ecb-get-edit-window-by-number (edit-win-nr &optional edit-win-list)
   "Return that edit-window with number EDIT-WIN-NR. If EDIT-WIN-LIST is set
@@ -2189,39 +2231,18 @@ EDIT-WIN-NR must be an integer between 1 and length of EDIT-WIN-LIST \(rsp.
 `ecb-canonical-edit-windows-list')."
   (nth (1- edit-win-nr) (or edit-win-list (ecb-canonical-edit-windows-list))))
 
-;; (defun my-edit-window-jumper (number)
-;;   "Selects the edit-window with ordering number NUMBER.
-;; Ordering is from top-left to bottom-right and counts from 1 to number of
-;; current visisble edit-windows in the ecb-frame."
-;;   (interactive "nInsert the number of the edit-window you want to jump:")
-;;   (let ((edit-win-list (ecb-canonical-edit-windows-list)))
-;;     (if (> number (length edit-win-list))
-;;         (message "There is no edit-window with this number; insert a lower one.")
-;;       (select-window (ecb-get-edit-window-by-number number edit-win-list)))))
+(defun ecb-get-ecb-window-by-number (ecb-win-nr &optional ecb-win-list)
+  "Return that ecb-window with number ECB-WIN-NR. If ECB-WIN-LIST is set
+then get it from that list otherwise from `ecb-canonical-ecb-windows-list'.
+ECB-WIN-NR must be an integer between 1 and length of ECB-WIN-LIST \(rsp.
+`ecb-canonical-ecb-windows-list')."
+  (nth (1- ecb-win-nr) (or ecb-win-list (ecb-canonical-ecb-windows-list))))
 
 (defun ecb-point-in-compile-window ()
   "Return not nil iff point is in the compile-window of ECB"
   (and (equal (selected-frame) ecb-frame)
        (ecb-compile-window-live-p)
        (equal (selected-window) ecb-compile-window)))
-
-;; Du not use this function is pre- or post-command hook because XEmacs has no
-;; builtin c-function but only an elisp one for this and therefore using it
-;; within post-command-hook or pre-command-hook would dramatically slow down
-;; XEmacs.
-(defun ecb-point-in-ecb-window-number (&optional ecb-windows-list)
-  "Return nil if point stays not in an special ecb-window otherwise return 1
-if point is in the left/topmost ecb-window or 2 if in the next ecb-window and
-so on. Return the number of the ecb-window \(if point is in an ecb-window) in
-the order `walk-windows' would go through the ecb-windows. If ECB-WINDOWS-LIST
-is not nil then it must be a current list of ecb-windows \(got by
-`ecb-canonical-ecb-windows-list'). If ECB-WINDOWS-LIST is nil then a new
-ecb-window-list is computed via `ecb-canonical-ecb-windows-list'."
-  (when (equal (selected-frame) ecb-frame)
-    (let* ((ecb-win-list (or ecb-windows-list
-                              (ecb-canonical-ecb-windows-list)))
-           (ecb-win-number (ecb-position ecb-win-list (selected-window))))
-      (if ecb-win-number (1+ ecb-win-number) nil))))
 
 (defun ecb-point-in-ecb-tree-buffer ()
   "Return not nil if point is in any of the standard tree-buffers \(see
@@ -2444,7 +2465,7 @@ nothing is done."
 
 ;; VERY IMPORTANT: pre-command- and the post-command-hook must NOT use any
 ;; function which calls `ecb-window-list' because this would slow-down the
-;; performance of all Emacs-versions unless GNU Emacs 21 because they have no
+;; performance of all Emacs-versions unless GNU Emacs >= 21 because they have no
 ;; builtin `window-list'-function.
 (defun ecb-layout-pre-command-hook ()
   "During activated ECB this function is added to `pre-command-hook' to set
@@ -2456,7 +2477,7 @@ can use these variables."
              (equal (selected-frame) ecb-frame))
     ;; We MUST not use here `ecb-point-in-edit-window-number' because this
     ;; would slow-down the performance of all Emacs-versions unless GNU Emacs
-    ;; 21 because they have no builtin `window-list'-function.
+    ;; >= 21 because they have no builtin `window-list'-function.
     (when (and (not (ecb-point-in-dedicated-special-buffer))
                (not (equal (minibuffer-window ecb-frame)
                            (selected-window)))
@@ -2539,6 +2560,7 @@ some special tasks:
                ;; In the meanwhile we allow automatic maximizing only when
                ;; `ecb-tree-mouse-action-trigger' is 'button-press!
                (or ecb-running-xemacs
+                   ecb-running-version-22
                    (equal ecb-tree-mouse-action-trigger 'button-press))
                (equal (selected-frame) ecb-frame)
                (= (minibuffer-depth) 0))
@@ -2886,7 +2908,7 @@ If called for other frames it works like the original version."
   "Implements the situation of an active minibuffer, see
 `ecb-other-window-behavior'."
   (let ((nth-win (or nth-window 1)))
-    (if (equal point-loc 'minibuf)
+    (if (equal (car point-loc) 'minibuf)
         (if (= nth-win 1)
             (or (if (and minibuffer-scroll-window
                          (window-live-p minibuffer-scroll-window)
@@ -2926,7 +2948,7 @@ If called for other frames it works like the original version."
                                            nth-window)
     ;; here we have no active minibuffer!
     (let ((nth-win (or nth-window 1)))
-      (case point-loc
+      (case (car point-loc)
         (ecb
          (ecb-next-listelem (if (and ecb-win-list
                                      (= 1 (length ecb-win-list)))
@@ -2960,7 +2982,7 @@ NTH-WINDOW is nil then it is treated as 1."
          (windows-list (ecb-canonical-windows-list))
          (edit-win-list (ecb-canonical-edit-windows-list windows-list))
          (ecb-win-list (ecb-canonical-ecb-windows-list windows-list))
-         (point-loc (ecb-where-is-point edit-win-list))
+         (point-loc (ecb-where-is-point windows-list))
          (compwin-state (ecb-compile-window-state))
          (minibuf-win (if (> (minibuffer-depth) 0)
                           (minibuffer-window ecb-frame))))
@@ -2993,7 +3015,7 @@ NTH-WINDOW is nil then it is treated as 1."
            (ecb-next-listelem windows-list
                               (selected-window) nth-win))
           (only-edit
-           (if (not (integerp point-loc))
+           (if (not (equal 'edit (car point-loc))) ;; point not in an edit-window
                (if (= nth-win 1)
                    (or (and ecb-last-edit-window-with-point
                             (window-live-p ecb-last-edit-window-with-point)
@@ -3004,7 +3026,7 @@ NTH-WINDOW is nil then it is treated as 1."
              (ecb-next-listelem edit-win-list
                                 (selected-window) nth-win)))
           (edit-and-compile
-           (if (equal point-loc 'ecb)
+           (if (equal (car point-loc) 'ecb)
                (ecb-next-listelem windows-list
                                   (selected-window) nth-win)
              (ecb-next-listelem (append edit-win-list
@@ -3414,7 +3436,7 @@ for compilation-buffers \(if a compile-window is used, see above)."
           (not (equal (selected-frame) ecb-frame)))
       (ecb-with-original-basic-functions
        ad-do-it)
-    (if (equal (ecb-where-is-point) 'ecb)
+    (if (equal (car (ecb-where-is-point)) 'ecb)
         (ecb-select-edit-window))
     (let ((pop-up-windows t)
           ;; Don't let these interfere...
@@ -3456,7 +3478,7 @@ an error is reported."
                (select-window ecb-compile-window))
            ;; now we must handle if there is still no compile-window and
            ;; therefore point can still stay in an ecb-window
-           (if (equal (ecb-where-is-point) 'ecb)
+           (if (equal (car (ecb-where-is-point)) 'ecb)
                (if (member 'switch-to-buffer ecb-layout-always-operate-in-edit-window)
                    (ecb-select-edit-window)
                  (ecb-error "switch-to-buffer: Can not switch to %s in an ecb-window!"
@@ -3466,7 +3488,7 @@ an error is reported."
                (select-window (get-buffer-window (ad-get-arg 0) ecb-frame))
              (ecb-error "switch-to-buffer: Can only switch to visible special ecb-buffers!")))
           (t ;; normal buffers
-           (if (member (ecb-where-is-point) '(ecb compile))
+           (if (member (car (ecb-where-is-point)) '(ecb compile))
                (if (member 'switch-to-buffer ecb-layout-always-operate-in-edit-window)
                    (ecb-select-edit-window)
                  (ecb-error "switch-to-buffer: Can only switch to %s in an edit-window!"
@@ -3767,7 +3789,7 @@ current edit-window is selected."
       ;; point is now in the edit-buffer so maybe we have to move point to the
       ;; buffer where it was before.
       (when preserve-selected-window
-        (case curr-loc
+        (case (car curr-loc)
           (ecb
            (ecb-window-select prev-buffer-name))
           (compile
@@ -3814,7 +3836,7 @@ will be selected also after."
         ;; point is now in the edit-buffer so maybe we have to move point to the
         ;; buffer where it was before.
         (when preserve-selected-window
-          (case curr-point
+          (case (car curr-point)
             (ecb
              (ecb-window-select ecb-buffer-name))
             (compile
@@ -3868,16 +3890,16 @@ following structure:
    List with first elem is the buffer of the compile-window, second elem is
    current point of the compile-buffer if the compile-window is selected
    \(otherwise nil) and third elem is the current height of the
-   compile-window."
+   compile-window.
+5. The window sizes of the ecb-windows as returned by
+   `ecb-get-ecb-window-sizes'"
   (let* ((win-list (ecb-canonical-windows-list))
          (edit-win-list (ecb-canonical-edit-windows-list win-list))
          (ecb-win-list (ecb-canonical-ecb-windows-list win-list))
-         (point-pos (ecb-where-is-point edit-win-list))
-         (edit-area-size (ecb-get-edit-area-size)))
-    (list (if (integerp point-pos) point-pos nil)
-          (if (integerp point-pos)
-              (window-point (ecb-get-edit-window-by-number point-pos
-                                                           edit-win-list)))
+         (point-pos (ecb-where-is-point win-list))
+         (edit-area-size (ecb-get-edit-area-size win-list)))
+    (list (if (equal 'edit (car point-pos)) (cdr point-pos))
+          (if (equal 'edit (car point-pos)) (point))
           (mapcar (function (lambda (win)
                               (list (window-buffer win)
                                     (window-start win)
@@ -3886,9 +3908,9 @@ following structure:
                   edit-win-list)
           (if (equal 'visible (ecb-compile-window-state))
               (list (window-buffer ecb-compile-window)
-                    (if (equal point-pos 'compile) (point))
+                    (if (equal (car point-pos) 'compile) (point))
                     (ecb-window-full-height ecb-compile-window)))
-          (ecb-get-ecb-window-sizes)
+          (ecb-get-ecb-window-sizes nil ecb-win-list)
           )))
 
 ;; =================== Helper functions ==================================
@@ -4949,12 +4971,14 @@ nil). Default referencial width rsp. height are `frame-width' rsp.
                  (* 1.0 ref-height)))))))
 
 
-(defun ecb-get-ecb-window-sizes (&optional fix)
+(defun ecb-get-ecb-window-sizes (&optional fix ecb-win-list)
   "Get all window-sizes of current visible ecb-windows. If FIX is not nil then
 fixed sizes are used otherwise fractions of current frame-width rsp. -height.
 If a permanent compile-window is visible then window-heights will be computed
 as fractions of current \(frame-height minus current visible
-compile-window-height)!"
+compile-window-height)!
+Uses ECB-WIN-LIST or - if nil - computes it with the function
+`ecb-canonical-ecb-windows-list'."
   (let ((ref-height (if (ecb-compile-window-live-p)
                         (- (frame-height ecb-frame)
                            (ecb-window-full-height ecb-compile-window))
@@ -4964,7 +4988,7 @@ compile-window-height)!"
                         (ecb-get-window-size window
                                              fix
                                              (cons ref-width ref-height))))
-            (ecb-canonical-ecb-windows-list))))
+            (or ecb-win-list (ecb-canonical-ecb-windows-list)))))
 
 ;; Now possible to set fractional sizes; thanks to Geert Ribbers
 ;; [geert.ribbers@realworld.nl] for a first implementation.
@@ -5029,9 +5053,9 @@ floating-point-numbers. Default referencial width rsp. height are
 ;; ecb-window-full-width for only one window in the frame. But for now this
 ;; doesn't matter because it is only important that for getting and setting
 ;; the edit-windows-sizes the same reference-sizes are used.
-(defun ecb-get-edit-area-size ()
+(defun ecb-get-edit-area-size (&optional win-list)
   (let ((layout-type (ecb-get-layout-type ecb-layout-name))
-        (ecb-win-list (ecb-canonical-ecb-windows-list))
+        (ecb-win-list (ecb-canonical-ecb-windows-list win-list))
         (comp-win-state (ecb-compile-window-state)))
     (if (null ecb-win-list)
         (cons (frame-width ecb-frame)
@@ -5326,7 +5350,7 @@ you have to quit with `C-g')."
             (ecb-restore-window-sizes)
             ;; If point was in the compile-window we move it back to the first
             ;; edit-window
-            (if (equal point-location 'compile)
+            (if (equal (car point-location) 'compile)
                 (ecb-select-edit-window))))))))
 
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.138 2007/07/05 11:08:23 berndl Exp $
+;; $Id: ecb-util.el,v 1.139 2007/07/08 16:42:04 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -496,7 +496,7 @@ Example:
 
 (defecb-advice-set ecb-always-disabled-advices
   "These advices are always disabled.
-This advice-set will never be enabled by `ecb-enable-advices' but such an
+This advice-set can notbe enabled by `ecb-enable-advices' but such an
 advice has to be activated 'on demand' by the caller. Such an advice must be
 used with the macro `ecb-with-ecb-advice'.")
 
@@ -1827,11 +1827,11 @@ means not to count the minibuffer even if it is active."
   ;; To avoid this we run the body of this function with deactivated basic
   ;; advices of ecb.
    (if (not ecb-running-xemacs)
-       ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: There seems to be
-       ;; mysterious behavior when running our own window-list version with
-       ;; GNU Emacs >= 21.3 - especially when running an igrep when the
-       ;; igrep-buffer is already in another window. We can here savely use the
-       ;; function `window-list' because it returns an ordered list
+       ;; Klaus Berndl <klaus.berndl@sdm.de>: There seems to be mysterious
+       ;; behavior when running our own window-list version with GNU Emacs >=
+       ;; 21.3 - especially when running an igrep when the igrep-buffer is
+       ;; already in another window. We can here savely use the function
+       ;; `window-list' because it returns an ordered list
        (window-list frame minibuf window)
      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: the following is needed for
      ;; XEmacs >= 21.5 - but the best would be if we would not need
@@ -1933,25 +1933,16 @@ visible in the `ecb-frame'."
         buf-list))
 
 
-(defun ecb-window-number (&optional window)
-  "Return the number of WINDOW or - if nil - of the current selected window.
-The left-top-most window of the ecb-frame has number 0. The other windows have
-the same ordering as `other-window' would walk through the frame."
-  (1- (length (memq (or window (selected-window))
-                    (nreverse (if ecb-running-xemacs
-                                  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
-                                  ;; There seems to be a mysterious behavior of
-                                  ;; `ecb-window-list' when changing one buffer,
-                                  ;; immediately opening another buffer and
-                                  ;; scrolling sown to bottom of the new buffer
-                                  ;; - then if this function is added to the
-                                  ;;   modeline via (:eval...) the new buffer
-                                  ;;   scrolls autom. back to beginng of
-                                  ;;   buffer.
-                                  ;; With the original window-list all is
-                                  ;; ok...
-                                  (ecb-canonical-windows-list)
-                                (window-list)))))))
+(defun ecb-window-in-window-list-number (win-list &optional window)
+  "Return the number of WINDOW in the window-list WIN-LIST.
+The left-top-most window of the frame has number 1. The other windows have
+the same ordering as `other-window' would walk through the frame.
+
+If WINDOW is nil then the currently selected window is used."
+  (let ((win-number (ecb-position win-list (or window (selected-window)))))
+    (if win-number (1+ win-number) nil)))
+
+
 
 ;;; ----- Time  stuff -----------------------------------------
 
