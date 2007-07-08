@@ -46,7 +46,7 @@
    This is not a user-visible change but enhances the stability of ECB by
    using now a new advice-backbone which guarantes that all ecb-advices are
    enabled rsp. disabled correctly depending on the surrounding context.
-   Introdusing three new macros `defecb-advice-set', `defecb-advice' and
+   Introducing three new macros `defecb-advice-set', `defecb-advice' and
    `ecb-with-original-adviced-function-set'.
    
 ** New features rsp. commands
@@ -55,13 +55,15 @@
 
 *** New command `ecb-goto-window-ecb-by-smart-selection'
       
-** More compatibility with Emacs 22
+** Better compatibility with Emacs 22
 
-*** `balance-windows' now works also with Emacs 22
+*** `balance-windows' now works with Emacs 22 too
     Cause of the completely new implemantation based on `window-tree' ECB
     uses a new machanism for enabling balance-windows to work properly with
     active ECB, so only the edit-windows are balanced but all ecb-windows
     remain on their sizes.
+
+*** `master-mode' now works with Emacs 22
 
 *** Fixed problems with `ecb-fix-window-size' and active compile-windows
     With Emacs >= 22 the bugs of Emacs 21.3.X concerning `window-size-fixed'

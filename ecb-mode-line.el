@@ -308,7 +308,8 @@ as \"W-<number>\"."
                       (not no-win-nr))
                  ;; With :eval we must not use a list
                  '(:eval (car (ecb-mode-line-make-modeline-str
-                               (format " W-%d" (ecb-window-number))
+                               (format " W-%d"
+                                       (1- (ecb-window-in-window-list-number (ecb-canonical-windows-list))))
                                ecb-mode-line-win-nr-face)))
                "")
              (ecb-mode-line-make-modeline-str shown-prefix

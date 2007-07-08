@@ -3647,6 +3647,10 @@ is a full filename and cdr is a tag for TYPENAME. "
 should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
   (if shift-mode
       (ecb-mouse-over-method-node node nil nil 'force))
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: this prevents from jumping to
+  ;; the clicked tag!! Why???
+;;   (when (ecb-buffer-is-maximized-p (buffer-name))
+;;     (ecb-undo-maximize-ecb-buffer t))
   (let ((data (tree-node->data node))
         (type (tree-node->type node))
         (filename ecb-path-selected-source)
