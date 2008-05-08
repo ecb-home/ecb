@@ -1,4 +1,4 @@
-* Changes for ECB version 2.33beta1
+* Changes for ECB version 2.33beta2
 
 ** More user-responsible buffer-parsing based on the idle-mechanism of semantic
 
@@ -65,6 +65,16 @@
 
 *** `master-mode' now works with Emacs 22
 
+*** Grepping from ECB now uses per default `lgrep' rsp. `rgrep'.
+
+**** The option `ecb-grep-function' defaults to `lgrep' if available
+     If not it tries `igrep' or 'grep'.
+
+**** `ecb-grep-find-function' has been renamed to `ecb-grep-recursive-function'
+     It defaults to `rgrep' if available. If not it tries `igrep-find' or
+     `grep-find'. The old value is automatically upgraded to the new option
+     name.
+
 *** Fixed problems with `ecb-fix-window-size' and active compile-windows
     With Emacs >= 22 the bugs of Emacs 21.3.X concerning `window-size-fixed'
     are fixed by the Emacs-team so now ECB supports this feature also with
@@ -73,11 +83,11 @@
 *** Fixed small lack in the `switch-to-buffer-other-window'-advice.
     In Emacs 22 this command ignores the settings in `same-window-*'. Now ECB
     adopts this behavior also for its adviced version so the command works
-    in a smart manner optimzed for ECB.
+    in a smart manner optimized for ECB.
    
 ** Fixed Bugs
 
-*** Fixed a serious bug which prevented `ecb-rebuild-methods-buffer' to work
+*** Fixed a bug which prevented `ecb-rebuild-methods-buffer' to work correctly
 
 *** Fixed problems with the internal download of newer ECB-versions
     Seems that two different URLs are needed:
@@ -89,6 +99,9 @@
       ecb-2.32.tar.gz)
     Downloading does not work with the former one and getting a packagelist is
     not possible with the latter one. Therefore ECB now uses both URLs.
+
+*** Fixed context-menu for VC-operations in the sources- and history-window
+    Now all vc-commands are called interactively by ECB.
     
 
 
@@ -125,7 +138,7 @@
    new tree-buffer interactor. But of course it can be added to own build
    layouts - either via the command `ecb-create-new-layout' (add a buffer of
    type "other" and name "analyse" into the new layout) or via a
-   elisp-rogrammed new layout.
+   elisp-programmed new layout.
    
 ** New smart-arrow-navigation in a tree-buffer with up- and down-arrow
    Point jumps to the first character of the previous (up) rsp. next node

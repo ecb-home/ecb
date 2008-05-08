@@ -46,7 +46,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-2.33beta1
+2.33beta2
 @end macro
 
 
@@ -5780,7 +5780,7 @@ popup-source after clicking the right mouse-button onto a node.
 @end itemize
 @end defopt
 
-@defopt grep-find-function
+@defopt grep-recursive-function
 Function used for performing a recursive grep. For more Details see
 option `ecb-grep-function' and replace ``grep'' with ``recursive
 grep''.

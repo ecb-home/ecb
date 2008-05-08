@@ -648,7 +648,6 @@ by semantic!"
   :group 'ecb-methods
   :type 'boolean)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add this to texi
 (defcustom ecb-force-reparse-when-semantic-idle-scheduler-off nil
   "*Force a reparse of the semantic-source if the idle-scheduler is off.
 Generally ECB calls semantic to get the list of tags for current source-file
@@ -4310,7 +4309,8 @@ edit-windows. Otherwise return nil."
   (setq ecb-layout-prevent-handle-ecb-window-selection t)
   (let ((dyn-user-extension
          (and (functionp ecb-methods-menu-user-extension-function)
-              (funcall ecb-methods-menu-user-extension-function)))
+              (funcall ecb-methods-menu-user-extension-function
+                       tree-buffer-name node)))
         (dyn-builtin-extension-edit-win (ecb-methods-menu-editwin-entries))
         (dyn-builtin-extension-tagfilter (ecb-methods-menu-tagfilter-entries)))
     (list (cons ecb-methods-nodetype-tag

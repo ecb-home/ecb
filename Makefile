@@ -52,7 +52,7 @@ EMACS=emacs
 # variable to empty.
 
 #CEDET=
-CEDET=c:/Programme/emacs-21/site-lisp/package-development/cedet
+CEDET=c:/Programme/emacs-22.1/site-lisp/package-development/cedet
 #CEDET=c:/Programme/emacs-21/site-lisp/multi-file-packages/cedet-1.0beta3b
 
 # -------- Compiling ECB with the semantic < 2.0 -------------------------
@@ -130,7 +130,7 @@ PS2PDF=/C/home/bin/ps2pdf
 
 # Set here the path of the info subdirectory of your (X)Emacs installation
 # which contains the dir file.
-EMACSINFOPATH=/C/Programme/emacs-21/info
+EMACSINFOPATH=/C/Programme/emacs-22.1/info
 
 # If you want to install the info-format of the online-help in the
 # Top-directory of the info-directory of (X)Emacs (see above EMACSINFOPATH)
@@ -148,7 +148,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
-ecb_VERSION=2.33beta1
+ecb_VERSION=2.33beta2
 #ecb_VERSION=2.32
 
 include ecb-makedef.mk

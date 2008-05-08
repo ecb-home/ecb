@@ -1490,7 +1490,7 @@ If ECB detects a problem it is reported and then an error is thrown."
                           "Please read the INSTALL-file of the cedet-suite and install cedet as described.\n"
                           "It is essential that the file /your/path/to/cedet/common/cedet.el is loaded!")
                   )
-                 ;; not semantic was compiled into ECB
+                 ;; semantic was not compiled into ECB
                  ((null ecb-compiled-in-semantic-version)
                   (concat (format "Currently semantic %s is loaded but ECB has been byte-compiled without\n"
                                   semantic-version)

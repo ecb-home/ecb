@@ -162,7 +162,7 @@
 ;; (defconst ecb-version "2.33beta1"
 ;;   "Current ECB version.")
 
-(defconst ecb-version "2.33beta1"
+(defconst ecb-version "2.33beta2"
   "Current ECB version.")
 
 (eval-when-compile
@@ -311,6 +311,7 @@
                                          ecb-upgrade-tree-RET-selects-edit-window))
     (ecb-download-url . (ecb-download-ecb-url identity))
     (ecb-cedet-url . (ecb-download-cedet-url identity))
+    (ecb-grep-find-function . (ecb-grep-recursive-function identity))
     )
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
