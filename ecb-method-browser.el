@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.81 2007/07/08 16:42:04 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.82 2008/05/08 12:03:44 berndl Exp $
 
 ;;; Commentary:
 
@@ -648,7 +648,6 @@ by semantic!"
   :group 'ecb-methods
   :type 'boolean)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add this to texi
 (defcustom ecb-force-reparse-when-semantic-idle-scheduler-off nil
   "*Force a reparse of the semantic-source if the idle-scheduler is off.
 Generally ECB calls semantic to get the list of tags for current source-file
@@ -4310,7 +4309,8 @@ edit-windows. Otherwise return nil."
   (setq ecb-layout-prevent-handle-ecb-window-selection t)
   (let ((dyn-user-extension
          (and (functionp ecb-methods-menu-user-extension-function)
-              (funcall ecb-methods-menu-user-extension-function)))
+              (funcall ecb-methods-menu-user-extension-function
+                       tree-buffer-name node)))
         (dyn-builtin-extension-edit-win (ecb-methods-menu-editwin-entries))
         (dyn-builtin-extension-tagfilter (ecb-methods-menu-tagfilter-entries)))
     (list (cons ecb-methods-nodetype-tag

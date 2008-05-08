@@ -23,7 +23,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.212 2007/07/08 16:42:04 berndl Exp $
+@c $Id: ecb.texi,v 1.213 2008/05/08 12:03:41 berndl Exp $
 
 @setfilename ecb.info
 
@@ -46,7 +46,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-2.33beta1
+2.33beta2
 @end macro
 
 
@@ -5780,7 +5780,7 @@ popup-source after clicking the right mouse-button onto a node.
 @end itemize
 @end defopt
 
-@defopt grep-find-function
+@defopt grep-recursive-function
 Function used for performing a recursive grep. For more Details see
 option `ecb-grep-function' and replace ``grep'' with ``recursive
 grep''.

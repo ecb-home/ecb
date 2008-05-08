@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.433 2007/07/05 11:08:23 berndl Exp $
+;; $Id: ecb.el,v 1.434 2008/05/08 12:03:42 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1490,7 +1490,7 @@ If ECB detects a problem it is reported and then an error is thrown."
                           "Please read the INSTALL-file of the cedet-suite and install cedet as described.\n"
                           "It is essential that the file /your/path/to/cedet/common/cedet.el is loaded!")
                   )
-                 ;; not semantic was compiled into ECB
+                 ;; semantic was not compiled into ECB
                  ((null ecb-compiled-in-semantic-version)
                   (concat (format "Currently semantic %s is loaded but ECB has been byte-compiled without\n"
                                   semantic-version)

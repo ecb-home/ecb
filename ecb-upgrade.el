@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.107 2006/08/18 14:49:43 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.108 2008/05/08 12:03:44 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -162,7 +162,7 @@
 ;; (defconst ecb-version "2.33beta1"
 ;;   "Current ECB version.")
 
-(defconst ecb-version "2.33beta1"
+(defconst ecb-version "2.33beta2"
   "Current ECB version.")
 
 (eval-when-compile
@@ -311,6 +311,7 @@
                                          ecb-upgrade-tree-RET-selects-edit-window))
     (ecb-download-url . (ecb-download-ecb-url identity))
     (ecb-cedet-url . (ecb-download-cedet-url identity))
+    (ecb-grep-find-function . (ecb-grep-recursive-function identity))
     )
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:

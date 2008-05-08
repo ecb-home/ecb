@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.64 2007/07/05 11:08:24 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.65 2008/05/08 12:03:50 berndl Exp $
 
 ;;; Commentary:
 
@@ -426,7 +426,11 @@ The check is performed according to the settings in the options
                 (not (ecb-remote-path dir))))
        (not (ecb-match-regexp-list dir ecb-prescan-directories-exclude-regexps))))
 
-(defcustom ecb-grep-function (if (fboundp 'igrep) 'igrep 'grep)
+(defcustom ecb-grep-function (cond ((fboundp 'lgrep)
+                                    'lgrep)
+                                   ((fboundp 'igrep)
+                                    'igrep)
+                                   (t 'grep))
   "*Function used for performing a grep.
 The popup-menu of the tree-buffers \"Directories\", \"Sources\" and
 \"History\" offer to grep the \"current\" directory:
@@ -446,17 +450,24 @@ Conditions for such a function:
 - The function is completely responsible for performing the grep itself and
   displaying the results.
 
-Normally one of the standard-grepping functions like `grep' or `igrep' \(or
-some wrappers around it) should be used!"
+Normally one of the standard-grepping functions like `lgrep',
+`grep' or `igrep' \(or some wrappers around it) should be used!"
   :group 'ecb-directories
   :group 'ecb-sources
   :type 'function)
 
-(defcustom ecb-grep-find-function (if (fboundp 'igrep-find)
-                                      'igrep-find 'grep-find)
+(defcustom ecb-grep-recursive-function (cond ((fboundp 'rgrep)
+                                              'rgrep)
+                                             ((fboundp 'igrep-find)
+                                              'igrep-find)
+                                             (t 'grep-find))
   "*Function used for performing a recursive grep.
 For more Details see option `ecb-grep-function' and replace \"grep\" with
-\"recursive grep\" or \"grep-find\"."
+\"recursive grep\".
+
+Normally one of the standard-grepping functions like `rgrep',
+`grep-find' or `igrep-find' \(or some wrappers around it) should
+be used!"
   :group 'ecb-directories
   :group 'ecb-sources
   :type 'function)
@@ -2181,7 +2192,6 @@ buffers at the bottom."
   (ecb-reset-history-filter)
   (ecb-add-buffers-to-history))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: return t if filter applied else nil
 (defun ecb-add-buffers-to-history ()
   "Add exactly these currently existing file-buffers to the history-buffer
 which are not filtered out by current value of `ecb-history-filter'. Returns t
@@ -3293,7 +3303,8 @@ checked-in file.")
 (defecb-advice vc-checkin after ecb-vc-advices
   "Simply stores the filename of the checked-in file in `ecb-checkedin-file'
 so it is available in the `vc-checkin-hook'."
-  (setq ecb-checkedin-file (ecb-fix-filename (ad-get-arg 0))))
+  (ignore-errors
+    (setq ecb-checkedin-file (ecb-fix-filename (ad-get-arg 0)))))
 
 (defun ecb-vc-checkin-hook ()
   "Ensures that the ECB-cache is reset and the entry for the most recent
@@ -3699,8 +3710,8 @@ the help-text should be printed here."
                                        (ecb-file-name-directory node-data)))
                                     (ecb-directory-sep-string node-data))))
     (call-interactively (if find
-                            (or (and (fboundp ecb-grep-find-function)
-                                     ecb-grep-find-function)
+                            (or (and (fboundp ecb-grep-recursive-function)
+                                     ecb-grep-recursive-function)
                                 'grep-find)
                           (or (and (fboundp ecb-grep-function)
                                    ecb-grep-function)
@@ -3867,7 +3878,8 @@ edit-windows. Otherwise return nil."
   (setq ecb-layout-prevent-handle-ecb-window-selection t)
   (let ((dyn-user-extension
          (and (functionp ecb-directories-menu-user-extension-function)
-              (funcall ecb-directories-menu-user-extension-function)))
+              (funcall ecb-directories-menu-user-extension-function
+                       tree-buffer-name node)))
         (dyn-builtin-extension (ecb-dir/source/hist-menu-editwin-entries)))
     (list (cons ecb-directories-nodetype-directory
                 (funcall (or ecb-directories-menu-sorter
@@ -3924,27 +3936,27 @@ edit-windows. Otherwise return nil."
   "Checkin/out file."
   (let ((file (tree-node->data node)))
     (find-file file)
-    (vc-next-action nil)))
+    (call-interactively 'vc-next-action)))
 
 
 (tree-buffer-defpopup-command ecb-file-popup-vc-log
   "Print revision history of file."
   (let ((file (tree-node->data node)))
     (find-file file)
-    (vc-print-log)))
+    (call-interactively 'vc-print-log)))
 
 
 (tree-buffer-defpopup-command ecb-file-popup-vc-annotate
   "Annotate file"
   (let ((file (tree-node->data node)))
     (find-file file)
-    (vc-annotate nil)))
+    (call-interactively 'vc-annotate)))
 
 (tree-buffer-defpopup-command ecb-file-popup-vc-diff
   "Diff file against last version in repository."
   (let ((file (tree-node->data node)))
     (find-file file)
-    (vc-diff nil)))
+    (call-interactively 'vc-diff)))
 
 (tree-buffer-defpopup-command ecb-file-popup-vc-refresh-file
   "Recompute the VC-state for this file."
@@ -3990,7 +4002,8 @@ edit-windows. Otherwise return nil."
   (setq ecb-layout-prevent-handle-ecb-window-selection t)
   (let ((dyn-user-extension
          (and (functionp ecb-sources-menu-user-extension-function)
-              (funcall ecb-sources-menu-user-extension-function)))
+              (funcall ecb-sources-menu-user-extension-function
+                       tree-buffer-name node)))
         (dyn-builtin-extension (ecb-dir/source/hist-menu-editwin-entries)))
     (list (cons ecb-sources-nodetype-sourcefile
                 (funcall (or ecb-sources-menu-sorter
@@ -4118,7 +4131,8 @@ So you get a better overlooking. There are three choices:
   (setq ecb-layout-prevent-handle-ecb-window-selection t)
   (let ((dyn-user-extension
          (and (functionp ecb-history-menu-user-extension-function)
-              (funcall ecb-history-menu-user-extension-function)))
+              (funcall ecb-history-menu-user-extension-function
+                       tree-buffer-name node)))
         (dyn-builtin-extension (ecb-dir/source/hist-menu-editwin-entries)))
     (list (cons ecb-history-nodetype-sourcefile
                 (funcall (or ecb-history-menu-sorter 'identity)

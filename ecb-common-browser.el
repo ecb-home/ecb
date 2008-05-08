@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.26 2007/07/05 11:08:24 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.27 2008/05/08 12:03:50 berndl Exp $
 
 
 ;;; History
@@ -873,20 +873,7 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
 (defmacro defecb-interactor-synchronizer (synchronizer
                                           buffer-name-symbol
                                           docstring &rest body)
-  "Define a creator-function CREATOR for a tree-buffer which name is hold in
-the symbol TREE-BUFFER-NAME-SYMBOL. Do not quote CREATOR and
-TREE-BUFFER-NAME-SYMBOL. DOCSTRING is the docstring for CREATOR. BODY is all
-the program-code of CREATOR \(must contain a call to `tree-buffer-create'). It
-makes sense that BODY returns the created tree-buffer.
-
-When creating a tree-buffer with this macro then this tree-buffer will be
-automatically created \(i.e. its creator-function defined with this macro will
-be called) when activating ECB and the tree-buffer will automatically
-registered at ECB. This means that some features of ECB will work
-automatically out of the box with this tree-buffer.
-
-When creating a tree-buffer for ECB then it MUST be created with this macro
-and not with `tree-buffer-create'!"
+  ""
   `(eval-and-compile
      (ecb-interactor-synchronizer-register (quote ,buffer-name-symbol)
                                            (quote ,synchronizer))

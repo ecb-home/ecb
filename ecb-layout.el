@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.257 2007/07/08 16:42:05 berndl Exp $
+;; $Id: ecb-layout.el,v 1.258 2008/05/08 12:03:44 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2406,17 +2406,29 @@ possible destinations are immediately shown in a completion-buffer."
                                ;; point elsewhere ==> all windows of the list in
                                ;; canonical order
                                win-list))
-           (choices-list (mapcar (function (lambda (w)
-                                             (buffer-name (window-buffer w))))
-                                 destination-list)))
-      (when choices-list
-        (if (= (length choices-list) 1)
+           ;; build an alist with car is a left-trimmed buffer-name (usefull
+           ;; for the special ECB-buffers which all start with a blank) and
+           ;; cdr ist the real buffer-name (used for selecting the buffer)
+           (choices-buffer-name-alist
+            (mapcar (function (lambda (w)
+                                (cons (ecb-left-trim (buffer-name (window-buffer w)))
+                                      (buffer-name (window-buffer w)))))
+                    destination-list)))
+      (when choices-buffer-name-alist
+        (if (= (length choices-buffer-name-alist) 1)
             ;; no user-interaction necessary because only one senseful destination
-            (ecb-window-select (car choices-list))
-          ;; we ask the user which window should be selected.
+            (ecb-window-select (cdar choices-buffer-name-alist))
+          ;; we ask the user which window/buffer should be selected. For conveniance
+          ;; the left-trimmed buffer-names are offered - s.a.
           (if use-immediate-completion
-              (ecb-window-select (ecb-offer-choices "Select a window: " choices-list))
-            (ecb-window-select (ecb-query-string "Select a window: " choices-list))))))))
+              (ecb-window-select
+               (cdr (assoc (ecb-offer-choices "Select a window: "
+                                              (mapcar 'car choices-buffer-name-alist))
+                           choices-buffer-name-alist)))
+            (ecb-window-select
+             (cdr (assoc (ecb-query-string "Select a window: "
+                                           (mapcar 'car choices-buffer-name-alist))
+                         choices-buffer-name-alist)))))))))
 
 (defun ecb-goto-window-compilation ()
   "Goto the ecb compilation window `ecb-compile-window'."
@@ -2654,11 +2666,11 @@ variable is strictly only for internal usage!")
 ;; This advice is the heart of the mechanism which displays all buffer in the
 ;; compile-window if they are are "compilation-buffers" in the sense of
 ;; `ecb-compilation-buffer-p'!
-
 ;; We do not use `display-buffer-function' but we just handle it within the
 ;; advice, because otherwise we would have to implement all window-choosing
 ;; for ourself and with our advice we just "restrict" the windows
-;; `display-buffer' can use but the real choosing-task is done by the function
+;; `display-buffer' can use (by setting the not choosable windows temporarly
+;; dedicated) but the real choosing-task is done by the function
 ;; itself - this is much better and smarter than implementing the whole stuff.
 (defecb-advice display-buffer around ecb-basic-adviced-functions
   "Makes this function compatible with ECB if called in or for the ecb-frame.
