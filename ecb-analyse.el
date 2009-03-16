@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.16 2006/05/12 16:03:11 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.17 2009/03/16 08:41:23 berndl Exp $
 
 
 ;;; Commentary:
@@ -143,7 +143,7 @@ bucket. So most needed buckets are better visible in the analyse-buffer."
                          (const :tag "Completions" :value "Completions")
                          (string :tag "Other bucketname"))))
 
-(defcustom ecb-analyse-fontified-buckets '("Context")
+(defcustom ecb-analyse-fontified-buckets '("Context" "Function")
   "*Buckets whose elements should be fontified as in the methods-buffer.
 If the name of a category/bucket is contained in this option then all elements
 of this bucket will be displayed as in the methods-buffer - at least if an
@@ -201,18 +201,85 @@ See also `ecb-analyse-gen-tag-info-fn'."
                        :value ecb-analyse-show-tag-info-in-temp-buffer)
                 (function :tag "Info display-function")))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: first we start simple by creating
-;; an analyse-tree-buffer which can be included in a layout and all should
-;; work. Later we could design a basic-mechanism which:
-;; - creates a "mode"-tree-buffer for stuff like analyse, class browser etc.
-;; - a mechansims which copy the anaylse-tree-buffer (or in future the
-;;   class-browser-tree-buffer etc.) to that "mode"-tree-buffer so you can
-;;   display in that basic tree-buffer different "modes". Probably this would
-;;   be the best: We have 4 basic tree-buffers (directories, sources, methods
-;;   and history and one additional "mode"-tree-buffer which can be added to a
-;;   layout. Then there is a command which display different tree-buffers uin
-;;   the mode-tree-buffer, e.g. the analyse tree-buffer or a
-;;   class-browser-tree-buffer.
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add all these new options to the
+;; ecb.texi
+(defcustom ecb-analyse-buffer-sync 'basic
+  "*Synchronize the analyse buffer automatically with current edit buffer.
+
+If 'always then the synchronization takes place always a buffer changes in the
+edit window, if nil then never. If a list of major-modes then only if the
+`major-mode' of the new buffer belongs NOT to this list.
+
+Normally it's not necessary to exclude some major-modes because with
+not-semantic supported major-modes simply nothing happens. But maybe it can be
+helpful for certain situations...
+
+If the special value 'basic is set then ECB uses the setting of the option
+`ecb-basic-buffer-sync'.
+
+IMPORTANT NOTE: Every time the synchronization is done the hook
+`ecb-analyse-buffer-sync-hook' is evaluated."
+    :group 'ecb-analyse
+    :type '(radio :tag "Synchronize ECBs analyse buffer"
+                  (const :tag "use basic value" :value basic)
+                  (const :tag "Always" :value always)
+                  (const :tag "Never" nil)
+                  (repeat :tag "Not with these modes"
+                          (symbol :tag "mode"))))
+    
+
+(defcustom ecb-analyse-buffer-sync-delay 2
+  "*Time Emacs must be idle before the analyse-buffer is synchronized.
+Synchronizing is done with the current source displayed in the edit window. If
+nil then there is no delay, means synchronization takes place immediately. A
+small value of about 0.25 seconds saves CPU resources and you get even though
+almost the same effect as if you set no delay.
+
+CAUTION: With analysing a value to too small is strongly recommended because
+it can be very annoying if more or less after each typing the current context
+is analysed.
+
+If the special value 'basic is set then ECB uses the setting of the option
+`ecb-basic-buffer-sync-delay'"
+  :group 'ecb-analyse
+  :type '(radio (const :tag "use basic value" :value basic)
+                (const :tag "No synchronizing delay" :value nil)
+                (number :tag "Idle time before synchronizing" :value 2))
+  :set (function (lambda (symbol value)
+                   (set symbol value)
+                   (if (and (boundp 'ecb-minor-mode)
+                            ecb-minor-mode)
+                       (ecb-activate-ecb-autocontrol-functions
+                        value 'ecb-analyse-buffer-sync))))
+  :initialize 'custom-initialize-set)
+  
+(defcustom ecb-analyse-buffer-sync-hook nil
+  "Hook run at the end of `ecb-analyse-buffer-sync'.
+See documentation of `ecb-analyse-buffer-sync' for conditions when
+synchronization takes place and so in turn these hooks are evaluated.
+
+Preconditions for such a hook:
+- Current buffer is the buffer of the currently selected
+  edit-window.
+- The analyse-buffer is displayed in a visible window of the
+  ecb-frame \(so no check for visibilty of the analyse-buffer in
+  the ecb-frame is necessary in a hook function)
+
+Postcondition for such a hook:
+Point must stay in the same edit-window as before evaluating the hook.
+
+Important note: If the option `ecb-analyse-buffer-sync' is not
+nil the function `ecb-analyse-buffer-sync' is running either
+every time Emacs is idle or even after every command \(see
+`ecb-analyse-buffer-sync-delay'). So if the anaylse-buffer is
+displayed in a window of the ecb-frame \(see preconditions above)
+these hooks can be really called very often! Therefore each
+function of this hook should/must check in an efficient way at
+beginning if its task have to be really performed and then do
+them only if really necessary! Otherwise performance of Emacs
+could slow down dramatically!"
+    :group 'ecb-analyse
+    :type 'hook)
 
 (defconst ecb-analyse-nodedata-tag-with-pos 0)
 (defconst ecb-analyse-nodedata-tag-without-pos 1)
@@ -228,49 +295,54 @@ See also `ecb-analyse-gen-tag-info-fn'."
 (defconst ecb-analyse-nodetype-function 7)
 (defconst ecb-analyse-nodetype-function-arg 8)
 
-
-
-(defun ecb-analyse-buffer-sync ()
+(defecb-autocontrol/sync-function ecb-analyse-buffer-sync
+    ecb-analyse-buffer-name ecb-analyse-buffer-sync t
   "Synchronize the analyse buffer with the current buffer and point.
 This means in fact display the current analysis for current point."
-  (interactive)
-  (ecb-do-if-buffer-visible-in-ecb-frame 'ecb-analyse-buffer-name
-    ;; (current-buffer) is here the current buffer of the edit-area!
-    (let ((analysis nil)
-          (completions nil)
-          (fnargs nil)
-          (cnt nil)
-          )
-      ;; Try and get some sort of analysis
-      (ignore-errors
-        (save-excursion
-          (setq analysis (ecb--semantic-analyze-current-context (point)))
-          (setq cnt (ecb--semantic-find-tag-by-overlay))
-          (when analysis
-            (setq completions (ecb--semantic-analyze-possible-completions analysis))
-            (setq fnargs (ecb--semantic-get-local-arguments (point)))
-            )))
-      (ecb-exec-in-window ecb-analyse-buffer-name
-        ;; we must remove the old nodes
-        (tree-buffer-set-root (tree-node-new-root))
-        (when analysis
-          ;; Now insert information about the context
-          (when cnt
-            (ecb-analyse-add-nodes "Context" "Context"
-                                   cnt ecb-analyse-nodetype-context))
-          (when fnargs
-            (ecb-analyse-add-nodes "Arguments" "Arguments" fnargs
-                                   ecb-analyse-nodetype-arguments))
-          ;; Let different classes draw more nodes.
-          (ecb-analyse-more-nodes analysis)
-          (when completions
-            (ecb-analyse-add-nodes "Completions" "Completions" completions
-                                   ecb-analyse-nodetype-completions)))
-        (tree-buffer-update)))))
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: make interruptable. Necessary
+  ;; e.g. when typing: "(e" then scanning all elisp stuff beginning with e is
+  ;; really annoying....
+  (let* ((mode-local-active-mode major-mode)
+         (scope (semantic-calculate-scope (point)))
+         (ctxt (ecb--semantic-analyze-current-context (point)))
+         (cnt (ecb--semantic-find-tag-by-overlay))
+         (completions (when ctxt
+                        (ecb--semantic-analyze-possible-completions ctxt))))
+    ;; Try and get some sort of analysis
+    (ecb-exec-in-window ecb-analyse-buffer-name
+      ;; we must remove the old nodes
+      (tree-buffer-set-root (tree-node-new-root))
+      (when ctxt
+        ;; Now insert information about the context
+        (when cnt
+          (ecb-analyse-add-nodes "Context" "Context"
+                                 cnt ecb-analyse-nodetype-context))
+        ;; Let different classes draw more nodes.
+        (ecb-analyse-more-nodes ctxt)
+        (when completions
+          (ecb-analyse-add-nodes "Completions" "Completions" completions
+                                 ecb-analyse-nodetype-completions)))
+      (tree-buffer-update)))
+  (run-hooks 'ecb-analyse-buffer-sync-hook))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: why does this not work?!
+;; (defmethod ecb-analyse-more-nodes ((context semantic-analyze-context))
+;;   "Show a set of ecb-nodes specific to CONTEXT."
+;;   (let* ((scope (or (oref context scope)
+;;                     (semantic-calculate-scope (point))))
+;;          (localvars (or (when scope (oref scope localvar))
+;;                         (semantic-get-all-local-variables))))
+;;     (when localvars
+;;       (ecb-analyse-add-nodes "Local Variables" "Local Variables" localvars
+;;                              ecb-analyse-nodetype-localvars)))
+;;   (let ((prefix (oref context prefix)))
+;;     (when prefix
+;;       (ecb-analyse-add-nodes "Prefix" "Prefix" prefix ecb-analyse-nodetype-prefix))))
 
 (defmethod ecb-analyse-more-nodes ((context semantic-analyze-context))
   "Show a set of ecb-nodes specific to CONTEXT."
-  (let ((localvars (oref context localvariables)))
+  (let* ((scope (oref context scope))
+         (localvars (when scope (oref scope localvar))))
     (when localvars
       (ecb-analyse-add-nodes "Local Variables" "Local Variables" localvars
                              ecb-analyse-nodetype-localvars)))
@@ -326,30 +398,32 @@ of LIST."
         (setf (tree-node->expanded bucket-node)
               (not (member bucket
                            ecb-analyse-collapsed-buckets)))
-        (dolist (elem list)
-          (let* ((fontify-tags (member bucket ecb-analyse-fontified-buckets))
-                 (string-1 (typecase elem
-                             (string elem)
-                             (ecb--semantic-tag
-                              (if fontify-tags
-                                  (ecb-displayed-tag-name elem)
-                                (ecb--semantic-format-tag-uml-concise-prototype elem)))
-                             (otherwise "foo")))
-                 (string (concat string-1)))
-            (unless fontify-tags
-              (ecb-merge-face-into-text string ecb-analyse-bucket-element-face))
-            (if (ecb--semantic-tag-p elem)
+        (ecb-exit-on-input 'ecb-analyse
+          (dolist (elem list)
+            (ecb-throw-on-input 'ecb-analyse-tree-buffer-build)
+            (let* ((fontify-tags (member bucket ecb-analyse-fontified-buckets))
+                   (string-1 (typecase elem
+                               (string elem)
+                               (ecb--semantic-tag
+                                (if fontify-tags
+                                    (ecb-displayed-tag-name elem)
+                                  (ecb--semantic-format-tag-uml-concise-prototype elem)))
+                               (otherwise "foo")))
+                   (string (concat string-1)))
+              (unless fontify-tags
+                (ecb-merge-face-into-text string ecb-analyse-bucket-element-face))
+              (if (ecb--semantic-tag-p elem)
+                  (tree-node-new string nodetype
+                                 (list elem
+                                       (if (ecb--semantic-tag-with-position-p elem)
+                                           ecb-analyse-nodedata-tag-with-pos
+                                         ecb-analyse-nodedata-tag-without-pos)
+                                       nodetype)
+                                 t bucket-node nil)
                 (tree-node-new string nodetype
-                               (list elem
-                                     (if (ecb--semantic-tag-with-position-p elem)
-                                         ecb-analyse-nodedata-tag-with-pos
-                                       ecb-analyse-nodedata-tag-without-pos)
-                                     nodetype)
-                               t bucket-node nil)
-              (tree-node-new string nodetype
-                             (list elem ecb-analyse-nodedata-no-tag nodetype)
-                             t bucket-node nil))))))))
-
+                               (list elem ecb-analyse-nodedata-no-tag nodetype)
+                               t bucket-node nil)))))))))
+  
 (defun ecb-analyse-compare-node-data (left right)
   "Return not nil when LEFT and RIGHT are identical node-datas."
   (and (equal (nth 2 left) (nth 2 right))
@@ -399,6 +473,28 @@ used as window."
         (if movepoint
             (goto-char movepoint))))))
 
+(tree-buffer-defpopup-command ecb-analyse-insert
+  "Insert at current point of the edit-window the selected Local-var-tag."
+  ;; We must highlight the tag
+  (let* ((data (tree-node->data node))
+         (tag (nth 0 data))
+         (type (tree-node->type node)))
+    (when (= type ecb-analyse-nodetype-completions)
+      (tree-buffer-highlight-node-data data)
+      (ecb-find-file-and-display ecb-path-selected-source nil)
+      (let* ((a (ecb--semantic-analyze-current-context (point)))
+             (bounds (oref a bounds))
+             (movepoint nil))
+        (save-excursion
+          (if (and (<= (point) (cdr bounds)) (>= (point) (car bounds)))
+              (setq movepoint t))
+          (goto-char (car bounds))
+          (delete-region (car bounds) (cdr bounds))
+          (insert (ecb--semantic-tag-name tag))
+          (if movepoint (setq movepoint (point))))
+        (if movepoint
+            (goto-char movepoint))))))
+
 (defun ecb-analyse-node-clicked (node ecb-button edit-window-nr
                                       shift-mode meta-mode)
   "Handle clicking onto NODE in the analyse-buffer. ECB-BUTTON can be 1, 2 or
@@ -416,6 +512,8 @@ value of EDIT-WINDOW-NR is ignored."
       (tree-buffer-update node))
      ((= type ecb-analyse-nodetype-completions)
       (ecb-analyse-complete node))
+     ((= type ecb-analyse-nodetype-localvars)
+      (ecb-analyse-insert node))
      (t
       (ecb-analyse-jump-to-tag node (ecb-get-edit-window
                                      ;; `ecb-analyse-jump-to-tag' expects all
@@ -428,7 +526,8 @@ value of EDIT-WINDOW-NR is ignored."
 
 (defecb-window-dedicator ecb-set-analyse-buffer ecb-analyse-buffer-name
   "Display the analyse buffer in current window and make window dedicated."
-  (add-hook 'ecb-current-buffer-sync-hook-internal 'ecb-analyse-buffer-sync)
+  (ecb-activate-ecb-autocontrol-functions ecb-analyse-buffer-sync-delay
+                                          'ecb-analyse-buffer-sync)
   (switch-to-buffer ecb-analyse-buffer-name))
 
 (defun ecb-maximize-window-analyse ()

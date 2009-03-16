@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-examples.el,v 1.20 2005/06/20 14:34:20 berndl Exp $
+;; $Id: ecb-examples.el,v 1.21 2009/03/16 08:41:23 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -113,7 +113,7 @@
 ;; The main synchronizing function which is added to
 ;; `ecb-current-buffer-sync-hook' for autom. evaluation by
 ;; `ecb-current-buffer-sync' which runs dependent on the values of
-;; `ecb-window-sync' and `ecb-window-sync-delay'.
+;; `ecb-basic-buffer-sync' and `ecb-basic-buffer-sync-delay'.
 
 (defun ecb-examples-bufferinfo-sync ()
   "Synchronizes the buffer-info buffer with current source if changed.

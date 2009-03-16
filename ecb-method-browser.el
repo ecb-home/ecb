@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.82 2008/05/08 12:03:44 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.83 2009/03/16 08:41:23 berndl Exp $
 
 ;;; Commentary:
 
@@ -2725,13 +2725,13 @@ non-semantic-sources."
       ;; "manually" rebuild of the method buffer is not necessary.
       ;;
       ;; `ecb-update-methods-buffer--internal' is called by
-      ;; `ecb-current-buffer-sync' and `ecb-set-selected-source' (depending on
-      ;; the method switching to current buffer) which both are called also
+      ;; `ecb-basic-buffer-sync' and `ecb-set-selected-source' (depending
+      ;; on the method switching to current buffer) which both are called also
       ;; for buffers which are not setup for semantic (e.g. text-,
-      ;; tex-buffers). current-tagcache is nil for such buffers so we call
-      ;; the rebuilding of the method buffer with a nil cache and therefore
-      ;; the method-buffer will be cleared out for such buffers. This is what
-      ;; we want! For further explanation see
+      ;; tex-buffers). current-tagcache is nil for such buffers so we call the
+      ;; rebuilding of the method buffer with a nil cache and therefore the
+      ;; method-buffer will be cleared out for such buffers. This is what we
+      ;; want! For further explanation see
       ;; `ecb-rebuild-methods-buffer-with-tagcache'...
       (if ecb-method-buffer-needs-rebuild
           ;; the hook was not called therefore here manually
@@ -2826,10 +2826,20 @@ it is cleared.
 IF NON-SEMANTIC-REBUILD is not nil then current non-semantic-source is forced
 to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
   ;; The most important function for (re)building the Method-buffer
-  (when (and ecb-minor-mode
+  (when (and ecb-minor-mode ;; ECB must be active - just for saveness
+             ;; ECB-frame must be active
              (equal (selected-frame) ecb-frame)
+             ;; the methods-buffer must be visible
              (get-buffer-window ecb-methods-buffer-name)
-             (buffer-file-name (current-buffer))             
+             ;; current buffer must have a filename. TODO: Klaus Berndl
+             ;; <klaus.berndl@sdm.de>: maybe this restriction has to be
+             ;; reconsidered for the sake being able also displaying
+             ;; buffer-contents not related to a physical file.
+             (buffer-file-name (current-buffer))
+             ;; the parsed buffer must be displayed in a window within the
+             ;; ECB-frame: This prevents the methods-buffer being confused by
+             ;; the background-parsing of other files by semantic-idle-timer
+             (get-buffer-window (current-buffer) ecb-frame)
              ;; The functions of the hook
              ;; `semantic-after-toplevel-cache-change-hook' are also called
              ;; after clearing the cache to set the cache to nil if a buffer
@@ -3003,6 +3013,7 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
     ;; stored in the dnodes of the navigation-list now are invalid. Therefore
     ;; we have changed the implementation of ecb-navigate.el from storing
     ;; whole tags to storing buffer and start- and end-markers!
+    ;; Just for information also remarked here.
     
     (ecb-mode-line-format)
 
@@ -3288,9 +3299,9 @@ current buffer."
 
 ;; This approach only expands the needed parts of the tree-buffer when
 ;; the current-tag is not visible as node and not the whole tree-buffer.
-(defun ecb-tag-sync (&optional force)
-  (ecb-debug-autocontrol-fcn-error 'ecb-tag-sync
-                                   "Begin: Cur-buf: %s" (current-buffer))
+
+(defecb-autocontrol/sync-function ecb-tag-sync ecb-methods-buffer-name nil nil
+  "Synchronizing tag-display of the methods-buffer with current point."
   (when (and ecb-minor-mode
              (not (ecb-point-in-dedicated-special-buffer))
              (not (ecb-point-in-compile-window)))
@@ -3371,10 +3382,7 @@ current buffer."
                        nil t)
                       (tree-buffer-highlight-node-data
                        curr-tag nil (equal ecb-highlight-tag-with-point 'highlight)))
-                    ))))))))
-  (ecb-debug-autocontrol-fcn-error 'ecb-tag-sync
-                                   "End: Cur-buf: %s" (current-buffer)))
-  
+                    )))))))))  
 
 
 (defun ecb-find-file-and-display (filename other-edit-window)
@@ -4498,7 +4506,7 @@ by semantic and also killed afterwards."
       (let ( ;; XEmacs 21.4 does not set this so we do it here, to ensure that
             ;; the custom-file is loadede in an emacs-lisp-mode buffer, s.b.
             (default-major-mode 'emacs-lisp-mode)
-            (ecb-window-sync nil)
+            (ecb-basic-buffer-sync nil)
             (kill-buffer-hook nil)
             ;; we prevent parsing the custom-file
             (semantic-before-toplevel-bovination-hook (lambda ()

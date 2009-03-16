@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.65 2008/05/08 12:03:50 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.66 2009/03/16 08:41:23 berndl Exp $
 
 ;;; Commentary:
 
@@ -142,7 +142,7 @@ either nil or a list of strings where each string is a path.")
 (defcustom ecb-display-default-dir-after-start t
   "*Automatically display current default-directory after activating ECB.
 If a file-buffer is displayed in the edit-window then ECB synchronizes its
-tree-buffers to this file-buffer - at least if the option `ecb-window-sync' it
+tree-buffers to this file-buffer - at least if the option `ecb-basic-buffer-sync' it
 not nil. So for this situation `ecb-display-default-dir-after-start' takes no
 effect but this option is for the case if no file-buffer is displayed in the
 edit-window after startup:
@@ -336,18 +336,31 @@ NOT use \"~\" because ECB tries always to match full path-names!"
 
 (defcustom ecb-ping-program "ping"
   "Program to send network test packets to a host.
-See also `ecb-ping-options'."
+The set ping-program is used to test if a remote host of a remote
+path \(e.g. a tramp-, ange-ftp- or efs-path) is accessible. See
+also `ecb-ping-options'."
   :group 'ecb-directories
   :type  'string)
 
-(defcustom ecb-ping-options
-  (if (eq system-type 'windows-nt)
-      (list "-n" "1")
-    (list "-c" "1"))
+(defcustom ecb-ping-options (list "HOST")
   "List of options for the ping program.
-These options can be used to limit how many ICMP packets are emitted. Ping is
-used to test if a remote host of a remote path \(e.g. a tramp-, ange-ftp- or
-efs-path) is accessible. See also `ecb-ping-program'."
+These options have to ensure that the program set in `ecb-ping-program' only
+emits as few as possible ICMP packets, ideally exactly 1. These options must
+ensure the ping-program doesn't emit an endless sequence of packets!
+
+These sequence of options must fit the required argument- and options-list of
+the specified ping-program \(see `ecb-ping-program'). Therefore at least on of
+these options must be the string HOST \(uppercase) which will be replaced
+internally by ECB with that host-name everytime the accessibility of this host
+has to be tested. So ensure that this 'HOST'-option is in the right place of
+the options-sequence - check the manual of your ping-program!
+
+Default-value of this option is a list with just one element
+HOST, which means the ping-program of `ecb-ping-program' will be
+called with one argument which will be the host-name which should be
+tested.
+
+See also `ecb-ping-program'."
   :group 'ecb-directories
   :type  '(repeat string))
 
@@ -480,7 +493,7 @@ regardless of the trigger of this change. So for example it runs also when you
 just switches from one buffer to another via `switch-to-buffer' or
 `switch-to-buffer-other-window' and the directory of these filebuffers is
 different but only when auto-synchronizing of the ECB-windows is on (see
-`ecb-window-sync'). It runs not when switching between buffers and the
+`ecb-basic-buffer-sync'). It runs not when switching between buffers and the
 associated files reside in the same directory.
 
 Each function added to this hook will be called with two arguments: The
@@ -1241,9 +1254,11 @@ beginning of this option."
 ;;   (vc-fetch-master-properties file)
 ;;   (vc-file-getprop file 'vc-cvs-status))
 
+
 ;;====================================================
 ;; Internals
 ;;====================================================
+
 
 ;; constants for the node-types
 (defconst ecb-directories-nodetype-directory 0)
@@ -1605,9 +1620,11 @@ ECB-history-window is not visible in current layout."
   "Display the History-buffer in current window and make window dedicated."
   (switch-to-buffer ecb-history-buffer-name))
 
-
-(defun ecb-directories-sources-history-buffer-sync (&optional force)
+(defecb-autocontrol/sync-function ecb-basic-buffer-sync nil ecb-basic-buffer-sync nil
   "Synchronizing the basic tree-buffers of ECB.
+
+The basic ecb-buffers are the tree-buffers for drirectories, sources, history
+and methods.
 
 Under the following additional conditions some tasks are performed:
 
@@ -1615,90 +1632,99 @@ Under the following additional conditions some tasks are performed:
   is different from the source-file currently displayed in the
   ECB-tree-buffers:
 
-  Synchronizing all tree-buffers with the current buffer
+  Synchronizing all basic tree-buffers \(directories, sources, history,
+  methods) with the current buffer
 
 - Current buffer is a dired-buffer:
 
-  Synchronizing the directory- and sources-tree-buffer if visible"
-  (let ((filename (buffer-file-name (current-buffer))))
-    (cond ( ;; synchronizing for real filesource-buffers
-           (and filename
-                (ecb-buffer-or-file-readable-p)
-                (or force
-                    (not (ecb-string= filename ecb-path-selected-source))))
-          
-           ;; * KB: Problem: seems this little sleep is necessary because
-           ;;   otherwise jumping to certain markers in new opened files (e.g.
-           ;;   with next-error etc. ) doesn´t work correct. Can´t debug down
-           ;;   this mysterious thing! Regardless of the size of the file to
-           ;;   load, this 0.1 fraction of a sec is enough!
-           ;; * KB: With current ECB implementation this sit-for seems not
-           ;;   longer necessary, it works with every Emacs version correct.
-           ;;   Therefore i comment out the sit-for until this error occurs
-           ;;   again.               
-           ;;           (sit-for 0.1)
-               
-           ;; if the file is not located in any of the paths in
-           ;; `ecb-source-path' or in the paths returned from
-           ;; `ecb-source-path-functions' we must at least add the new
-           ;; source path temporally to our paths. But the user has also
-           ;; the choice to save it for future sessions too.
-           (if (null (ecb-matching-source-paths filename))
-               (let* ((norm-filename (ecb-fix-filename filename))
-                      (remote-path (ecb-remote-path norm-filename))
-                      (source-path (if (car ecb-add-path-for-not-matching-files)
-                                       ;; we always add the only the root
-                                       ;; as source-path
-                                       (if remote-path
-                                           ;; for a remote-path we add the
-                                           ;; host+ the root of the host
-                                           (concat (car remote-path) "/")
-                                         ;; filename is a local-path
-                                         (if (= (aref norm-filename 0) ?/)
-                                             ;; for Unix-style-path we add the
-                                             ;; root-dir
-                                             (substring norm-filename 0 1)
-                                           ;; for win32-style-path we add
-                                           ;; the drive; because
-                                           ;; `ecb-fix-filename' also
-                                           ;; converts cygwin-path-style
-                                           ;; to win32-path-style here
-                                           ;; also the drive is added.
-                                           (substring norm-filename 0 2)))
-                                     ;; add the full directory as source-path
-                                     (ecb-file-name-directory norm-filename))))
-                 (ecb-add-source-path source-path (ecb-fix-filename source-path)
-                                      (not (cdr ecb-add-path-for-not-matching-files)))))
+  Synchronizing the directory- and sources-tree-buffer if visible
 
-           ;; now we can be sure that a matching source-path exists
-               
-           ;; Klaus: The explicit update of the directories buffer is not
-           ;; necessary because the sync with the current source is done by
-           ;; `ecb-select-source-file'!
-           ;;           (ecb-update-directories-buffer)
-           (ecb-select-source-file filename force)
-           (ecb-update-methods-buffer--internal 'scroll-to-begin)
-           (setq ecb-major-mode-selected-source major-mode)
+At the end the hooks in `ecb-basic-buffer-sync-hook' run."
+  (when (and ecb-minor-mode
+             (not ecb-windows-hidden)
+             (ecb-point-in-edit-window-number))
+    (let ((filename (buffer-file-name (current-buffer))))
+      (cond ( ;; synchronizing for real filesource-buffers
+             (and filename
+                  (ecb-buffer-or-file-readable-p)
+                  (or force
+                      (not (ecb-string= filename ecb-path-selected-source))))
+             
+             ;; * KB: Problem: seems this little sleep is necessary because
+             ;; otherwise jumping to certain markers in new opened files (e.g.
+             ;; with next-error etc. ) doesn´t work correct. Can´t debug down
+             ;; this mysterious thing! Regardless of the size of the file to
+             ;; load, this 0.1 fraction of a sec is enough!
+             ;; * KB: With current ECB implementation this sit-for seems not
+             ;;   longer necessary, it works with every Emacs version correct.
+             ;;   Therefore i comment out the sit-for until this error occurs
+             ;;   again.
+             ;; (sit-for 0.1)
+             
+             ;; if the file is not located in any of the paths in
+             ;; `ecb-source-path' or in the paths returned from
+             ;; `ecb-source-path-functions' we must at least add the new
+             ;; source path temporally to our paths. But the user has also
+             ;; the choice to save it for future sessions too.
+             (if (null (ecb-matching-source-paths filename))
+                 (let* ((norm-filename (ecb-fix-filename filename))
+                        (remote-path (ecb-remote-path norm-filename))
+                        (source-path (if (car ecb-add-path-for-not-matching-files)
+                                         ;; we always add the only the root
+                                         ;; as source-path
+                                         (if remote-path
+                                             ;; for a remote-path we add the
+                                             ;; host+ the root of the host
+                                             (concat (car remote-path) "/")
+                                           ;; filename is a local-path
+                                           (if (= (aref norm-filename 0) ?/)
+                                               ;; for Unix-style-path we add the
+                                               ;; root-dir
+                                               (substring norm-filename 0 1)
+                                             ;; for win32-style-path we add
+                                             ;; the drive; because
+                                             ;; `ecb-fix-filename' also
+                                             ;; converts cygwin-path-style
+                                             ;; to win32-path-style here
+                                             ;; also the drive is added.
+                                             (substring norm-filename 0 2)))
+                                       ;; add the full directory as source-path
+                                       (ecb-file-name-directory norm-filename))))
+                   (ecb-add-source-path source-path (ecb-fix-filename source-path)
+                                        (not (cdr ecb-add-path-for-not-matching-files)))))
+             
+             ;; now we can be sure that a matching source-path exists
+             
+             ;; Klaus: The explicit update of the directories buffer is not
+             ;; necessary because the sync with the current source is done by
+             ;; `ecb-select-source-file'!
+             ;; (ecb-update-directories-buffer)
+             (ecb-select-source-file filename force)
+             (ecb-update-methods-buffer--internal 'scroll-to-begin)
+             (setq ecb-major-mode-selected-source major-mode)
+             
+             ;; Klaus Berndl <klaus.berndl@sdm.de>: is now be done at the
+             ;; end of `ecb-rebuild-methods-buffer-with-tagcache' which is
+             ;; called by `ecb-update-methods-buffer--internal'!
+             
+             ;; selected source has changed, therefore we must initialize
+             ;; ecb-selected-tag again.
+             (ecb-tag-sync 'force)
+             )
+            
+            ( ;; synchronizing for dired-mode
+             (eq major-mode 'dired-mode)
+             (ecb-set-selected-directory
+              (or (and (stringp dired-directory)
+                       (ecb-file-exists-p dired-directory)
+                       dired-directory)
+                  (and (listp dired-directory)
+                       (car dired-directory)))))
+            (t nil)))
+    (run-hooks 'ecb-basic-buffer-sync-hook)
+    ))
 
-           ;; Klaus Berndl <klaus.berndl@sdm.de>: is now be done at the
-           ;; end of `ecb-rebuild-methods-buffer-with-tagcache' which is
-           ;; called by `ecb-update-methods-buffer--internal'!
-
-           ;; selected source has changed, therefore we must initialize
-           ;; ecb-selected-tag again.
-           (ecb-tag-sync 'force)
-           )
-              
-          ( ;; synchronizing for dired-mode
-           (eq major-mode 'dired-mode)
-           (ecb-set-selected-directory
-            (or (and (stringp dired-directory)
-                     (ecb-file-exists-p dired-directory)
-                     dired-directory)
-                (and (listp dired-directory)
-                     (car dired-directory)))))
-          (t nil))))
-
+  
 (defun ecb-expand-directory-tree (path node)
   "Expands the directory part so the node representing PATH is visible.
 Start with the childrens of NODE. Return not nil when an expansion has been
@@ -2457,8 +2483,10 @@ ecb-windows after displaying the file in an edit-window."
         (tree-buffer-update)))
     ))
 
-;; remote-path stuff 
 
+;; remote-path stuff 
+;; (ecb-host-accessible-valid-time "ecb.sourceforge.net")
+;; (ecb-host-accessible-cache-get "ecb.sourceforge.net" 60)
 (defsubst ecb-host-accessible-valid-time (host)
   "Get the valid-cache-time of a remote HOST concering its ping-state. If host
 doesn't match any regexp of `ecb-host-accessible-check-valid-time' then return
@@ -2468,7 +2496,7 @@ doesn't match any regexp of `ecb-host-accessible-check-valid-time' then return
       60))
 
 ;; (ecb-host-accessible-valid-time "ecb.sourceforge.net")
-
+;; (ecb-host-accessible-cache-get "ecb.sourceforge.net" 60)
 (defun ecb-host-accessible-p (host)
   "Return not nil if HOST is accessible."
   (let ((value (ecb-host-accessible-cache-get
@@ -2476,7 +2504,8 @@ doesn't match any regexp of `ecb-host-accessible-check-valid-time' then return
     (case value
       (NOT-ACCESSIBLE nil)
       ((nil) ;; not cached or outdated
-       (let* ((options (append ecb-ping-options (list host)))
+       (let* ((options (ecb-replace-all-occurences (ecb-copy-list ecb-ping-options)
+                                                   "HOST" host))
               (result (equal 0 (apply 'call-process
                                       ecb-ping-program
                                       nil nil nil
@@ -2540,9 +2569,9 @@ component after that :-separator. Supports tramp, ange-ftp and efs."
          result))
       (otherwise value))))
 
-;; (ecb-remote-path "/berndl@ecb.sourceforge.net:~")
+;;(ecb-remote-path "/berndl@ecb.sourceforge.net:~")
+;;(directory-files "/berndl@ecb.sourceforge.net:~/beate")
 ;; (ecb-remote-path "~")
-
 
 ;; empty dirs
 
@@ -2846,7 +2875,7 @@ new state."
                         ;; CVS-subdir for example - then for such a directory
                         ;; ECB would eventually call this backend - but this
                         ;; would fail because the needed program is not
-                        ;; installed - so we ignore this an handle this as
+                        ;; installed - so we ignore this and handle this as
                         ;; unknown-state. 
                         (ignore-errors (funcall vc-state-fcn file))))
       ;; now we map the backend-state to one of the ECB-VC-state-values
@@ -3595,7 +3624,7 @@ can last a long time - depending of machine- and disk-performance."
     (dolist (node (tree-node->children (tree-buffer-get-root)))
       (tree-buffer-expand-node node level))
     (tree-buffer-update))
-  (ecb-current-buffer-sync 'force))
+  (ecb-basic-buffer-sync 'force))
 
 
 (defun ecb-get-file-info-text (file)
@@ -3698,7 +3727,7 @@ the help-text should be printed here."
       (ecb-rebuild-methods-buffer-with-tagcache nil nil t))
     (ecb-remove-dir-from-caches dir)
     (ecb-set-selected-directory dir t)
-    (ecb-current-buffer-sync)))
+    (ecb-basic-buffer-sync)))
 
 
 (defun ecb-grep-directory-internal (node find)

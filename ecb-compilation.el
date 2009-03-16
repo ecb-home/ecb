@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compilation.el,v 1.36 2005/04/21 12:15:54 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.37 2009/03/16 08:41:23 berndl Exp $
 
 ;;; Commentary:
 
@@ -255,21 +255,20 @@ either
   (setq ecb-compilation-buffer-list-cache nil)
   (ecb-compilation-buffer-list-changed-p))
 
-(defun ecb-compilation-buffer-list-changed-p ()
+(defecb-autocontrol/sync-function ecb-compilation-buffer-list-changed-p nil nil nil
   "Check if current active buffer list has changed - i.e. if a new buffer has
 been created or a buffer has been deleted. If yes then
 `ecb-compilation-update-menu-p' is set to not nil and the cache is updated."
-  (ecb-debug-autocontrol-fcn-error 'ecb-compilation-buffer-list-changed-p
-                                   "Begin: Cur-buf: %s" (current-buffer))
   (let ((new-buffer-list (buffer-list)))
     (when (not (equal new-buffer-list
                       ecb-compilation-buffer-list-cache))
+      (ecb-bodytrace-autocontrol/sync-fcn-error
+       'ecb-compilation-buffer-list-changed-p
+       "New buffer list not equal with cached buffer list.")
       (setq ecb-compilation-buffer-list-cache new-buffer-list)
       ;; Nowhere else this variable will be set to t.
-      (setq ecb-compilation-update-menu-p t)))
-  (ecb-debug-autocontrol-fcn-error 'ecb-compilation-buffer-list-changed-p
-                                   "End: Cur-buf: %s" (current-buffer)))
-  
+      (setq ecb-compilation-update-menu-p t))))
+
 
 (defun ecb-compilation-update-menu()
   "Create an install a menu that allows the user to navigate buffers that are

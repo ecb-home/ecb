@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.108 2008/05/08 12:03:44 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.109 2009/03/16 08:41:23 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -242,7 +242,7 @@
 (defconst ecb-upgradable-option-alist
   '((ecb-compile-window-temporally-enlarge . (ecb-compile-window-temporally-enlarge
                                               ecb-upgrade-compile-window-temporally-enlarge))
-    (ecb-window-sync . (ecb-window-sync ecb-upgrade-window-sync))
+    ;;(ecb-window-sync . (ecb-window-sync ecb-upgrade-window-sync))
     (ecb-hide-ecb-windows-hook . (ecb-hide-ecb-windows-before-hook identity))
     (ecb-show-ecb-windows-hook . (ecb-show-ecb-windows-before-hook identity))
     (ecb-layout-nr . (ecb-layout-name ecb-upgrade-layout-nr))
@@ -2001,7 +2001,7 @@ for details about using \"wget\"."
       ;; OK, now we begin....
 
       (let (
-            (ecb-window-sync nil)
+            (ecb-basic-buffer-sync nil)
             (kill-buffer-hook nil)
             (semantic-after-toplevel-cache-change-hook nil)
             (semantic-after-partial-cache-change-hook nil)
@@ -2054,7 +2054,7 @@ for details about using \"wget\"."
 
       (when success
         (let (
-              (ecb-window-sync nil)
+              (ecb-basic-buffer-sync nil)
               (kill-buffer-hook nil)
               (semantic-after-toplevel-cache-change-hook nil)
               (semantic-after-partial-cache-change-hook nil)
@@ -2073,7 +2073,7 @@ for details about using \"wget\"."
         
       ;; maybe cleaning up
       (let (
-            (ecb-window-sync nil)
+            (ecb-basic-buffer-sync nil)
             (kill-buffer-hook nil)
             (semantic-after-toplevel-cache-change-hook nil)
             (semantic-after-partial-cache-change-hook nil)
