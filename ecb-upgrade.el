@@ -242,7 +242,7 @@
 (defconst ecb-upgradable-option-alist
   '((ecb-compile-window-temporally-enlarge . (ecb-compile-window-temporally-enlarge
                                               ecb-upgrade-compile-window-temporally-enlarge))
-    (ecb-window-sync . (ecb-window-sync ecb-upgrade-window-sync))
+    ;;(ecb-window-sync . (ecb-window-sync ecb-upgrade-window-sync))
     (ecb-hide-ecb-windows-hook . (ecb-hide-ecb-windows-before-hook identity))
     (ecb-show-ecb-windows-hook . (ecb-show-ecb-windows-before-hook identity))
     (ecb-layout-nr . (ecb-layout-name ecb-upgrade-layout-nr))
@@ -2001,7 +2001,7 @@ for details about using \"wget\"."
       ;; OK, now we begin....
 
       (let (
-            (ecb-window-sync nil)
+            (ecb-basic-buffer-sync nil)
             (kill-buffer-hook nil)
             (semantic-after-toplevel-cache-change-hook nil)
             (semantic-after-partial-cache-change-hook nil)
@@ -2054,7 +2054,7 @@ for details about using \"wget\"."
 
       (when success
         (let (
-              (ecb-window-sync nil)
+              (ecb-basic-buffer-sync nil)
               (kill-buffer-hook nil)
               (semantic-after-toplevel-cache-change-hook nil)
               (semantic-after-partial-cache-change-hook nil)
@@ -2073,7 +2073,7 @@ for details about using \"wget\"."
         
       ;; maybe cleaning up
       (let (
-            (ecb-window-sync nil)
+            (ecb-basic-buffer-sync nil)
             (kill-buffer-hook nil)
             (semantic-after-toplevel-cache-change-hook nil)
             (semantic-after-partial-cache-change-hook nil)

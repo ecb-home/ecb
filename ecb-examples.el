@@ -113,7 +113,7 @@
 ;; The main synchronizing function which is added to
 ;; `ecb-current-buffer-sync-hook' for autom. evaluation by
 ;; `ecb-current-buffer-sync' which runs dependent on the values of
-;; `ecb-window-sync' and `ecb-window-sync-delay'.
+;; `ecb-basic-buffer-sync' and `ecb-basic-buffer-sync-delay'.
 
 (defun ecb-examples-bufferinfo-sync ()
   "Synchronizes the buffer-info buffer with current source if changed.

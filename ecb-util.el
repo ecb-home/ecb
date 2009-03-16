@@ -2061,7 +2061,8 @@ interrupted..
 
 Example: \(ecb-throw-on-input 'test-inner-loop \"test\") would throw a
 cons-cell \('test-inner-loop . \"test\")"
-  `(when (and ecb-current-input-throw-symbol (input-pending-p))
+  `(when (and ecb-current-input-throw-symbol
+              (or (input-pending-p) (accept-process-output)))
      (throw ecb-current-input-throw-symbol (cons ,from ,value))))
 
 
@@ -2084,6 +2085,19 @@ cons-cell \('test-inner-loop . \"test\")"
                  ;;(while t nil)
 		 (ecb-throw-on-input 'test-inner-loop "test")
                  )
+	       'exit))))
+
+(defun ecb-test-throw-on-input-new ()
+  "Test that while-no-input will work even better."
+  (interactive)
+  (message "Exit Code: %s"
+	   (while-no-input
+	     (let ((inhibit-quit nil)
+		   (message-log-max nil))
+	       (while t
+		 (message "Looping ...")
+                 (while t nil)
+		 "test")
 	       'exit))))
 
 

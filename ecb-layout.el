@@ -1010,6 +1010,21 @@ Please read also carefully the documentation of `ecb-redraw-layout'."
   :type 'boolean
   :group 'ecb-layout)
 
+(defcustom ecb-major-modes-show-or-hide (cons nil nil)
+  "*List of major-modes which show or hide the ecb-windows.
+The value is a cons-cell where the car contains all major-mode-symbols which
+should show the special ecb-windows and the cdr contains all
+major-mode-symbols which should hide the special ecb-windows. If the symbol of
+a major-mode is neither contained in the car-\"show-list\" nor in the
+cdr-\"hide-list\" then the visibility-state of the ecb-windows does not
+change."
+  :group 'ecb-layout
+  :group 'ecb-most-important
+  :type '(cons (repeat :tag "Modes for visible ecb-windows"
+                       (symbol :tag "Major-mode"))
+               (repeat :tag "Modes for invisible ecb-windows"
+                       (symbol :tag "Major-mode"))))
+
 (defcustom ecb-toggle-layout-sequence '("left9" "left14")
   "*Toggle sequence for layout toggling with `ecb-toggle-layout'.
 Every element of this list has to be a valid layout-name \(a string) i.e.
@@ -1200,6 +1215,55 @@ command. If not nil it contains the buffer-name of this special ecb-buffer.")
 
 (defvar ecb-layout-prevent-handle-ecb-window-selection nil
   "If not nil ECB will ignore in the post-command-hook auto. maximizing.")
+
+
+(defvar ecb-last-major-mode nil)
+
+(defecb-autocontrol/sync-function ecb-handle-major-mode-visibilty nil nil nil
+  "Added to `post-command-hook' after loading the ecb-library. Handles the
+value `ecb-major-modes-show-or-hide'. Because this hook of `post-command-hook'
+does nothing if the major-mode has not changed there should be no
+performance-problem!"
+  ;; Klaus: I think we need this to prevent doing here (de)activation
+  ;; immediately after the button-pressed event (which is a command) because
+  ;; then a mysterious window-live-p error for the minibuffer-window occurs if
+  ;; we click onto a file which deactivates ECB.
+  ;; With this the (de)activation is first done after the button-released
+  ;; event which is created by Emacs for every tree-buffer click and is bound
+  ;; to a nop.
+  ;; At least this is my current interpretation and it works :-)
+  ;; TODO: detecting the real reason why this happens and fixing it.
+  (if (and ecb-item-in-tree-buffer-selected
+           (equal ecb-tree-mouse-action-trigger 'button-press))
+      (setq ecb-item-in-tree-buffer-selected nil)
+    ;; do nothing if major-mode has not been changed or if a minibuffer is
+    ;; active or if now one of the ecb-buffers is active
+    (when (and (not (> (minibuffer-depth) 0))
+               (not (equal ecb-last-major-mode major-mode))
+               (not (member (current-buffer)
+                            (ecb-get-current-visible-ecb-buffers))))
+      (let ((last-mode ecb-last-major-mode))
+        (setq ecb-last-major-mode major-mode)
+        (ignore-errors
+          (cond ((member major-mode (car ecb-major-modes-show-or-hide))
+                 (let ((edit-win-list (ecb-canonical-edit-windows-list)))
+                   ;; the window must not be splitted or if splitted the last
+                   ;; major-mode must be dired-mode
+                   (when (or (not (ecb-edit-window-splitted edit-win-list))
+                             (equal last-mode 'dired-mode))
+                     (and (ecb-point-in-edit-window-number edit-win-list)
+                          ecb-windows-hidden
+                          (ecb-show-ecb-windows)))))
+                ((member major-mode (cdr ecb-major-modes-show-or-hide))
+                 (let ((edit-win-list (ecb-canonical-edit-windows-list)))
+                   ;; the window must not be splitted or if splitted the last
+                   ;; major-mode must be dired-mode
+                   (when (or (not (ecb-edit-window-splitted edit-win-list))
+                             (equal last-mode 'dired-mode))
+                     (and (ecb-point-in-edit-window-number edit-win-list)
+                          (not ecb-windows-hidden)
+                          (ecb-hide-ecb-windows))))))))))
+  )
 
 (defun ecb-initialize-layout ()
   ;; We do not initialize the `ecb-frame'!
@@ -2479,7 +2543,7 @@ nothing is done."
 ;; function which calls `ecb-window-list' because this would slow-down the
 ;; performance of all Emacs-versions unless GNU Emacs >= 21 because they have no
 ;; builtin `window-list'-function.
-(defun ecb-layout-pre-command-hook ()
+(defecb-autocontrol/sync-function ecb-layout-pre-command-hook nil nil nil
   "During activated ECB this function is added to `pre-command-hook' to set
 always `ecb-last-edit-window-with-point', `ecb-last-source-buffer',
 `ecb-compile-window-was-selected-before-command' and
@@ -2510,7 +2574,7 @@ can use these variables."
 
 (defvar ecb-layout-prevent-handle-compile-window-selection nil)
 (defvar ecb-last-edit-area-creators nil)
-(defun ecb-layout-post-command-hook ()
+(defecb-autocontrol/sync-function ecb-layout-post-command-hook nil nil nil
   "During activated ECB this function is added to `post-command-hook' to do
 some special tasks:
 - handling of `ecb-compile-window-temporally-enlarge'
@@ -4516,7 +4580,7 @@ for the quick version!"
     (message "ECB redrawing layout...done")))
 
 
-(defun ecb-repair-only-ecb-window-layout ()
+(defecb-autocontrol/sync-function ecb-repair-only-ecb-window-layout nil nil nil
   "Repair the ecb-window layout if it has been destroyed."
   ;; In the following situation repairing the layout with preserving all
   ;; states of all edit-windows and the compile-window (incl. all sizes) makes
@@ -4533,8 +4597,6 @@ for the quick version!"
   ;; (i.e. all data of all edit-windows and all data of the compile window) so
   ;; we get back all ecb-windows of current lyout but preserve the
   ;; edit-windows and also the compile-window (incl. its height).
-  (ecb-debug-autocontrol-fcn-error 'ecb-repair-only-ecb-window-layout
-                                   "Begin: Cur-buf: %s" (current-buffer))
   (if (and (ecb-compile-window-live-p)
            (not ecb-windows-hidden)
            (not (ecb-buffer-is-maximized-p))
@@ -4577,9 +4639,7 @@ for the quick version!"
           ;; repair is necessary or at least the repair doesn't fail. So we
           ;; have to implement a smarter mechanism..............
           nil ;; (ecb-set-window-configuration win-config-before)
-          )))
-    (ecb-debug-autocontrol-fcn-error 'ecb-repair-only-ecb-window-layout
-                                     "Begin: Cur-buf: %s" (current-buffer)))
+          ))))
 
                         
 
@@ -4859,7 +4919,9 @@ emergency-redraw."
           ;; ecb-windows of current layout were visible before redraw) and
           (when (and (not (equal ecb-windows-before-redraw current-ecb-buffers))
                      (not no-buffer-sync))
-            (ecb-current-buffer-sync t))
+            ;; maybe we have to deal with the other special buffers too but
+            ;; maybe this is not necessary because the idle-stuff runs...
+            (ecb-basic-buffer-sync t))
           ))
 
       ;; if the compile-window was selected before redraw we go back to it
