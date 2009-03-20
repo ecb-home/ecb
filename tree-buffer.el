@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.172 2006/05/12 16:03:11 berndl Exp $
+;; $Id: tree-buffer.el,v 1.173 2009/03/20 17:01:40 berndl Exp $
 
 ;;; Commentary:
 
@@ -440,6 +440,7 @@ become the new children of NODE."
   (setf (tree-node->children node)
         (delq child (tree-node->children node))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: do we need here the type too?
 (defun tree-node-find-child-by-data (node child-data)
   "Finds the first child with the given CHILD-DATA.
 CHILD-DATA will be compared with the data of each children of NODE by calling
@@ -512,10 +513,14 @@ top-to-bottom order. This variable is buffer-local in each tree-buffer!")
 Counts from 0 whereas the 0-th node is the topmost displayed node."
   (nth n tree-buffer-displayed-nodes))
 
-(defun tree-buffer-find-displayed-node-by-data (node-data &optional start-node)
+(defun tree-buffer-find-displayed-node-by-data/type (node-data &optional
+                                                               only-with-type start-node)
   "Find the first displayed node in current tree-buffer having data NODA-DATA.
 When START-NODE is nil then all currently visible nodes are searched beginning
 with the first one otherwise START-NODE is the startpoint for the search.
+
+If ONLY-WITH-TYPE is not nil then it must be an integer known as NODE-type and
+only a node is found which has the same node-type.
 
 If the search has success then the found node is returend."
   (catch 'exit
@@ -533,7 +538,11 @@ If the search has success then the found node is returend."
                                                'eq)
                            tree-buffer-displayed-nodes))))
       (dolist (node node-list)
-        (when (tree-buffer-node-data-equal-p (tree-node->data node) node-data)
+        (when (and (tree-buffer-node-data-equal-p (tree-node->data node)
+                                                  node-data)
+                   (or (null only-with-type)
+                       (and (integerp only-with-type)
+                            (= (tree-node->type node) only-with-type))))
           (throw 'exit node))))))
 
 (defun tree-buffer-search-displayed-node-list (search-fcn)
@@ -611,9 +620,27 @@ The value is buffer-local in current tree-buffer.")
   "The local keymap of current tree-buffer.
 The value is buffer-local in current tree-buffer.")
 
-(defvar tree-buffer-highlighted-node-data nil
+(defvar tree-buffer-highlighted-node nil
   "The data of that node which is currently highlighted.
+It's a list with three elements: The first element is the data-slot of the
+node, the second one is the type-slot and the third one is the node object
+itself.
+
+This variable is only set by `tree-buffer-highlight-node-by-data/type'.
+
 The value is buffer-local in current tree-buffer.")
+
+(defun tree-buffer-highlighted-node-matches-data/type-p (data type)
+  "return not nil iff currently highlighted node matches passed data and type
+
+Currently highlighted node is stored in `tree-buffer-highlighted-node'."
+  (and (tree-buffer-node-data-equal-p data (nth 0 tree-buffer-highlighted-node))
+       ;; if stored type is nil then it has not been set by
+       ;; `tree-buffer-highlight-node-by-data/type' and is therefore not
+       ;; valid to compare. If set it must match the passed type.
+       (or (null (nth 1 tree-buffer-highlighted-node))
+           (equal type (nth 1 tree-buffer-highlighted-node)))))
+
 
 (defvar tree-buffer-highlight-overlay nil
   "Overlay \(rsp. extent for XEmacs) used for highlighting current node.
@@ -1326,12 +1353,12 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
 
 (defun tree-buffer-remove-highlight ()
   "Unhighlight the currently highlighted tree-node."
-  (when tree-buffer-highlighted-node-data
+  (when tree-buffer-highlighted-node
     (tree-buffer-overlay-delete tree-buffer-highlight-overlay))
-  (setq tree-buffer-highlighted-node-data nil))
+  (setq tree-buffer-highlighted-node nil))
 
-(defun tree-buffer-highlight-node-data (node-data &optional start-node
-                                                  dont-make-visible)
+(defun tree-buffer-highlight-node-by-data/type (node-data &optional node-type start-node
+                                                          dont-make-visible)
   "Highlights in current tree-buffer the node which has as data NODE-DATA. If
 START-NODE is nil or equal to the root-node then all nodes of current
 tree-buffer are searched from beginning until the node with data NODE-DATA has
@@ -1339,13 +1366,19 @@ been found otherwise the search starts with START-NODE. If DONT-MAKE-VISIBLE
 is true then no tree-buffer recentering has been done to make this node
 visible.
 
-If either NODE-DATA is nil or if the node belonging to NODE-DATA can not be
-found because it is invisible \(probably because its parent-node is not
-expanded) then no highlighting takes place but the existing highlighting is
-removed and nil is returned. Otherwise the node is highlighted and not nil is
-returned."
+If optional argument NODE-TYPE is not nil then it must be a node-type
+\(integer) and a node will only be highlighted if not only NODE-DATA matches
+but also NODE-TYPE.
+
+If either NODE-DATA is nil or if the node belonging to NODE-DATA
+\(and NODE-TYPE, if set) can not be found because it is invisible
+\(probably because its parent-node is not expanded) then no
+highlighting takes place but the existing highlighting is removed
+and nil is returned. Otherwise the node is highlighted and not
+nil is returned."
   (if node-data
-      (let ((node (tree-buffer-find-displayed-node-by-data node-data start-node))
+      (let ((node (tree-buffer-find-displayed-node-by-data/type node-data
+                                                                node-type start-node))
             (w (get-buffer-window (current-buffer))))
         (if (null node)
             (progn
@@ -1354,7 +1387,7 @@ returned."
               ;; NODE-DATA; therefore we must remove the highlighting
               (tree-buffer-remove-highlight)
               nil)
-          (setq tree-buffer-highlighted-node-data (cons node-data node))
+          (setq tree-buffer-highlighted-node (list node-data node-type node))
           (save-excursion
             (tree-buffer-overlay-move tree-buffer-highlight-overlay
                                       (tree-buffer-get-node-name-start-point node)
@@ -1673,6 +1706,7 @@ is called after updating all needed nodes."
                           (tree-buffer-displayed-node-linenr node)
                         (tree-buffer-current-line))))
          (old-node-data (tree-node->data my-node))
+         (old-node-type (tree-node->type my-node))
          (buffer-read-only nil))
     (tree-node-update my-node name type data expandable shrink-name)
     (when node-line ;; we want a redisplay
@@ -1688,16 +1722,17 @@ is called after updating all needed nodes."
         ;; displayed-node list ==> this list is automatically up-to-date now.
         
         ;; rehighlight here the current highlighted node again - this is
-        ;; necessary if we have redisplayed the currently highlighted node.
-        ;; For this check we have to compare the old-node-data (before the
-        ;; update!) with that node-data stored in
-        ;; `tree-buffer-highlighted-node-data' - but the rehighlight has to be
-        ;; done with the new node-data (after the update) because the node is
-        ;; already updated so the node is only findable via the new node-data!
-        (when (tree-buffer-node-data-equal-p old-node-data
-                                             (car tree-buffer-highlighted-node-data))
-          (tree-buffer-highlight-node-data (tree-node->data my-node)
-                                           nil t))))
+        ;; necessary if we have unpdated and redisplayed the currently
+        ;; highlighted node. For this check we have to compare the
+        ;; old-node-data/type (before the update!) with that node-data/type
+        ;; stored in `tree-buffer-highlighted-node' - but the rehighlight has
+        ;; to be done with the new node-data/type (after the update) because the
+        ;; node is already updated so the node is only findable via the new
+        ;; node-data/type!
+        (when (tree-buffer-highlighted-node-matches-data/type-p old-node-data old-node-type)
+          (tree-buffer-highlight-node-by-data/type (tree-node->data my-node)
+                                                   (tree-node->type my-node)
+                                                   nil t))))
     ))
 
 (defun tree-buffer-clear-tree ()
@@ -1794,10 +1829,11 @@ inserting the car of CONTENT in the tree-buffer and setting
           (tree-buffer-set-displayed-nodes (cdr content)))
       (tree-buffer-build-tree-buffer-display))
     (tree-buffer-display-in-general-face)
-    (tree-buffer-highlight-node-data
+    (tree-buffer-highlight-node-by-data/type
      (or nil ;;(and node (tree-node->data node))
-         (car tree-buffer-highlighted-node-data))
-     (cdr tree-buffer-highlighted-node-data)
+         (nth 0 tree-buffer-highlighted-node))
+     (nth 1 tree-buffer-highlighted-node)
+     (nth 2 tree-buffer-highlighted-node)
      nil)
     (goto-char p)
     (set-window-start w ws)
@@ -2797,8 +2833,8 @@ See Info node `(ecb)tree-buffer' for all details of using tree-buffers."
                              general-face)
 
   
-    (make-local-variable 'tree-buffer-highlighted-node-data)
-    (setq tree-buffer-highlighted-node-data nil)
+    (make-local-variable 'tree-buffer-highlighted-node)
+    (setq tree-buffer-highlighted-node nil)
     (make-local-variable 'tree-buffer-hscroll-number)
     (setq tree-buffer-hscroll-number 0)
     
