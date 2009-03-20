@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.17 2009/03/16 08:41:23 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.18 2009/03/20 16:35:10 berndl Exp $
 
 
 ;;; Commentary:
@@ -73,9 +73,9 @@ key-bindings only for the analyse-buffer of ECB."
   :type 'hook)
 
 (defcustom ecb-analyse-show-node-info '(if-too-long . name)
-  "*When to display which node-info in the history-buffer.
+  "*When to display which node-info in the analyse-buffer.
 Define which node info should displayed after moving the mouse over a node
-\(or after a shift click onto the node) in the history-buffer.
+\(or after a shift click onto the node) in the analyse-buffer.
 
 You can define \"when\" a node-info should be displayed:
 See `ecb-directories-show-node-info' for the possible choices.
@@ -109,8 +109,6 @@ a defun-definition in emacs-lisp or within a java-method then this defun rsp.
 method is the context. In object oriented languages this can be the full
 hierachy, i.e. not only the current method, but the current method, the class
 of this method, the superclass of this class and so on!
-
-Arguments: The arguments of the context if the context is a function/method.
 
 Local Variables: All accessible and bound local variables visible at current
 point.
@@ -226,7 +224,6 @@ IMPORTANT NOTE: Every time the synchronization is done the hook
                   (const :tag "Never" nil)
                   (repeat :tag "Not with these modes"
                           (symbol :tag "mode"))))
-    
 
 (defcustom ecb-analyse-buffer-sync-delay 2
   "*Time Emacs must be idle before the analyse-buffer is synchronized.
@@ -251,8 +248,8 @@ If the special value 'basic is set then ECB uses the setting of the option
                             ecb-minor-mode)
                        (ecb-activate-ecb-autocontrol-functions
                         value 'ecb-analyse-buffer-sync))))
-  :initialize 'custom-initialize-set)
-  
+  :initialize 'custom-initialize-default)
+
 (defcustom ecb-analyse-buffer-sync-hook nil
   "Hook run at the end of `ecb-analyse-buffer-sync'.
 See documentation of `ecb-analyse-buffer-sync' for conditions when
@@ -326,6 +323,7 @@ This means in fact display the current analysis for current point."
   (run-hooks 'ecb-analyse-buffer-sync-hook))
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: why does this not work?!
+
 ;; (defmethod ecb-analyse-more-nodes ((context semantic-analyze-context))
 ;;   "Show a set of ecb-nodes specific to CONTEXT."
 ;;   (let* ((scope (or (oref context scope)
@@ -396,8 +394,7 @@ of LIST."
                                          nil
                                          (tree-buffer-get-root))))
         (setf (tree-node->expanded bucket-node)
-              (not (member bucket
-                           ecb-analyse-collapsed-buckets)))
+              (not (member bucket ecb-analyse-collapsed-buckets)))
         (ecb-exit-on-input 'ecb-analyse
           (dolist (elem list)
             (ecb-throw-on-input 'ecb-analyse-tree-buffer-build)
@@ -441,7 +438,7 @@ used as window."
         ;; if we have a positioned tag we jump to it
         (when (and tag (= (nth 1 data) ecb-analyse-nodedata-tag-with-pos))
           ;; We must highlight the tag
-          (tree-buffer-highlight-node-data data)
+          (tree-buffer-highlight-node-by-data/type data)
           (ecb-jump-to-tag (or (and (ecb--semantic-tag-buffer tag)
                                     (buffer-file-name (ecb--semantic-tag-buffer tag)))
                                ;; then we have a tag with no buffer but only
@@ -458,7 +455,7 @@ used as window."
          (tag (nth 0 data))
          (type (tree-node->type node)))
     (when (= type ecb-analyse-nodetype-completions)
-      (tree-buffer-highlight-node-data data)
+      (tree-buffer-highlight-node-by-data/type data)
       (ecb-find-file-and-display ecb-path-selected-source nil)
       (let* ((a (ecb--semantic-analyze-current-context (point)))
              (bounds (oref a bounds))
@@ -480,7 +477,7 @@ used as window."
          (tag (nth 0 data))
          (type (tree-node->type node)))
     (when (= type ecb-analyse-nodetype-completions)
-      (tree-buffer-highlight-node-data data)
+      (tree-buffer-highlight-node-by-data/type data)
       (ecb-find-file-and-display ecb-path-selected-source nil)
       (let* ((a (ecb--semantic-analyze-current-context (point)))
              (bounds (oref a bounds))

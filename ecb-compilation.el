@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compilation.el,v 1.37 2009/03/16 08:41:23 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.38 2009/03/20 16:35:10 berndl Exp $
 
 ;;; Commentary:
 
@@ -37,6 +37,7 @@
 ;;
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
+
 
 
 ;;; Code:

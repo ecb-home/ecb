@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.66 2009/03/16 08:41:23 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.67 2009/03/20 16:35:10 berndl Exp $
 
 ;;; Commentary:
 
@@ -1644,11 +1644,22 @@ At the end the hooks in `ecb-basic-buffer-sync-hook' run."
              (not ecb-windows-hidden)
              (ecb-point-in-edit-window-number))
     (let ((filename (buffer-file-name (current-buffer))))
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: how to deal here with
+      ;; indirect buffers??indirect-buffers should be added as childs in to
+      ;; the related file-history-node. but here we have to find a condition
+      ;; when we want to sync for indirect buffers!!
+      ;; maybe we should sync when current buffer-name in the edit-area
+      ;; changes...
+      ;; so we do not compare with ecb-path-selected-source but with
+      ;; ecb-last-source-buffer 
       (cond ( ;; synchronizing for real filesource-buffers
              (and filename
                   (ecb-buffer-or-file-readable-p)
                   (or force
-                      (not (ecb-string= filename ecb-path-selected-source))))
+                      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: test this
+                      ;; very intensive!!!!!!!!!!!!!!!!!!!!!!!!!!
+                      (not (equal (current-buffer) ecb-last-source-buffer))))
+;;                       (not (ecb-string= filename ecb-path-selected-source))))
              
              ;; * KB: Problem: seems this little sleep is necessary because
              ;; otherwise jumping to certain markers in new opened files (e.g.
@@ -1699,6 +1710,8 @@ At the end the hooks in `ecb-basic-buffer-sync-hook' run."
              ;; necessary because the sync with the current source is done by
              ;; `ecb-select-source-file'!
              ;; (ecb-update-directories-buffer)
+             ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we must here
+             ;; add the buffer-name in case of an indirect buffer
              (ecb-select-source-file filename force)
              (ecb-update-methods-buffer--internal 'scroll-to-begin)
              (setq ecb-major-mode-selected-source major-mode)
@@ -1995,7 +2008,7 @@ nil. Returns 'window-not-visible if the ECB-sources-buffer is not visible."
               ;; update the sources buffer - because the filtered cache is nil
               ;; the full sources are displayed.
               (ecb-update-sources-buffer ecb-path-selected-directory)
-              (tree-buffer-highlight-node-data ecb-path-selected-source)
+              (tree-buffer-highlight-node-by-data/type ecb-path-selected-source)
               nil)
           ;; apply the filter-regexp
           (let ((new-tree (tree-node-new-root))
@@ -2023,7 +2036,7 @@ nil. Returns 'window-not-visible if the ECB-sources-buffer is not visible."
               (tree-buffer-set-root new-tree)
               (tree-buffer-update)
               (ecb-scroll-window (point-min) (point-min))
-              (tree-buffer-highlight-node-data ecb-path-selected-source)
+              (tree-buffer-highlight-node-by-data/type ecb-path-selected-source)
 
               ;; add the new filter to the cache, so the next call to
               ;; `ecb-update-sources-buffer' displays the filtered sources.
@@ -2135,8 +2148,8 @@ then nothing is done unless first optional argument FORCE is not nil."
             ;;                                               (tree-buffer-get-root)))
             ;;                (tree-buffer-update))
             (when (not (ecb-show-sources-in-directories-buffer-p))
-              (tree-buffer-highlight-node-data ecb-path-selected-directory
-                                               start)))))
+              (tree-buffer-highlight-node-by-data/type ecb-path-selected-directory
+                                                       nil start)))))
       ;; now we update the sources buffer for `ecb-path-selected-directory'
       (ecb-update-sources-buffer last-dir)
       ;; now we run the hooks
@@ -2168,7 +2181,8 @@ then nothing is done unless first optional argument FORCE is not nil."
         f
       (ecb-file-name-sans-extension f))))
 
-
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we must add an optional
+;; argument for indirect-buffers
 (defun ecb-select-source-file (filename &optional force)
   "Updates the directories, sources and history buffers to match the filename
 given. If FORCE is not nil then the update of the directories buffer is done
@@ -2179,16 +2193,19 @@ even if current directory is equal to `ecb-path-selected-directory'."
   ;; Update directory buffer
   (when (ecb-show-sources-in-directories-buffer-p)
     (ecb-exec-in-window ecb-directories-buffer-name
-      (tree-buffer-highlight-node-data ecb-path-selected-source)))
+      (tree-buffer-highlight-node-by-data/type ecb-path-selected-source)))
     
   ;; Update source buffer
   (ecb-exec-in-window ecb-sources-buffer-name
-    (tree-buffer-highlight-node-data ecb-path-selected-source))
+    (tree-buffer-highlight-node-by-data/type ecb-path-selected-source))
 
   ;; Update history buffer always regardless of visibility of history window
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: pass indirect-buffers
   (ecb-add-item-to-history-buffer ecb-path-selected-source)
   (ecb-sort-history-buffer)
   ;; Update the history window only if it is visible
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: here we must take care of
+  ;; indirect buffers
   (ecb-update-history-window ecb-path-selected-source))
 
 
@@ -2254,7 +2271,8 @@ by the option `ecb-mode-line-prefixes'."
   (and (cdr ecb-history-filter)
        (format "[Filter: %s]" (cdr ecb-history-filter))))
 
-
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we need here an optional
+;; argument indirect-buffer
 (defun ecb-add-item-to-history-buffer (filename)
   "Add a new item for FILENAME to the history buffer if the current filter of
 `ecb-history-filter' does not filter out this file."
@@ -2360,8 +2378,10 @@ by the option `ecb-mode-line-prefixes'."
   "Updates the history window and highlights the item for FILENAME if given."
   (ecb-exec-in-window ecb-history-buffer-name
     (tree-buffer-update)
-    (tree-buffer-highlight-node-data filename)))
+    (tree-buffer-highlight-node-by-data/type filename)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: do we need here an argument for
+;; indirect buffers
 (defun ecb-set-selected-source (filename other-edit-window
 					 no-edit-buffer-selection hide)
   "Updates all the ECB buffers and loads the file. The file is also
@@ -2383,6 +2403,10 @@ ecb-windows after displaying the file in an edit-window."
         (ecb-update-methods-buffer--internal 'scroll-to-begin))
     ;; open the selected source in the edit-window and do all the update and
     ;; parsing stuff with this buffer
+    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: here we must take care of
+    ;; indirect buffers and use switch-to-buffer instead of
+    ;; find-file-and-display... but maybe we must write an own switch-function
+    ;; which takes care of ecb-navigate-stuff.
     (ecb-find-file-and-display ecb-path-selected-source
 			       other-edit-window)
     (ecb-update-methods-buffer--internal 'scroll-to-begin)
@@ -2400,7 +2424,7 @@ ecb-windows after displaying the file in an edit-window."
     (ecb-exec-in-window ecb-history-buffer-name
       (tree-buffer-clear-tree)
       (tree-buffer-update)
-      (tree-buffer-highlight-node-data ecb-path-selected-source))))
+      (tree-buffer-highlight-node-by-data/type ecb-path-selected-source))))
 
 
 
@@ -3593,6 +3617,8 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
           (ecb-maximize-ecb-buffer ecb-methods-buffer-name)
           (ecb-window-select ecb-methods-buffer-name))
       (ecb-undo-maximize-ecb-buffer t)))
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: here we must pass the indirect
+  ;; buffer if current node is one (in case of history-node)
   (ecb-set-selected-source (tree-node->data node)
                            (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)
 			   shift-mode meta-mode))

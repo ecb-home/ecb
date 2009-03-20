@@ -54,6 +54,12 @@
 *** New command `ecb-goto-window-edit-by-smart-selection'
 
 *** New command `ecb-goto-window-ecb-by-smart-selection'
+
+*** New option `ecb-ignore-pop-up-frames'
+    The new option is for customizing the behavior of ECB concerning
+    `pop-up-frames'. It allows three value: Always, only when a permanent
+    compile-window is used and never. This makes ECB fully compatible with the
+    option `pop-up-frames'.
       
 ** Better compatibility with Emacs 22
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.112 2007/07/05 11:08:24 berndl Exp $
+;; $Id: ecb-help.el,v 1.113 2009/03/20 16:35:10 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -426,15 +426,23 @@ could be interesting for support."
         (ecb-internal-vars (sort '(ecb-path-selected-directory
                                    ecb-path-selected-source
                                    ecb-use-semantic-grouping
+                                   ecb-autocontrol/sync-fcn-register
                                    ecb-idle-timer-alist
                                    ecb-post-command-hooks
+                                   ecb-pre-command-hooks
                                    ecb-max-specpdl-size-old
                                    ecb-max-lisp-eval-depth-old
                                    ecb-minor-mode
+                                   ecb-adviced-function-sets
+                                   ecb-adviced-functions
                                    ecb-last-window-config-before-deactivation
                                    ecb-edit-area-creators
+                                   ecb-stealthy-function-list
+                                   ecb-stealthy-function-state-alist
                                    ecb-windows-hidden
                                    ecb-toggle-layout-state
+                                   ecb-tree-buffer-creators
+                                   ecb-tree-buffers
                                    ecb-current-maximized-ecb-buffer-name
                                    ecb-special-ecb-buffers-of-current-layout)
                                  (function (lambda (l r)

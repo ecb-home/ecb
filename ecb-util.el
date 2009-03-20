@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.140 2009/03/16 08:41:23 berndl Exp $
+;; $Id: ecb-util.el,v 1.141 2009/03/20 16:35:10 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1788,6 +1788,20 @@ minor-mode `tar-subfile-mode' or `archive-subfile-mode'."
            tar-subfile-mode)
       (and (boundp 'archive-subfile-mode)
            archive-subfile-mode)))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: check all occurences of
+;; buffer-file-name and replace it with this function to handle ECB indirect
+;; buffers properly... caution with history buffer and which data is added to
+;; a tree-node, maybe we need as data of a history nood a cons with car is
+;; filename and cdr is buffer-name to distinguish a filenode from a
+;; indirect-buffer-node.... caution also with kill-buffer-hook
+;; !!! before changing something save a running ECB with current mechanism!!!!
+(defun ecb-buffer-file-name (&optional buffer no-indirect-buffers)
+  (or (buffer-file-name buffer)
+      (and (not no-indirect-buffers)
+           (buffer-base-buffer buffer)
+           (buffer-file-name (buffer-base-buffer buffer)))))
+
 
 (defun ecb-buffer-or-file-readable-p (&optional filename)
   "Checks if a buffer or a file is a readable file in the sense of ECB which

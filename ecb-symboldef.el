@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-symboldef.el,v 1.3 2009/03/16 08:41:23 berndl Exp $
+;; $Id: ecb-symboldef.el,v 1.4 2009/03/20 16:35:10 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -167,7 +167,7 @@ If the special value 'basic is set then ECB uses the setting of the option
                             ecb-minor-mode)
                        (ecb-activate-ecb-autocontrol-functions
                         value 'ecb-analyse-buffer-sync))))
-  :initialize 'custom-initialize-set)
+  :initialize 'custom-initialize-default)
   
 (defcustom ecb-symboldef-buffer-sync-hook nil
   "Hook run at the end of the function `ecb-symboldef-buffer-sync'.
