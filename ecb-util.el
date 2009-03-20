@@ -1789,6 +1789,20 @@ minor-mode `tar-subfile-mode' or `archive-subfile-mode'."
       (and (boundp 'archive-subfile-mode)
            archive-subfile-mode)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: check all occurences of
+;; buffer-file-name and replace it with this function to handle ECB indirect
+;; buffers properly... caution with history buffer and which data is added to
+;; a tree-node, maybe we need as data of a history nood a cons with car is
+;; filename and cdr is buffer-name to distinguish a filenode from a
+;; indirect-buffer-node.... caution also with kill-buffer-hook
+;; !!! before changing something save a running ECB with current mechanism!!!!
+(defun ecb-buffer-file-name (&optional buffer no-indirect-buffers)
+  (or (buffer-file-name buffer)
+      (and (not no-indirect-buffers)
+           (buffer-base-buffer buffer)
+           (buffer-file-name (buffer-base-buffer buffer)))))
+
+
 (defun ecb-buffer-or-file-readable-p (&optional filename)
   "Checks if a buffer or a file is a readable file in the sense of ECB which
 means either a real physical file or an auto-extracted file from an archive.

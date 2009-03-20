@@ -426,15 +426,23 @@ could be interesting for support."
         (ecb-internal-vars (sort '(ecb-path-selected-directory
                                    ecb-path-selected-source
                                    ecb-use-semantic-grouping
+                                   ecb-autocontrol/sync-fcn-register
                                    ecb-idle-timer-alist
                                    ecb-post-command-hooks
+                                   ecb-pre-command-hooks
                                    ecb-max-specpdl-size-old
                                    ecb-max-lisp-eval-depth-old
                                    ecb-minor-mode
+                                   ecb-adviced-function-sets
+                                   ecb-adviced-functions
                                    ecb-last-window-config-before-deactivation
                                    ecb-edit-area-creators
+                                   ecb-stealthy-function-list
+                                   ecb-stealthy-function-state-alist
                                    ecb-windows-hidden
                                    ecb-toggle-layout-state
+                                   ecb-tree-buffer-creators
+                                   ecb-tree-buffers
                                    ecb-current-maximized-ecb-buffer-name
                                    ecb-special-ecb-buffers-of-current-layout)
                                  (function (lambda (l r)

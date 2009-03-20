@@ -76,7 +76,7 @@ special face for the bucket-node
 The default are empty prefix/suffix-strings and 'ecb-bucket-node-face'. But
 an alternative can be for example '\(\"[\" \"]\" nil) which means no special
 face and a display like \"[+] [<bucket-name>]\"."
-  :group 'ecb-general
+  :group 'ecb-tree-buffer
   :set (function (lambda (symbol value)
 		   (set symbol value)
 		   (ecb-clear-tag-tree-cache)))
@@ -110,7 +110,7 @@ displays also directories and sources in one window.
 `ecb-use-speedbar-instead-native-tree-buffer' is for people who like the
 speedbar way handling directories and source-files or methods and want it in
 conjunction with ECB."
-  :group 'ecb-general
+  :group 'ecb-tree-buffer
   :group 'ecb-directories
   :group 'ecb-sources
   :group 'ecb-methods
@@ -495,7 +495,7 @@ If the edit-window is not splitted this setting has no effect.
 Note: If the tree-buffers are used with the keyboard instead with the mouse
 then this option takes effect too because [RET] is interpreted as primary
 mouse-button and [C-RET] as secondary mouse-button!"
-  :group 'ecb-general
+  :group 'ecb-tree-buffer
   :group 'ecb-most-important
   :type '(radio (const :tag "Left/topmost edit-window"
                        :value left-top)
@@ -544,7 +544,7 @@ dired-buffer.
 
 IMPORTANT NOTE: Every time the synchronization is done the hook
 `ecb-basic-buffer-sync-hook' is evaluated."
-  :group 'ecb-general
+  :group 'ecb-tree-buffer
   :type '(radio :tag "Synchronize basic ECB buffers"
                 (const :tag "Always" :value always)
                 (const :tag "Never" nil)
@@ -559,7 +559,7 @@ Synchronizing is done with the current source displayed in the edit window. If
 nil then there is no delay, means synchronization takes place immediately. A
 small value of about 0.25 seconds saves CPU resources and you get even though
 almost the same effect as if you set no delay."
-  :group 'ecb-general
+  :group 'ecb-tree-buffer
   :type '(radio (const :tag "No synchronizing delay"
                        :value nil)
                 (number :tag "Idle time before synchronizing"
@@ -598,7 +598,7 @@ It is strongly recommended that each function added to this hook uses the
 macro `ecb-do-if-buffer-visible-in-ecb-frame' at beginning! See
 `ecb-speedbar-buffer-sync' and `ecb-eshell-buffer-sync' for
 examples how to use this macro!"
-  :group 'ecb-general
+  :group 'ecb-tree-buffer
   :type 'hook)
 
 ;;====================================================

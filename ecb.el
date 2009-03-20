@@ -489,7 +489,7 @@ See also `ecb-before-activate-hook'."
     (when ecb-kill-buffer-clears-history
       (let ((node (if buffer-file
                       (ecb-exec-in-window ecb-history-buffer-name
-                        (tree-buffer-find-displayed-node-by-data buffer-file)))))
+                        (tree-buffer-find-displayed-node-by-data/type buffer-file)))))
         (when (and node
                    (or (equal ecb-kill-buffer-clears-history 'auto)
                        (and (equal ecb-kill-buffer-clears-history 'ask)
@@ -1718,16 +1718,8 @@ does all necessary after finishing ediff."
       (remove-hook (ecb--semantic-after-toplevel-cache-change-hook)
                    'ecb-rebuild-methods-buffer-with-tagcache)
 ;;       (remove-hook (ecb--semantic--before-fetch-tags-hook)
-;;                 'ecb-prevent-from-parsing-if-exceeding-threshold)      
-      (dolist (timer-elem ecb-idle-timer-alist)
-        (ecb-cancel-timer (cdr timer-elem)))
-      (setq ecb-idle-timer-alist nil)
-      (dolist (hook ecb-post-command-hooks)
-        (remove-hook 'post-command-hook hook))
-      (setq ecb-post-command-hooks nil)
-      (dolist (hook ecb-pre-command-hooks)
-        (remove-hook 'pre-command-hook hook))
-      (setq ecb-pre-command-hooks nil)
+;;                 'ecb-prevent-from-parsing-if-exceeding-threshold)
+      (ecb-stop-all-autocontrol/sync-functions)
       (remove-hook 'after-save-hook 'ecb-update-methods-after-saving)
       (remove-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
 

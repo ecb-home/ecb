@@ -168,7 +168,7 @@ If the special value 'basic is set then ECB uses the setting of the option
                             ecb-minor-mode)
                        (ecb-activate-ecb-autocontrol-functions
                         value 'ecb-analyse-buffer-sync))))
-  :initialize 'custom-initialize-set)
+  :initialize 'custom-initialize-default)
   
 
 

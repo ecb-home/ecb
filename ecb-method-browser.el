@@ -3217,8 +3217,8 @@ current buffer."
          (type-node nil))
     (or (and curr-tag
              (ecb-exec-in-window ecb-methods-buffer-name
-               (or (tree-buffer-highlight-node-data
-                    highlight-tag nil
+               (or (tree-buffer-highlight-node-by-data/type
+                    highlight-tag nil nil
                     (equal ecb-highlight-tag-with-point 'highlight))
                    ;; If the tag could not be highlighted and if there is no
                    ;; containing type for this tag then this tag is probably
@@ -3252,11 +3252,11 @@ current buffer."
                           100
                           (equal ecb-auto-expand-tag-tree 'all)
                           nil t)
-                         (tree-buffer-highlight-node-data
-                          highlight-tag nil
+                         (tree-buffer-highlight-node-by-data/type
+                          highlight-tag nil nil
                           (equal ecb-highlight-tag-with-point 'highlight)))))
                    ;; The node representing HIGHLIGHT-TAG could not be
-                   ;; highlighted by `tree-buffer-highlight-node-data' -
+                   ;; highlighted by `tree-buffer-highlight-node-by-data/type' -
                    ;; probably it is invisible. Let's try to make expand its
                    ;; containing type (if there is any) and then highlighting
                    ;; again.
@@ -3266,7 +3266,7 @@ current buffer."
                                   (member (ecb--semantic-tag-class highlight-tag)
                                           (ecb-normalize-expand-spec
                                            ecb-methods-nodes-expand-spec))))
-                     (setq type-node (tree-buffer-find-displayed-node-by-data type-tag))
+                     (setq type-node (tree-buffer-find-displayed-node-by-data/type type-tag))
                      (when type-node
                        (ecb-expand-methods-node-internal
                         type-node
@@ -3287,8 +3287,8 @@ current buffer."
                         100
                         (equal ecb-auto-expand-tag-tree 'all)
                         nil t)
-                       (tree-buffer-highlight-node-data
-                        highlight-tag nil
+                       (tree-buffer-highlight-node-by-data/type
+                        highlight-tag nil nil
                         (equal ecb-highlight-tag-with-point 'highlight))
                        )))))
         (if curr-tag
@@ -3329,7 +3329,7 @@ current buffer."
                 (ecb-exec-in-window ecb-methods-buffer-name
                   ;; If there is no tag to highlight then we remove the
                   ;; highlighting
-                  (tree-buffer-highlight-node-data nil)
+                  (tree-buffer-highlight-node-by-data/type nil)
                   (if (equal ecb-auto-expand-tag-tree-collapse-other 'always)
                       ;; If this option is t (means always) we collapse also
                       ;; when point is not on a tag!
@@ -3366,7 +3366,7 @@ current buffer."
               (if (not (ecb-try-highlight-tag curr-tag curr-tag
                                               (ecb-get-current-tag-table)))
                   ;; The node representing CURR-TAG could not be highlighted by
-                  ;; `tree-buffer-highlight-node-data' - probably it is still
+                  ;; `tree-buffer-highlight-node-by-data/type' - probably it is still
                   ;; invisible. Let's try to make visible all nodes and then
                   ;; highlighting again.
                   (ecb-exec-in-window ecb-methods-buffer-name
@@ -3380,8 +3380,8 @@ current buffer."
                        100 ;; this should be enough levels ;-)
                        (equal ecb-auto-expand-tag-tree 'all)
                        nil t)
-                      (tree-buffer-highlight-node-data
-                       curr-tag nil (equal ecb-highlight-tag-with-point 'highlight)))
+                      (tree-buffer-highlight-node-by-data/type
+                       curr-tag nil nil (equal ecb-highlight-tag-with-point 'highlight)))
                     )))))))))  
 
 
@@ -3663,7 +3663,7 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
         (filename ecb-path-selected-source)
         tag found)
     ;; Klaus Berndl <klaus.berndl@sdm.de>: We must highlight the tag
-    (tree-buffer-highlight-node-data data)
+    (tree-buffer-highlight-node-by-data/type data)
     (cond
      ;; Type ecb-methods-nodetype-tag = a tag
      ((= type ecb-methods-nodetype-tag)
