@@ -1485,7 +1485,7 @@ of TEXT which are not set by FACE are preserved."
                              ;; we must add the new-face in front of
                              ;; current-face to get the right merge!
                              (if (member face cf)
-                                 nf
+                                 cf
                                (append nf cf)))
                            text)
       (alter-text-property 0 (length text) 'face
@@ -1503,7 +1503,7 @@ of TEXT which are not set by FACE are preserved."
                                ;; we must add the new-face in front of
                                ;; current-face to get the right merge!
                                (if (member face cf)
-                                   nf
+                                   cf
                                  (append nf cf))))
                            text))
     text))
