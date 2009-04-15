@@ -5,11 +5,8 @@
 ;;                           Kevin A. Burton,
 ;;                           Free Software Foundation, Inc.
 
-;; Author: Jesper Nordenberg <mayhem@home.se>
-;;         Klaus Berndl <klaus.berndl@sdm.de>
-;;         Kevin A. Burton <burton@openprivacy.org>
+;; Author: Klaus Berndl <klaus.berndl@sdm.de>
 ;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
-;;             Kevin A. Burton <burton@openprivacy.org>
 ;; Keywords: browser, code, programming, tools
 ;; Created: 2002
 
@@ -817,9 +814,10 @@ unbound."
   (ecb-load-layouts)
   (let ((new-layout-list
          (sort (ecb-set-difference (ecb-available-layouts-of-type nil)
-                               (mapcar (function (lambda (elem)
-                                                   (car elem)))
-                                       ecb-buildin-layouts))
+                                   (mapcar (function (lambda (elem)
+                                                       (car elem)))
+                                           ecb-buildin-layouts)
+                                   'member)
                'ecb-string<))
         (layout-name nil))
     (if (= (length new-layout-list) 0)

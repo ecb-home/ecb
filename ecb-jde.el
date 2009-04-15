@@ -9,7 +9,6 @@
 ;;         Klaus Berndl <klaus.berndl@sdm.de>
 ;;         Kevin A. Burton <burton@openprivacy.org>
 ;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
-;;             Kevin A. Burton <burton@openprivacy.org>
 ;; Keywords: browser, code, programming, tools
 ;; Created: 2003
 
@@ -118,19 +117,19 @@ available."
                   ;; methods-window before because otherwise our automatically
                   ;; buffer-sync would resync with current java-source-file.
                   (if (ecb-window-select ecb-methods-buffer-name)
-                      (ecb-set-selected-source java-file-name nil t nil))))
+                      (ecb-set-selected-source java-file-name nil t))))
             
             (ecb-error "Can not parse the thing at point!")))
       (message "You need JDE >= 2.2.6 and Senator for using this feature!"))))
 
 
-(defun ecb-jde-show-class-source (unqual-class)
-  "Calls `jde-show-class-source' for UNQUAL-CLASS and returns t if no error
-occurs."
+(defun ecb-jde-show-class-source (external-tag)
+  "Calls `jde-show-class-source' for th tag-name of EXTERNAL-TAG.
+Returns t if the tag is found and no error occurs otherwise nil."
   (when (eq major-mode 'jde-mode)
     (condition-case nil
         (progn
-          (jde-show-class-source unqual-class)
+          (jde-show-class-source (ecb--semantic-tag-name external-tag))
           t)
       (error nil))))
 

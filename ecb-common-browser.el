@@ -44,6 +44,7 @@
 (require 'tree-buffer)
 ;; (require 'ecb-layout) ;; causes cyclic dependencies!
 (require 'ecb-mode-line)
+(require 'ecb-navigate)
 
 ;; various loads
 (require 'assoc)
@@ -605,6 +606,148 @@ examples how to use this macro!"
 ;; Internals
 ;;====================================================
 
+(defun ecb-combine-ecb-button/edit-win-nr (ecb-button edit-window-nr)
+  "Depending on ECB-BUTTON and EDIT-WINDOW-NR return one value:
+- nil if ECB-BUTTON is 1.
+- t if ECB-BUTTON is 2 and the edit-area of ECB is splitted.
+- EDIT-WINDOW-NR if ECB-BUTTON is 3."
+  (case ecb-button
+    (1 nil)
+    (2 (ecb-edit-window-splitted))
+    (3 edit-window-nr)))
+
+(defun ecb-get-edit-window (other-edit-window)
+  "Get the correct edit-window. Which one is the correct one depends on the
+value of OTHER-EDIT-WINDOW \(which is a value returned by
+`ecb-combine-ecb-button/edit-win-nr') and `ecb-mouse-click-destination'.
+- OTHER-EDIT-WINDOW is nil: Get the edit-window according to the option
+  `ecb-mouse-click-destination'.
+- OTHER-EDIT-WINDOW is t: Get the next edit-window in the cyclic list of
+  current edit-windows starting either from the left-top-most one or from the
+  last edit-window with point (depends on
+  `ecb-mouse-click-destination').
+- OTHER-EDIT-WINDOW is an integer: Get exactly the edit-window with that
+  number > 0."
+  (let ((edit-win-list (ecb-canonical-edit-windows-list)))
+    (typecase other-edit-window
+      (null
+       (if (eq ecb-mouse-click-destination 'left-top)
+           (car edit-win-list)
+         ecb-last-edit-window-with-point))
+      (integer
+       (ecb-get-edit-window-by-number other-edit-window edit-win-list))
+      (otherwise
+       (ecb-next-listelem edit-win-list
+                          (if (eq ecb-mouse-click-destination 'left-top)
+                              (car edit-win-list)
+                            ecb-last-edit-window-with-point))))))
+
+(defun ecb-source-make (filename &optional buffer)
+  "Build a source-object from FILENAME and BUFFER.
+If optional arg BUFFER is nil then the just FILENAME is returned.
+If BUFFER is not nil then it can be either a buffer-object or a buffer-name.
+A cons is returned where car is FILENAME and cdr is the buffername of BUFFER."
+  (let ((buffername (when buffer
+                      (if (bufferp buffer)
+                          (buffer-name buffer)
+                        buffer))))
+    (if buffername
+        (cons filename buffername)
+      filename)))
+
+(defun ecb-source-get-filename (source)
+  "SOURCE is either a string, then it is a filename or a cons, then the car is
+the filename and the cdr is the buffer-name, whereas the latter one can be the
+name of an indirect-buffer."
+  (if (consp source)
+      (car source)
+    source))
+
+(defun ecb-source-get-buffername (source)
+  "SOURCE is either a string, then it is a filename or a cons, then the car is
+the filename and the cdr is the buffer-name, whereas the latter one can be the
+name of an indirect-buffer."
+  (if (consp source)
+      (cdr source)))
+
+(defun ecb-source-get-buffer (source)
+  "Return a living buffer-object for SOURCE.
+SOURCE is either a string, then it is a filename or a cons, then the car is
+the filename and the cdr is the buffer-name, whereas the latter one can be the
+name of an indirect-buffer.
+
+If SOURCE contains a living buffer then this buffer is returned. Otherwise a
+buffer for the filename-part of SOURCE is created and returned. For an
+existing ans readable file this means the file is loaded into a buffer.
+
+Note: The buffer is just returned but not displayed."
+  (let* ((my-source (if (consp source) source (cons source nil)))
+         (filename (car my-source))
+         (buffer (and (cdr my-source)
+                      (get-buffer (cdr my-source)))))
+    (or buffer
+        (find-file-noselect filename))))
+
+(defun ecb-display-source (source other-edit-window)
+  "Display SOURCE in the correct edit-window.
+What the correct window is depends on the setting in
+`ecb-mouse-click-destination' and the value of OTHER-EDIT-WINDOW
+\(for this see `ecb-combine-ecb-button/edit-win-nr').
+
+SOURCE is either a string, then it is a filename or a cons, then the car is
+the filename and the cdr is the buffer-name, whereas the latter one can be the
+name of an indirect-buffer."
+  (select-window (ecb-get-edit-window other-edit-window))
+  (ecb-nav-save-current)
+  (switch-to-buffer (ecb-source-get-buffer source))
+  (ecb-nav-add-item (ecb-nav-file-history-item-new)))
+
+(defvar ecb-path-selected-directory nil
+  "Path to currently selected directory.")
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
+;; XXXX here we have to check all usages of this var and check if this works
+;; also for indirect buffers
+(defvar ecb-path-selected-source nil
+  "Path to currently selected source.
+
+It is a cons where the cdr is a buffer-object of the current selected source
+The name of this file is the car of the cons:
+\(<filename> . <indirect-buffer-object>).
+
+This variable is only set by `ecb-path-selected-source-set' and evaluated by
+the function `ecb-path-selected-source'.
+
+Do not use it directly! Use always one of the mentioned functions!")
+
+(defun ecb-path-selected-source-set (filename buffer)
+  "Set `ecb-path-selected-source' to FILENAME and BUFFER.
+Returns in the new value. FILENAME and BUFFER must not be nil.
+For a description of FILENAME and BUFFER see `ecb-source-make'."
+  (unless (and filename buffer)
+    (error "ECB %s: Invalid setting of `ecb-path-selected-source with file %s, buffer %s"
+           ecb-version filename buffer))
+  (setq ecb-path-selected-source (ecb-source-make filename buffer)))
+  
+(defun ecb-path-selected-source (&optional type)
+  "Get the value of the internal variable `ecb-path-selected-source'.
+If optional arg TYPE is the symbol 'file then the filename-part
+is returned as string, if it is the symbol 'buffername then the
+stored buffername is returned if there is any and and if it is the
+symbol 'buffer then the buffer-object of the stored buffername is
+returned if there is any or nil.
+
+In all other cases of TYPE always that value is returned
+`ecb-path-selected-source' has been set by most recent
+`ecb-path-selected-source-set'."
+  (case type
+    (file (ecb-source-get-filename ecb-path-selected-source))
+    (buffername (ecb-source-get-buffername ecb-path-selected-source))
+    (buffer (ecb-source-get-buffer ecb-path-selected-source))
+    (otherwise ecb-path-selected-source)))
+
+
+
 (defvar ecb-basic-buffer-sync-old '(Info-mode dired-mode))
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: rename this in the info-file
 ;; was ecb-window-sync
@@ -715,8 +858,126 @@ associated symbol which contains this name.")
 (defsubst ecb-tree-buffers-get-symbol (name)
   (ecb-find-assoc-value name ecb-tree-buffers))
 
+(defvar ecb-tree-buffer-callbacks '((expand . nil) (select . nil))
+  "All callback-functions for the tree-buffers of ECB.
+This list contains two items of the form:
+\(<callback-type> .\(<buffer-callback-alist>))
+where <callback-type> is 'select and 'expand and
+<buffer-callback-alist> is an alist where each item is a cons
+like \(<buffer-name-symbol> . <callback-symbol>)."
+  )
 
-  
+
+(defun ecb-tree-buffer-callbacks-add (type buffer-name-symbol callback)
+  (unless (member type '(select expand))
+    (error "ECB %s tries to add tree-buffer-callback of unknown type %s"
+           ecb-version type))
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we should add a check if
+  ;; the buffer-name-symbol is already registered with defecb-tree-buffer-creator
+  (let ((type-elem (ecb-find-assoc type ecb-tree-buffer-callbacks)))
+    (unless (ecb-find-assoc buffer-name-symbol type-elem)
+      (setcdr type-elem (cons (cons buffer-name-symbol callback)
+                              (cdr type-elem))))))
+
+
+(defun ecb-tree-buffer-callbacks-alist-of-type (type)
+  (unless (member type '(select expand))
+    (error "ECB %s tries to get tree-buffer-callback of unknown type %s"
+           ecb-version type))
+  (cdr (assoc type ecb-tree-buffer-callbacks)))
+
+
+(defmacro defecb-tree-buffer-callback (callback
+                                       tree-buffer-name-symbol
+                                       callback-type
+                                       optional-arg-list
+                                       docstring &rest body)
+  "Define a callback-function CALLBACK for a tree-buffer which name is hold in
+the symbol TREE-BUFFER-NAME-SYMBOL. Do not quote CALLBACK and
+TREE-BUFFER-NAME-SYMBOL and CALLBACK-TYPE. DOCSTRING is the
+docstring for CALLBACK. BODY is all the program-code of CALLBACK.
+
+CALLBACK-TYPE must be either 'expand or 'select, whereas the
+former one defines a callback for handling expanding a node and
+the latter one for clicking onto a node.
+
+CALLBACK is defined as a function with at least five arguments:
+NODE, ECB-BUTTON, EDIT-WINDOW-NR, SHIFT-MODE and META-MODE.
+CALLBACK must handle clicking onto NODE in the tree-buffer for
+which the callback is defined. ECB-BUTTON can be 1, 2 or 3 \(=
+mouse-buttons). If 3 then EDIT-WINDOW-NR contains the number of
+the edit-window the NODE should be displayed or whatever should
+be done with NODE. For 1 and 2 the value of EDIT-WINDOW-NR is
+ignored. SHIFT-MODE and META-MODE are not nil if the user has
+pressed the shift- rsp. the meta-button during his click. Note:
+using the keyboard in the tree-buffer instead the mouse is
+already handled by the caller of CALLBACK, so CALLBACK has no
+need to bother with keyboard or mouse specific stuff!
+
+If OPTIONAL-ARG-LIST is not nil then it must be a list with all
+optional or rest arguments. You have to include the keywords
+&optional or/and &rest! The first item of this list must be
+either the keyword &optional or &rest! The defined CALLBACK gets
+exactly these additional arguments after the reqired 5 arguments
+described above. Do not quote OPTIONAL-ARG-LIST!
+
+The defined CALLBACK automatically hides the ecb-windows after
+selecting a node in case META-MODE is not nil and if the CALLBACK
+is of type 'select; this is a must for every tree-buffer. Do not
+do this within BODY! But: During the evaluation of BODY the local
+variable no-meta-hiding is bound and set to nil per default. If
+BODY sets it to not nil then the hiding of the ecb-windows is
+prevented even if META-MODE is not nil.
+
+The value of the last expression of BODY is returned.
+
+This macro automatically adds the appropriate description of the
+5 arguments of the defined CALLBACK to DOCSTRING. So just
+describe what the CALLBACK does!
+
+It is strongly recommended defining a callback-function for a
+tree-buffer of ECB with this macro and not with plain `defun',
+because then a lot of stuff needed to be done by every
+tree-buffer is automatically performed."
+  `(eval-and-compile
+     (ecb-tree-buffer-callbacks-add (quote ,callback-type)
+                                    (quote ,tree-buffer-name-symbol)
+                                    (quote ,callback))
+     (defun ,callback ,(append '(node ecb-button edit-window-nr shift-mode meta-mode)
+                               optional-arg-list)
+       ,(concat (if (equal callback-type 'select)
+                    (concat
+                     "Handle clicking onto NODE in the current tree-buffer.\n"
+                     "ECB-BUTTON can be 1, 2 or 3. If 3 then EDIT-WINDOW-NR contains the number\n"
+                     "of the edit-window the NODE should be displayed or whatever should be done\n"
+                     "with NODE. For 1 and 2 the value of EDIT-WINDOW-NR is ignored.\n"
+                     "SHIFT-MODE and META-MODE are self-explanatory.")
+                  (concat
+                   "Handle expanding NODE in the current tree-buffer.\n"
+                   "ECB-BUTTON can be 1, 2 or 3. If 3 then EDIT-WINDOW-NR contains the number\n"
+                   "of the edit-window the NODE should be displayed or whatever should be done\n"
+                   "with NODE. For 1 and 2 the value of EDIT-WINDOW-NR is ignored.\n"
+                   "SHIFT-MODE and META-MODE are self-explanatory."))
+                "\n\n"
+                docstring)
+       (let ((no-meta-hiding nil))
+         (prog1
+             (progn
+               ,@body)
+           ,(if (equal callback-type 'select)
+                `(when (and (not no-meta-hiding) meta-mode)
+                   (ecb-run-with-idle-timer 0.001 nil 'ecb-hide-ecb-windows))))))))
+
+;; (insert (pp (macroexpand
+;;              '(defecb-tree-buffer-callback kausi-callback ecb-history-buffer
+;;                 expand (&optional a b)
+;;                 "das ist ein Docstring"
+;;                 (message "")
+;;                 (if nil t nil)))))
+
+
+(put 'defecb-tree-buffer-callback 'lisp-indent-function 4)
+
 ;; the filename/path cache
 
 (defecb-multicache ecb-filename-cache 500 nil '(FILES-AND-SUBDIRS
@@ -1209,12 +1470,17 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
 ;; -- end of canonical filenames
 
 
-(defun ecb-format-bucket-name (name)
-  "Format NAME as a bucket-name according to `ecb-bucket-node-display'."
-  (let ((formatted-name (concat (nth 0 ecb-bucket-node-display)
-				name
-				(nth 1 ecb-bucket-node-display))))
-    (ecb-merge-face-into-text formatted-name (nth 2 ecb-bucket-node-display))
+(defun ecb-format-bucket-name (name &optional ignore-prefix-suffix ignore-bucket-face)
+  "Format NAME as a bucket-name according to `ecb-bucket-node-display'.
+If optional arg IGNORE-PREFIX-SUFFIX rsp. IGNORE-BUCKET-FACE is not nil then
+these settings of `ecb-bucket-node-display' are ignored."
+  (let ((formatted-name (if ignore-prefix-suffix
+                            name
+                          (concat (nth 0 ecb-bucket-node-display)
+                                  name
+                                  (nth 1 ecb-bucket-node-display)))))
+    (unless ignore-bucket-face
+      (ecb-merge-face-into-text formatted-name (nth 2 ecb-bucket-node-display)))
     formatted-name))
 
 (defun ecb-toggle-do-not-leave-window-after-select ()
@@ -1262,41 +1528,7 @@ The tree-buffer is the current buffer."
                    'ecb-toggle-maximize-ecb-window-with-mouse)))
   
  
-(defun ecb-combine-ecb-button/edit-win-nr (ecb-button edit-window-nr)
-  "Depending on ECB-BUTTON and EDIT-WINDOW-NR return one value:
-- nil if ECB-BUTTON is 1.
-- t if ECB-BUTTON is 2 and the edit-area of ECB is splitted.
-- EDIT-WINDOW-NR if ECB-BUTTON is 3."
-  (case ecb-button
-    (1 nil)
-    (2 (ecb-edit-window-splitted))
-    (3 edit-window-nr)))
 
-(defun ecb-get-edit-window (other-edit-window)
-  "Get the correct edit-window. Which one is the correct one depends on the
-value of OTHER-EDIT-WINDOW \(which is a value returned by
-`ecb-combine-ecb-button/edit-win-nr') and `ecb-mouse-click-destination'.
-- OTHER-EDIT-WINDOW is nil: Get the edit-window according to the option
-  `ecb-mouse-click-destination'.
-- OTHER-EDIT-WINDOW is t: Get the next edit-window in the cyclic list of
-  current edit-windows starting either from the left-top-most one or from the
-  last edit-window with point (depends on
-  `ecb-mouse-click-destination').
-- OTHER-EDIT-WINDOW is an integer: Get exactly the edit-window with that
-  number > 0."
-  (let ((edit-win-list (ecb-canonical-edit-windows-list)))
-    (typecase other-edit-window
-      (null
-       (if (eq ecb-mouse-click-destination 'left-top)
-           (car edit-win-list)
-         ecb-last-edit-window-with-point))
-      (integer
-       (ecb-get-edit-window-by-number other-edit-window edit-win-list))
-      (otherwise
-       (ecb-next-listelem edit-win-list
-                          (if (eq ecb-mouse-click-destination 'left-top)
-                              (car edit-win-list)
-                            ecb-last-edit-window-with-point))))))
 
 ;;====================================================
 ;; Mouse callbacks
@@ -1320,25 +1552,24 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
 	 (shift-mode (nth 1 ecb-button-list))
          (meta-mode (nth 2 ecb-button-list))
          (keyboard-p (equal (nth 3 ecb-button-list) 'keyboard))
-         (maximized-p (ecb-buffer-is-maximized-p tree-buffer-name)))
+         (maximized-p (ecb-buffer-is-maximized-p tree-buffer-name))
+         (select-callbacks (ecb-tree-buffer-callbacks-alist-of-type 'select))
+         (callback-fcn nil))
     ;; we need maybe later that something has clicked in a tree-buffer, e.g.
     ;; in `ecb-handle-major-mode-visibilty'.
     (setq ecb-item-in-tree-buffer-selected t)
     (if (not keyboard-p)
         (setq ecb-layout-prevent-handle-ecb-window-selection t))
+    
     ;; first we dispatch to the right action
     (when ecb-button-list
-      (cond ((ecb-string= tree-buffer-name ecb-directories-buffer-name)
-	     (ecb-directory-clicked node ecb-button nil shift-mode meta-mode))
-	    ((ecb-string= tree-buffer-name ecb-sources-buffer-name)
-	     (ecb-source-clicked node ecb-button nil shift-mode meta-mode))
-	    ((ecb-string= tree-buffer-name ecb-history-buffer-name)
-	     (ecb-history-clicked node ecb-button nil shift-mode meta-mode))
-	    ((ecb-string= tree-buffer-name ecb-methods-buffer-name)
-	     (ecb-method-clicked node ecb-button nil shift-mode meta-mode))
-	    ((ecb-string= tree-buffer-name ecb-analyse-buffer-name)
-	     (ecb-analyse-node-clicked node ecb-button nil shift-mode meta-mode))
-	    (t nil)))
+      (setq callback-fcn
+            (ecb-member-of-symbol/value-list tree-buffer-name
+                                             select-callbacks
+                                             'car
+                                             'cdr))
+      (when (functionp callback-fcn)
+        (funcall callback-fcn node ecb-button nil shift-mode meta-mode)))
 
     ;; now we go back to the tree-buffer but only if all of the following
     ;; conditions are true:
@@ -1401,19 +1632,20 @@ combination is invalid \(see `ecb-interpret-mouse-click')."
 	 (ecb-button (nth 0 ecb-button-list))
 	 (shift-mode (nth 1 ecb-button-list))
          (meta-mode (nth 2 ecb-button-list))
-         (keyboard-p (equal (nth 3 ecb-button-list) 'keyboard)))
+         (keyboard-p (equal (nth 3 ecb-button-list) 'keyboard))
+         (expand-callbacks (ecb-tree-buffer-callbacks-alist-of-type 'expand))
+         (callback-fcn nil))
     (if (not keyboard-p)
         (setq ecb-layout-prevent-handle-ecb-window-selection t))
+    ;; we just dispatch to the right action
     (when ecb-button-list
-      (cond ((ecb-string= tree-buffer-name ecb-directories-buffer-name)
-	     (ecb-update-directory-node node))
-	    ((ecb-string= tree-buffer-name ecb-sources-buffer-name)
-	     (ecb-source-clicked node ecb-button nil shift-mode meta-mode))
-	    ((ecb-string= tree-buffer-name ecb-history-buffer-name)
-	     (ecb-history-clicked node ecb-button nil shift-mode meta-mode))
-	    ((ecb-string= tree-buffer-name ecb-methods-buffer-name)
-	     nil)
-	    (t nil)))))
+      (setq callback-fcn
+            (ecb-member-of-symbol/value-list tree-buffer-name
+                                             expand-callbacks
+                                             'car
+                                             'cdr))
+      (when (functionp callback-fcn)
+        (funcall callback-fcn node ecb-button nil shift-mode meta-mode)))))
 
 (defun ecb-interpret-mouse-click (mouse-button
                                   shift-pressed

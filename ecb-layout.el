@@ -9,7 +9,6 @@
 ;;         Klaus Berndl <klaus.berndl@sdm.de>
 ;;         Kevin A. Burton <burton@openprivacy.org>
 ;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
-;;             Kevin A. Burton <burton@openprivacy.org>
 ;; Keywords: browser, code, programming, tools
 ;; Created: 2000
 
@@ -4934,7 +4933,7 @@ emergency-redraw."
                                   ecb-windows-before-redraw))
                      (member (get-buffer ecb-history-buffer-name)
                              current-ecb-buffers))
-            (ecb-add-buffers-to-history))
+            (ecb-add-buffers-to-history-new))
           ;; update the directories buffer if the directories buffer was not
           ;; shown before the redisplay but now (means if the layout has
           ;; changed)

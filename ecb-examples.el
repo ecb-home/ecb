@@ -9,7 +9,6 @@
 ;;         Klaus Berndl <klaus.berndl@sdm.de>
 ;;         Kevin A. Burton <burton@openprivacy.org>
 ;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
-;;             Kevin A. Burton <burton@openprivacy.org>
 ;; Keywords: browser, code, programming, tools
 ;; Created: 2002
 
@@ -234,6 +233,8 @@ it will be called autom. by the internal synchronizing mechanism of ECB."
   ;; For details please read the documentation of
   ;; `defecb-autocontrol/sync-function'!
 
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: currently not working for
+  ;; indirect buffers...
     (let ((filename (buffer-file-name (current-buffer))))
      
       (if (and filename (file-readable-p filename))
