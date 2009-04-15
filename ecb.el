@@ -9,7 +9,6 @@
 ;;         Klaus Berndl <klaus.berndl@sdm.de>
 ;;         Kevin A. Burton <burton@openprivacy.org>
 ;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
-;;             Kevin A. Burton <burton@openprivacy.org>
 ;; Keywords: browser, code, programming, tools
 ;; Created: 2000
 
@@ -26,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.436 2009/03/20 16:35:10 berndl Exp $
+;; $Id: ecb.el,v 1.437 2009/04/15 14:22:35 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -484,19 +483,9 @@ See also `ecb-before-activate-hook'."
 - Clearing the method buffer if a file-buffer has been killed.
 - The entry of the removed file-buffer is removed from `ecb-tag-tree-cache'."
   (let* ((curr-buf (current-buffer))
-         (buffer-file (ecb-fix-filename (buffer-file-name curr-buf))))
+         (buffer-file (ecb-fix-filename (ecb-buffer-file-name curr-buf))))
     ;; 1. clearing the history if necessary
-    (when ecb-kill-buffer-clears-history
-      (let ((node (if buffer-file
-                      (ecb-exec-in-window ecb-history-buffer-name
-                        (tree-buffer-find-displayed-node-by-data/type buffer-file)))))
-        (when (and node
-                   (or (equal ecb-kill-buffer-clears-history 'auto)
-                       (and (equal ecb-kill-buffer-clears-history 'ask)
-                            (y-or-n-p "Remove history entry for this buffer? "))))
-          (ecb-exec-in-window ecb-history-buffer-name
-            (tree-buffer-remove-node node))
-          (ecb-update-history-window))))
+    (ecb-history-kill-buffer-clear curr-buf)
 
     ;; 2. clearing the method buffer if a file-buffer is killed
     (if buffer-file
@@ -506,11 +495,12 @@ See also `ecb-before-activate-hook'."
     ;;    after 2. because otherwise a new element in the cache would be
     ;;    created again by `ecb-rebuild-methods-buffer-with-tagcache'.
     (if buffer-file
-        (ecb-clear-tag-tree-cache buffer-file))
+        (ecb-clear-tag-tree-cache (buffer-name curr-buf)))
 
     ;; 4. Preventing from killing the special-ecb-buffers by accident
     (when (member curr-buf (ecb-get-current-visible-ecb-buffers))
       (ecb-error "Killing an special ECB-buffer is not possible!"))))
+
 
 (defun ecb-window-sync (&optional only-basic-windows)
   "Synchronizes all special ECB-buffers with current buffer.
@@ -1480,6 +1470,9 @@ If ECB detects a problem it is reported and then an error is thrown."
 
               ;; enabling the VC-support
               (ecb-vc-enable-internals 1)
+
+              ;; initializing history
+              (ecb-history-content-init)
               
               ;; menus - dealing with the menu for XEmacs is really a pain...
               (when ecb-running-xemacs
@@ -1565,7 +1558,7 @@ If ECB detects a problem it is reported and then an error is thrown."
         (condition-case err-obj
             (let ((edit-window (car (ecb-canonical-edit-windows-list))))
               (when (and ecb-display-default-dir-after-start
-                         (null (buffer-file-name
+                         (null (ecb-buffer-file-name
                                 (window-buffer edit-window))))
                 (ecb-set-selected-directory
                  (ecb-fix-filename (save-excursion
@@ -1981,6 +1974,17 @@ exist."
                :user-visible-flag nil
                :documentation (semantic-elisp-do-doc (nth 4 read-lobject))))
           defecb-advice)
+        ;; defecb-tree-buffer-callback
+        (semantic-elisp-setup-form-parser
+            (lambda (read-lobject start end)
+              (semantic-tag-new-function
+               (symbol-name (nth 1 read-lobject)) nil
+               (semantic-elisp-desymbolify
+                (append '(node ecb-button edit-window-nr shift-mode meta-mode)
+                        (nth 4 read-lobject)))
+               :user-visible-flag nil
+               :documentation (semantic-elisp-do-doc (nth 5 read-lobject))))
+          defecb-tree-buffer-callback)
         ;; defecb-autocontrol/sync-function
         (semantic-elisp-setup-form-parser
             (lambda (read-lobject start end)
@@ -2026,6 +2030,7 @@ exist."
                                   "defecb-window-dedicator"
                                   "defecb-advice"
                                   "defecb-autocontrol/sync-function"
+                                  "defecb-tree-buffer-callback"
                                   ))
                  (plain-keywords '(
                                    "ecb-exec-in-window"

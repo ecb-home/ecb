@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.18 2009/03/20 16:35:10 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.19 2009/04/15 14:22:35 berndl Exp $
 
 
 ;;; Commentary:
@@ -299,51 +299,61 @@ This means in fact display the current analysis for current point."
   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: make interruptable. Necessary
   ;; e.g. when typing: "(e" then scanning all elisp stuff beginning with e is
   ;; really annoying....
-  (let* ((mode-local-active-mode major-mode)
-         (scope (semantic-calculate-scope (point)))
-         (ctxt (ecb--semantic-analyze-current-context (point)))
-         (cnt (ecb--semantic-find-tag-by-overlay))
-         (completions (when ctxt
-                        (ecb--semantic-analyze-possible-completions ctxt))))
+  (let ((analysis nil)
+        (scope nil)
+        (completions nil)
+        (cnt nil)
+        (mode-local-active-mode nil)
+        )
     ;; Try and get some sort of analysis
+    (condition-case nil
+        (progn
+          (setq mode-local-active-mode major-mode)
+          (save-excursion
+            ;; Get the current scope
+            (setq scope (semantic-calculate-scope (point)))
+            ;; Get the analysis
+            (setq analysis (ecb--semantic-analyze-current-context (point)))
+            (setq cnt (ecb--semantic-find-tag-by-overlay))
+            (when analysis
+              (setq completions (ecb--semantic-analyze-possible-completions analysis)))))
+      (error nil))
     (ecb-exec-in-window ecb-analyse-buffer-name
       ;; we must remove the old nodes
       (tree-buffer-set-root (tree-node-new-root))
-      (when ctxt
-        ;; Now insert information about the context
-        (when cnt
-          (ecb-analyse-add-nodes "Context" "Context"
-                                 cnt ecb-analyse-nodetype-context))
-        ;; Let different classes draw more nodes.
-        (ecb-analyse-more-nodes ctxt)
+      (when cnt
+        (ecb-analyse-add-nodes "Context" "Context"
+                               cnt ecb-analyse-nodetype-context))
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we should adopt this
+      ;; for ecb-analyse..
+      ;;     (when analysis
+      ;;       ;; If this analyzer happens to point at a complete symbol, then
+      ;;       ;; see if we can dig up some documentation for it.
+      ;;       (semantic-ia-sb-show-doc analysis))
+
+      ;; Show local variables
+      (when scope
+        (ecb-analyse-show-scope scope))
+
+      (when analysis
+        ;; Let different classes draw more buttons.
+        (ecb-analyse-more-nodes analysis)
         (when completions
           (ecb-analyse-add-nodes "Completions" "Completions" completions
                                  ecb-analyse-nodetype-completions)))
       (tree-buffer-update)))
   (run-hooks 'ecb-analyse-buffer-sync-hook))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: why does this not work?!
-
-;; (defmethod ecb-analyse-more-nodes ((context semantic-analyze-context))
-;;   "Show a set of ecb-nodes specific to CONTEXT."
-;;   (let* ((scope (or (oref context scope)
-;;                     (semantic-calculate-scope (point))))
-;;          (localvars (or (when scope (oref scope localvar))
-;;                         (semantic-get-all-local-variables))))
-;;     (when localvars
-;;       (ecb-analyse-add-nodes "Local Variables" "Local Variables" localvars
-;;                              ecb-analyse-nodetype-localvars)))
-;;   (let ((prefix (oref context prefix)))
-;;     (when prefix
-;;       (ecb-analyse-add-nodes "Prefix" "Prefix" prefix ecb-analyse-nodetype-prefix))))
+        
+(defun ecb-analyse-show-scope (scope)
+  "Show SCOPE information."
+  (let ((localvars (when scope
+		     (oref scope localvar))))
+    (when localvars
+      (ecb-analyse-add-nodes "Local Variables" "Local Variables" localvars
+                             ecb-analyse-nodetype-localvars))))
 
 (defmethod ecb-analyse-more-nodes ((context semantic-analyze-context))
   "Show a set of ecb-nodes specific to CONTEXT."
-  (let* ((scope (oref context scope))
-         (localvars (when scope (oref scope localvar))))
-    (when localvars
-      (ecb-analyse-add-nodes "Local Variables" "Local Variables" localvars
-                             ecb-analyse-nodetype-localvars)))
   (let ((prefix (oref context prefix)))
     (when prefix
       (ecb-analyse-add-nodes "Prefix" "Prefix" prefix ecb-analyse-nodetype-prefix))))
@@ -385,8 +395,9 @@ of LIST."
   (when list
     (save-excursion
       (set-buffer ecb-analyse-buffer-name)
-      (let* ((bucket-name-formatted (ecb-merge-face-into-text bucket-name
-                                                              ecb-analyse-bucket-node-face))
+      (let* ((bucket-name-formatted
+              (ecb-merge-face-into-text (ecb-format-bucket-name bucket-name)
+                                        ecb-analyse-bucket-node-face))
              (bucket-node (tree-node-new bucket-name-formatted
                                          ecb-analyse-nodetype-bucket
                                          (list 'ecb-bucket-node
@@ -411,7 +422,7 @@ of LIST."
                 (ecb-merge-face-into-text string ecb-analyse-bucket-element-face))
               (if (ecb--semantic-tag-p elem)
                   (tree-node-new string nodetype
-                                 (list elem
+                                 (list elem 
                                        (if (ecb--semantic-tag-with-position-p elem)
                                            ecb-analyse-nodedata-tag-with-pos
                                          ecb-analyse-nodedata-tag-without-pos)
@@ -438,79 +449,62 @@ used as window."
         ;; if we have a positioned tag we jump to it
         (when (and tag (= (nth 1 data) ecb-analyse-nodedata-tag-with-pos))
           ;; We must highlight the tag
-          (tree-buffer-highlight-node-by-data/type data)
-          (ecb-jump-to-tag (or (and (ecb--semantic-tag-buffer tag)
-                                    (buffer-file-name (ecb--semantic-tag-buffer tag)))
-                               ;; then we have a tag with no buffer but only
-                               ;; buffer-start- and buffer-end-pos
-                               ecb-path-selected-source)
+          (tree-buffer-highlight-node-by-data/name data)
+          ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: what about tags without
+          ;; buffer but onlxy with start- and end-pos?!
+          (ecb-display-tag (ecb-source-make (ecb-buffer-file-name
+                                             (ecb--semantic-tag-buffer tag))
+                                            (ecb--semantic-tag-buffer tag))
                            tag
-                           (or window ecb-last-edit-window-with-point)
+                           (or window (ecb-get-edit-window nil))
                            t nil))))))
 
-(tree-buffer-defpopup-command ecb-analyse-complete
-  "Complete at current point of the edit-window the selected completion-tag."
+(tree-buffer-defpopup-command ecb-analyse-complete/insert
+  "Complete/insert at current point the selected completion/localvar."
   ;; We must highlight the tag
   (let* ((data (tree-node->data node))
          (tag (nth 0 data))
          (type (tree-node->type node)))
-    (when (= type ecb-analyse-nodetype-completions)
-      (tree-buffer-highlight-node-by-data/type data)
-      (ecb-find-file-and-display ecb-path-selected-source nil)
+    (when (or (= type ecb-analyse-nodetype-completions)
+              (= type ecb-analyse-nodetype-localvars))
+      (tree-buffer-highlight-node-by-data/name data)
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: here we must handle
+      ;; indirect buffers - probbaly with a smart new function
+      ;; ecb-display-source which decides smartly if to switch to a buffer or
+      ;; if to find-file....
+      (ecb-display-source ecb-path-selected-source nil)
       (let* ((a (ecb--semantic-analyze-current-context (point)))
-             (bounds (oref a bounds))
+             (bounds (if a (oref a bounds)))
              (movepoint nil))
-        (save-excursion
-          (if (and (<= (point) (cdr bounds)) (>= (point) (car bounds)))
-              (setq movepoint t))
-          (goto-char (car bounds))
-          (delete-region (car bounds) (cdr bounds))
-          (insert (ecb--semantic-tag-name tag))
-          (if movepoint (setq movepoint (point))))
-        (if movepoint
-            (goto-char movepoint))))))
+        (if (null bounds)
+            (insert (ecb--semantic-tag-name tag))
+          (save-excursion
+            (if (and (<= (point) (cdr bounds)) (>= (point) (car bounds)))
+                (setq movepoint t))
+            (goto-char (car bounds))
+            (delete-region (car bounds) (cdr bounds))
+            (insert (ecb--semantic-tag-name tag))
+            (if movepoint (setq movepoint (point))))
+          (if movepoint
+              (goto-char movepoint)))))))
 
-(tree-buffer-defpopup-command ecb-analyse-insert
-  "Insert at current point of the edit-window the selected Local-var-tag."
-  ;; We must highlight the tag
-  (let* ((data (tree-node->data node))
-         (tag (nth 0 data))
-         (type (tree-node->type node)))
-    (when (= type ecb-analyse-nodetype-completions)
-      (tree-buffer-highlight-node-by-data/type data)
-      (ecb-find-file-and-display ecb-path-selected-source nil)
-      (let* ((a (ecb--semantic-analyze-current-context (point)))
-             (bounds (oref a bounds))
-             (movepoint nil))
-        (save-excursion
-          (if (and (<= (point) (cdr bounds)) (>= (point) (car bounds)))
-              (setq movepoint t))
-          (goto-char (car bounds))
-          (delete-region (car bounds) (cdr bounds))
-          (insert (ecb--semantic-tag-name tag))
-          (if movepoint (setq movepoint (point))))
-        (if movepoint
-            (goto-char movepoint))))))
-
-(defun ecb-analyse-node-clicked (node ecb-button edit-window-nr
-                                      shift-mode meta-mode)
-  "Handle clicking onto NODE in the analyse-buffer. ECB-BUTTON can be 1, 2 or
-3. If 3 then EDIT-WINDOW-NR contains the number of the edit-window the NODE
-should be displayed or whatever should be done with NODE. For 1 and 2 the
-value of EDIT-WINDOW-NR is ignored."
+(defecb-tree-buffer-callback ecb-analyse-node-clicked ecb-analyse-buffer-name select nil
+  "Handles clicking onto any of the nodes in the analyse-buffer of ECB."
   (if shift-mode
       (ecb-mouse-over-analyse-node node nil nil 'force))
   (let* ((data (tree-node->data node))
          (tag (nth 0 data))
          (type (tree-node->type node)))
+    ;; we handle hiding the ecb-windows for ourself
+    (setq no-meta-hiding t)
     (cond
      ((= type ecb-analyse-nodetype-bucket)
       (tree-node-toggle-expanded node)
       (tree-buffer-update node))
      ((= type ecb-analyse-nodetype-completions)
-      (ecb-analyse-complete node))
+      (ecb-analyse-complete/insert node))
      ((= type ecb-analyse-nodetype-localvars)
-      (ecb-analyse-insert node))
+      (ecb-analyse-complete/insert node))
      (t
       (ecb-analyse-jump-to-tag node (ecb-get-edit-window
                                      ;; `ecb-analyse-jump-to-tag' expects all
@@ -628,9 +622,11 @@ moved over it."
          (tag-p (not (equal (nth 1 data) ecb-analyse-nodedata-no-tag)))
          (tag-with-pos-p (equal (nth 1 data) ecb-analyse-nodedata-tag-with-pos))
          (nodetype (nth 2 data)))
-    (delq nil (list (if (equal nodetype ecb-analyse-nodetype-completions)
-                        '(ecb-analyse-complete "Complete"))
-                    (if tag-p
+    (delq nil (list (if (member nodetype (list
+                                          ecb-analyse-nodetype-completions
+                                          ecb-analyse-nodetype-localvars))
+                        '(ecb-analyse-complete/insert "Complete/insert"))
+                    (if tag-p 
                         '(ecb-analyse-show-tag-info "Show tag info"))
                     (if tag-with-pos-p
                         '(ecb-analyse-jump-to-tag "Jump to tag"))))))

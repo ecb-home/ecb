@@ -5,11 +5,9 @@
 ;;                           Kevin A. Burton,
 ;;                           Free Software Foundation, Inc.
 
-;; Author: Jesper Nordenberg <mayhem@home.se>
-;;         Klaus Berndl <klaus.berndl@sdm.de>
+;; Author: Klaus Berndl <klaus.berndl@sdm.de>
 ;;         Kevin A. Burton <burton@openprivacy.org>
 ;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
-;;             Kevin A. Burton <burton@openprivacy.org>
 ;; Keywords: browser, code, programming, tools
 ;; Created: 2002
 
@@ -26,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.70 2009/03/20 16:35:10 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.71 2009/04/15 14:22:35 berndl Exp $
 
 ;;; Commentary:
 
@@ -538,7 +536,7 @@ Return NODE."
                          (list (cons (cdr (assoc major-mode
                                                  ecb-non-semantic-parsing-function))
                                      'identity)))))
-                  (speedbar-fetch-dynamic-tags (buffer-file-name
+                  (speedbar-fetch-dynamic-tags (ecb-buffer-file-name
                                                 (current-buffer)))))
            (tag-list (cdr lst))
            (methods speedbar-tag-hierarchy-method))

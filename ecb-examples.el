@@ -9,7 +9,6 @@
 ;;         Klaus Berndl <klaus.berndl@sdm.de>
 ;;         Kevin A. Burton <burton@openprivacy.org>
 ;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
-;;             Kevin A. Burton <burton@openprivacy.org>
 ;; Keywords: browser, code, programming, tools
 ;; Created: 2002
 
@@ -26,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-examples.el,v 1.22 2009/03/20 16:35:10 berndl Exp $
+;; $Id: ecb-examples.el,v 1.23 2009/04/15 14:22:35 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -234,6 +233,8 @@ it will be called autom. by the internal synchronizing mechanism of ECB."
   ;; For details please read the documentation of
   ;; `defecb-autocontrol/sync-function'!
 
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: currently not working for
+  ;; indirect buffers...
     (let ((filename (buffer-file-name (current-buffer))))
      
       (if (and filename (file-readable-p filename))
