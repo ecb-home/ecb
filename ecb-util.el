@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.142 2009/04/15 14:22:35 berndl Exp $
+;; $Id: ecb-util.el,v 1.143 2009/04/15 14:25:30 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1485,7 +1485,7 @@ of TEXT which are not set by FACE are preserved."
                              ;; we must add the new-face in front of
                              ;; current-face to get the right merge!
                              (if (member face cf)
-                                 nf
+                                 cf
                                (append nf cf)))
                            text)
       (alter-text-property 0 (length text) 'face
@@ -1503,7 +1503,7 @@ of TEXT which are not set by FACE are preserved."
                                ;; we must add the new-face in front of
                                ;; current-face to get the right merge!
                                (if (member face cf)
-                                   nf
+                                   cf
                                  (append nf cf))))
                            text))
     text))
