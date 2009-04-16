@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.19 2009/04/15 14:22:35 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.20 2009/04/16 15:51:37 berndl Exp $
 
 
 ;;; Commentary:
@@ -453,8 +453,8 @@ used as window."
           ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: what about tags without
           ;; buffer but onlxy with start- and end-pos?!
           (ecb-display-tag (ecb-source-make (ecb-buffer-file-name
-                                             (ecb--semantic-tag-buffer tag))
-                                            (ecb--semantic-tag-buffer tag))
+                                             (ecb-semantic-tag-buffer tag))
+                                            (ecb-semantic-tag-buffer tag))
                            tag
                            (or window (ecb-get-edit-window nil))
                            t nil))))))

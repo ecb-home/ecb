@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.261 2009/04/15 14:22:35 berndl Exp $
+;; $Id: ecb-layout.el,v 1.262 2009/04/16 15:51:37 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -4972,7 +4972,7 @@ emergency-redraw."
     (run-hooks 'ecb-redraw-layout-after-hook)))
     
 
-(defun ecb-redraw-layout-quickly()
+(defun ecb-redraw-layout-quickly ()
   "Redraw the layout quickly using the cached window configuration
 `ecb-activated-window-configuration'."
   (when (and ecb-minor-mode

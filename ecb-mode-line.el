@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-mode-line.el,v 1.36 2009/04/15 14:22:35 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.37 2009/04/16 15:51:37 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -239,7 +239,7 @@ prepended by the window-number, see `ecb-mode-line-display-window-number'."
                                      ecb-path-selected-directory)
                                     ((equal data-elem 'sel-source)
                                      (and ecb-path-selected-source
-                                          (ecb-path-selected-source 'buffer)))
+                                          (ecb-path-selected-source 'buffername)))
                                     ((stringp data-elem)
                                      data-elem)
                                     ((null data-elem)

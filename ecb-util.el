@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.143 2009/04/15 14:25:30 berndl Exp $
+;; $Id: ecb-util.el,v 1.144 2009/04/16 15:51:37 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1865,7 +1865,7 @@ BUFFER can also be an indirect buffer - if its base buffer points to a file
 then this filename is returned.
 BUFFER can be a buffer-object or a buffer-name.
 If BUFFER is nil then current buffer is used.
-If no-indirect-buffers is not nil then for indirect buffers always nil is
+If NO-INDIRECT-BUFFERS is not nil then for indirect buffers always nil is
 returned."
   (or (buffer-file-name buffer)
       (and (not no-indirect-buffers)
@@ -1997,7 +1997,9 @@ returned. Otherwise the return value of BODY is returned. Runs encapsulated in
   `(save-selected-window
      (if (not (ecb-window-select ,buffer-or-name))
          'window-not-visible
-       ,@body)))
+       (save-excursion
+         (set-buffer ,buffer-or-name)
+         ,@body))))
 
 (put 'ecb-exec-in-window 'lisp-indent-function 1)
 
