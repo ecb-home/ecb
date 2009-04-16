@@ -239,7 +239,7 @@ prepended by the window-number, see `ecb-mode-line-display-window-number'."
                                      ecb-path-selected-directory)
                                     ((equal data-elem 'sel-source)
                                      (and ecb-path-selected-source
-                                          (ecb-path-selected-source 'buffer)))
+                                          (ecb-path-selected-source 'buffername)))
                                     ((stringp data-elem)
                                      data-elem)
                                     ((null data-elem)

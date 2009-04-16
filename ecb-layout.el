@@ -4972,7 +4972,7 @@ emergency-redraw."
     (run-hooks 'ecb-redraw-layout-after-hook)))
     
 
-(defun ecb-redraw-layout-quickly()
+(defun ecb-redraw-layout-quickly ()
   "Redraw the layout quickly using the cached window configuration
 `ecb-activated-window-configuration'."
   (when (and ecb-minor-mode

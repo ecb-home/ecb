@@ -453,8 +453,8 @@ used as window."
           ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: what about tags without
           ;; buffer but onlxy with start- and end-pos?!
           (ecb-display-tag (ecb-source-make (ecb-buffer-file-name
-                                             (ecb--semantic-tag-buffer tag))
-                                            (ecb--semantic-tag-buffer tag))
+                                             (ecb-semantic-tag-buffer tag))
+                                            (ecb-semantic-tag-buffer tag))
                            tag
                            (or window (ecb-get-edit-window nil))
                            t nil))))))

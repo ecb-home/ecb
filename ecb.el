@@ -484,22 +484,19 @@ See also `ecb-before-activate-hook'."
 - The entry of the removed file-buffer is removed from `ecb-tag-tree-cache'."
   (let* ((curr-buf (current-buffer))
          (buffer-file (ecb-fix-filename (ecb-buffer-file-name curr-buf))))
-    ;; 1. clearing the history if necessary
-    (ecb-history-kill-buffer-clear curr-buf)
+    ;; this prevents automatically from killing one of the ecb-buffers because
+    ;; these ones are never releated to file!
+    (when buffer-file
+      ;; 1. clearing the history if necessary
+      (ecb-history-kill-buffer-clear curr-buf)
 
-    ;; 2. clearing the method buffer if a file-buffer is killed
-    (if buffer-file
-        (ecb-rebuild-methods-buffer-with-tagcache nil nil t))
+      ;; 2. clearing the method buffer if a file-buffer is killed
+      (ecb-rebuild-methods-buffer-with-tagcache nil nil t)
 
-    ;; 3. removing the file-buffer from `ecb-tag-tree-cache'. Must be done
-    ;;    after 2. because otherwise a new element in the cache would be
-    ;;    created again by `ecb-rebuild-methods-buffer-with-tagcache'.
-    (if buffer-file
-        (ecb-clear-tag-tree-cache (buffer-name curr-buf)))
-
-    ;; 4. Preventing from killing the special-ecb-buffers by accident
-    (when (member curr-buf (ecb-get-current-visible-ecb-buffers))
-      (ecb-error "Killing an special ECB-buffer is not possible!"))))
+      ;; 3. removing the file-buffer from `ecb-tag-tree-cache'. Must be done
+      ;;    after 2. because otherwise a new element in the cache would be
+      ;;    created again by `ecb-rebuild-methods-buffer-with-tagcache'.
+      (ecb-clear-tag-tree-cache (buffer-name curr-buf)))))
 
 
 (defun ecb-window-sync (&optional only-basic-windows)
@@ -1470,9 +1467,6 @@ If ECB detects a problem it is reported and then an error is thrown."
 
               ;; enabling the VC-support
               (ecb-vc-enable-internals 1)
-
-              ;; initializing history
-              (ecb-history-content-init)
               
               ;; menus - dealing with the menu for XEmacs is really a pain...
               (when ecb-running-xemacs

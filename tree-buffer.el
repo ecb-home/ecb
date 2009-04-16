@@ -1789,7 +1789,7 @@ is called after updating all needed nodes."
   "Remove NODE from current tree-buffer. If NODE is nil then the node at
 current point will be removed. If NODE equal the node returned by
 `tree-buffer-get-root' then nothing will be done. If first optional arg
-REDISLAY is not nil then NODE will be also completely remove from the
+REDISLAY is not nil then NODE will be also completely removed from the
 tree-display otherwise only from the internal tree-structure. If second
 optional arg EMPTY-PARENT-TYPES is not nil and a list of node-types \(see
 `tree-buffer-create') and if the node-type of the parent of NODE is contained

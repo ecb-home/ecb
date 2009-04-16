@@ -2266,17 +2266,7 @@ even if current directory is equal to `ecb-path-selected-directory'."
   (ecb-exec-in-window ecb-sources-buffer-name
     (tree-buffer-highlight-node-by-data/name (ecb-path-selected-source 'file)))
   
-  (ecb-add-buffers-to-history-new)
-  
-;;   ;; Update history buffer always regardless of visibility of history window
-;;   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: pass indirect-buffers
-;;   (ecb-add-item-to-history-buffer (ecb-path-selected-source 'file))
-;;   (ecb-sort-history-buffer)
-;;   ;; Update the history window only if it is visible
-;;   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: here we must take care of
-;;   ;; indirect buffers
-;;   (ecb-update-history-window (ecb-path-selected-source 'file))
-  )
+  (ecb-add-buffers-to-history-new))
 
 
 (defvar ecb-history-filter nil
@@ -2299,70 +2289,50 @@ added.")
 
 (ecb-reset-history-filter)
 
-(defvar ecb-history-content nil
-  "An alist with items like \(<buffer-name> . \(<file-name> . <dead-p>))
-For each node in the history-buffer an item exists with <dead-p> is nil.
-If killing a buffer does not clear out this item from the history \(see option
-`ecb-kill-buffer-clears-history') then the item is not removed from this alist
-but <dead-p> is set to t. Otherwise the item is removed from the alist.
+(defun ecb-indirect-buffers-of-buffer (&optional buffer-or-name)
+  (let ((buffer (if (null buffer-or-name)
+                    (current-buffer)
+                  (if (and (bufferp buffer-or-name)
+                           (buffer-live-p buffer-or-name))
+                      buffer-or-name
+                    (if (stringp buffer-or-name)
+                        (get-buffer buffer-or-name))))))
+    (delq nil (mapcar (function
+                       (lambda (buf)
+                         (if (equal buffer (buffer-base-buffer buf))
+                             buf)))
+                      (buffer-list)))))
 
-So this alist can contain more items than the history-buffer contains nodes!"
-  )
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add this to ecb-activate
-(defun ecb-history-content-init ()
-  (setq ecb-history-content nil))
-
-(defun ecb-history-content-buffer-elem (buffer-name)
-  (assoc buffer-name ecb-history-content))
-
-(defun ecb-history-content-remove-buffer (buffer-name)
-  (setq ecb-history-content
-        (delq (ecb-history-content-buffer-elem buffer-name)
-              ecb-history-content)))
-
-(defun ecb-history-content-set-buffer-dead (buffer-name)
-  (let ((elem (ecb-history-content-buffer-elem buffer-name)))
-    (when elem
-      (setcdr (cdr elem) 'dead))))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: with the old-history-mechanism
-;; mysteriously the * ECB History* buffer is added with a file clicked in the
-;; source-buffer (e.e. ecb-upgrade.el). Lets see if this behavior is still
-;; there after switching to the new mechanism - for now it should be not
-;; dangerous. Maybe have to check within this function is buffer-name is a
-;; file-buffer?!
-(defun ecb-history-content-add-buffer (buffer-name file-name)
-  (ecb-history-content-remove-buffer buffer-name)
-  (push (cons buffer-name (cons file-name 'alive)) ecb-history-content))
-
+;; When a base-buffer of indirect-buffers is killed then automatically all
+;; indirect-buffers are killed too by Emacs - for all these kill-buffer-hook
+;; is called so also this function ==> we must not perform any special logic
+;; because the indirect-buffers nodes are always removed.
 (defun ecb-history-kill-buffer-clear (curr-buf)
   "Does all necessary clearence when CURR-BUF is killed."
   (let* ((buffer-file (ecb-fix-filename (ecb-buffer-file-name curr-buf)))
          (node (if buffer-file
                    (ecb-exec-in-window ecb-history-buffer-name
                      (tree-buffer-find-displayed-node-by-data/name
-                      (ecb-source-make buffer-file curr-buf))))))
+                      (ecb-source-make buffer-file curr-buf)))))
+         (buffer-name-to-ignore-list-for-rebuild nil))
     (when node
-      (if (or (buffer-base-buffer curr-buf) ; indirect-buffers always!
-              (equal ecb-kill-buffer-clears-history 'auto)
-              (and (equal ecb-kill-buffer-clears-history 'ask)
-                   (y-or-n-p "Remove history entry for this buffer?")))
-          (progn
-            ;; we must do this even when the history is not visible!!
-            ;; the history should be always up-to-date
-            (save-excursion
-              (set-buffer ecb-history-buffer-name)
-              (tree-buffer-remove-node node))
-;;             (ecb-history-content-remove-buffer (buffer-name curr-buf))
-            )
-;;         (ecb-history-content-set-buffer-dead (buffer-name curr-buf))
-        )
-      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: later we completely rebuild
-      ;; here the history to reface not cleared items
-     (ecb-add-buffers-to-history-new)
-;;       (ecb-update-history-window)
-      )))
+      (when (or (buffer-base-buffer curr-buf) ; indirect-buffers always!
+                (equal ecb-kill-buffer-clears-history 'auto)
+                (and (equal ecb-kill-buffer-clears-history 'ask)
+                     (y-or-n-p "Remove history entry for this buffer?")))
+        ;; we must do this even when the history is not visible!!
+        ;; the history should be always up-to-date
+        (save-excursion
+          (set-buffer ecb-history-buffer-name)
+          (tree-buffer-remove-node node))
+        ;; if we have removed a node then we must ignore the related buffer
+        ;; when rebuilding the history - otherwise the node would be added
+        ;; again. This is because the history is rebuild before
+        ;; kill-buffer-hook has been finished and therefore the killed buffer
+        ;; is still in (buffer-list) which is used by
+        ;; `ecb-add-buffers-to-history-new'!
+        (setq buffer-name-to-ignore-list-for-rebuild (list (buffer-name curr-buf))))
+      (ecb-add-buffers-to-history-new nil buffer-name-to-ignore-list-for-rebuild))))
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: update the texi for this command
 (defun ecb-add-all-buffers-to-history ()
@@ -2394,7 +2364,7 @@ entries of the history-buffer."
                       (cons (ecb-source-get-buffername data)
                             (ecb-source-get-filename data))))))))))
 
-(defun ecb-add-buffers-to-history-new (&optional no-dead-buffers)
+(defun ecb-add-buffers-to-history-new (&optional no-dead-buffers ignore-buffername-list)
   "Update contents of the history-buffer.
 This means a history-item is added to the history-buffer if an existing buffer:
 - is a file-buffer or is based on a file-buffer \(e.g. indirect-file-buffers)
@@ -2402,6 +2372,9 @@ This means a history-item is added to the history-buffer if an existing buffer:
 - is not filtered out by the current history-filter
 In addition dead-buffer items of the history-content before are added again
 unless optional argument NO-DEAD-BUFFERS is not nil.
+
+If second optional argument IGNORE-BUFFERNAME-LIST is not nil, then it must be a
+list of buffer-names which should be ignored for the history-rebuild.
 
 It takes into account the values of the options `ecb-history-make-buckets' and 
 `ecb-history-stick-indirect-buffers-to-basebuffer'.
@@ -2451,6 +2424,8 @@ Returns t if the current history filter has been applied otherwise nil."
                                              (ecb-buffer-file-name buf)))
                                  (base-buf (buffer-base-buffer buf)))
                              (if (and file-name
+                                      (not (member (buffer-name buf)
+                                                   ignore-buffername-list))
                                       (not (ecb-check-filename-for-history-exclude file-name))
                                       (funcall (car ecb-history-filter)
                                                (buffer-name buf)
@@ -2474,11 +2449,10 @@ Returns t if the current history filter has been applied otherwise nil."
           (if no-dead-buffers
               nil
             ;; we need these entries of the history-buffer which are marked as
-            ;; dead in the ecb-history-content. If all is working fine the
-            ;; set-difference would not be necessary because dead-items are
-            ;; dead because no buffer exists for them - so both lists should
-            ;; be disjunct - but who knows, to get sure we make the difference
-            ;; so we have no duplicates.
+            ;; dead. If all is working fine the set-difference would not be
+            ;; necessary because dead-items are dead because no buffer exists
+            ;; for them - so both lists should be disjunct - but who knows, to
+            ;; get sure we make the difference so we have no duplicates.
             (ecb-set-difference (ecb-history-content-all-dead-buffers-alist)
                                 buf-file-alist
                                 'member)))
@@ -2664,189 +2638,12 @@ Returns t if the current history filter has been applied otherwise nil."
 
 ;;(ecb-add-buffers-to-history-new)
 
-
-(defun ecb-add-buffers-to-history ()
-  "Add exactly these currently existing file-buffers to the history-buffer
-which are not filtered out by current value of `ecb-history-filter'. Returns t
-if the filter has been applied otherwise nil."
-  ;; first we clear out the history buffer
-  (save-excursion
-    (set-buffer ecb-history-buffer-name)
-    (tree-buffer-clear-tree))
-  (mapc (function (lambda (buf)
-                    (when (buffer-file-name buf)
-                      (ecb-add-item-to-history-buffer
-                       (buffer-file-name buf)))))
-        (reverse (buffer-list)))
-  (ecb-sort-history-buffer)
-  (ecb-update-history-window (buffer-file-name ecb-last-source-buffer))
-  (prog1
-      (if (and (save-excursion
-                 (set-buffer ecb-history-buffer-name)
-                 (tree-buffer-empty-p))
-               (not (ecb-history-filter-reset-p)))
-          (progn
-            (ecb-add-all-buffers-to-history)
-            (message "ECB has not applied this filter because it would filter out all entries!")
-            nil)
-        t)
-    ;; now the modeline has to display the current filter
-    (ecb-mode-line-format)))
-
-  
 (defun ecb-history-filter-modeline-prefix (buffer-name sel-dir sel-source)
   "Compute a mode-line prefix for the History-buffer so the current filter
 applied to the history-entries is displayed. This function is only for using
 by the option `ecb-mode-line-prefixes'."
   (and (cdr ecb-history-filter)
        (format "[Filter: %s]" (cdr ecb-history-filter))))
-
-
-(defun ecb-add-item-to-history-buffer (filename)
-  "Add a new item for FILENAME to the history buffer if the current filter of
-`ecb-history-filter' does not filter out this file."
-  (save-excursion
-    (set-buffer ecb-history-buffer-name)
-    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: handle indirect buffers
-    (tree-node-remove-child-by-data/name (tree-buffer-get-root)
-                                         (ecb-source-make filename
-                                                          (get-file-buffer filename)))
-    (when (and (not (ecb-check-filename-for-history-exclude filename))
-               (funcall (car ecb-history-filter)
-                        (buffer-name (get-file-buffer filename))
-                        filename))
-      (ecb-history-content-add-buffer (buffer-name (get-file-buffer filename))
-                                      filename)
-      (tree-node-add-children
-       (tree-buffer-get-root)
-       (tree-node-new
-        (let ((file-1 (let ((b (get-file-buffer filename)))
-                        (if b
-                            (buffer-name b)
-                          (ecb-get-source-name filename))))
-              (dir (ecb-file-name-directory filename)))
-          (if (and (ecb-vc-directory-should-be-checked-p dir)
-                   (ecb-vc-managed-dir-p dir))
-              (ecb-vc-generate-node-name file-1
-                                         (nth 0 (ecb-vc-cache-get filename)))
-            (ecb-generate-node-name file-1 -1 "leaf"
-                                    ecb-sources-buffer-name)))
-        ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: give indirect buffers an
-        ;; own type
-        ecb-history-nodetype-filebuffer
-        (ecb-source-make filename (get-file-buffer filename))
-        t)
-       'at-beginning))))
-
-
-(defun ecb-sort-history-buffer ()
-  "Sort the history buffer according to `ecb-history-sort-method'."
-  (when ecb-history-sort-method
-    (save-excursion
-      (set-buffer ecb-history-buffer-name)
-      (tree-node-sort-children
-       (tree-buffer-get-root)
-       (case ecb-history-sort-method
-         (name
-          (function (lambda (l r)
-                      (let* ((l1 (ecb-get-sourcename-of-nodename (tree-node->name l)))
-                             (r1 (ecb-get-sourcename-of-nodename (tree-node->name r))))
-                        (ecb-string< l1 r1 ecb-history-sort-ignore-case)))))
-         (extension
-          (function
-           (lambda (l r)
-             (let* ((l1 (ecb-get-sourcename-of-nodename (tree-node->name l)))
-                    (r1 (ecb-get-sourcename-of-nodename (tree-node->name r)))
-                    (ext-l (ecb-file-name-extension l1 t))
-                    (ext-r (ecb-file-name-extension r1 t)))
-               (if (ecb-string= ext-l ext-r ecb-history-sort-ignore-case)
-                   (ecb-string< l1 r1 ecb-history-sort-ignore-case)
-                 (ecb-string< ext-l ext-r ecb-history-sort-ignore-case))))))
-         (otherwise
-          (function (lambda (l r)
-                      nil))))))))
-
-;; (defun ecb-sort-history-buffer ()
-;;   "Sort the history buffer according to `ecb-history-sort-method'."
-;;   (when ecb-history-sort-method
-;;     (save-excursion
-;;       (set-buffer ecb-history-buffer-name)
-;;       (tree-node-sort-children
-;;        (tree-buffer-get-root)
-;;        (case ecb-history-sort-method
-;;          (name
-;;           (function (lambda (l r)
-;;                       (let* ((l0 (tree-node->name l))
-;;                              (r0 (tree-node->name r))
-;;                              (vc-ascii-icon-length-l (get-text-property
-;;                                                       0
-;;                                                       'ecb-vc-ascii-icon-length
-;;                                                       l0))
-;;                              (vc-ascii-icon-length-r (get-text-property
-;;                                                       0
-;;                                                       'ecb-vc-ascii-icon-length
-;;                                                       r0))
-;;                              (prefix-length-l (or vc-ascii-icon-length-l
-;;                                                   (or (get-text-property
-;;                                                        0
-;;                                                        'tree-buffer-image-length
-;;                                                        l0)
-;;                                                       0)))
-;;                              (prefix-length-r (or vc-ascii-icon-length-r
-;;                                                   (or (get-text-property
-;;                                                        0
-;;                                                        'tree-buffer-image-length
-;;                                                        r0)
-;;                                                       0)))
-;;                              (l1 (substring l0 prefix-length-l))
-;;                              (r1 (substring r0 prefix-length-r)))
-;;                         (ecb-string< l1 r1 ecb-history-sort-ignore-case)))))
-;;          (extension
-;;           (function
-;;            (lambda (l r)
-;;              (let* ((l0 (tree-node->name l))
-;;                     (r0 (tree-node->name r))
-;;                     (vc-ascii-icon-length-l (get-text-property
-;;                                              0
-;;                                              'ecb-vc-ascii-icon-length
-;;                                              l0))
-;;                     (vc-ascii-icon-length-r (get-text-property
-;;                                              0
-;;                                              'ecb-vc-ascii-icon-length
-;;                                              r0))
-;;                     (prefix-length-l (or vc-ascii-icon-length-l
-;;                                          (or (get-text-property
-;;                                               0
-;;                                               'tree-buffer-image-length
-;;                                               l0)
-;;                                              0)))
-;;                     (prefix-length-r (or vc-ascii-icon-length-r
-;;                                          (or (get-text-property
-;;                                               0
-;;                                               'tree-buffer-image-length
-;;                                               r0)
-;;                                              0)))
-;;                     (l1 (substring l0 prefix-length-l))
-;;                     (r1 (substring r0 prefix-length-r))
-;;                     (ext-l (ecb-file-name-extension l1 t))
-;;                     (ext-r (ecb-file-name-extension r1 t)))
-;;                (if (ecb-string= ext-l ext-r ecb-history-sort-ignore-case)
-;;                    (ecb-string< l1 r1 ecb-history-sort-ignore-case)
-;;                  (ecb-string< ext-l ext-r ecb-history-sort-ignore-case))))))
-;;          (otherwise
-;;           (function (lambda (l r)
-;;                       nil))))))))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: remove this later and all
-;; references because this is included in the new mechanism
-;; `ecb-add-buffers-to-history-new'!
-(defun ecb-update-history-window (&optional filename)
-  "Updates the history window and highlights the item for FILENAME if given."
-  (ecb-exec-in-window ecb-history-buffer-name
-    (tree-buffer-update)
-    (tree-buffer-highlight-node-by-data/name
-     (if filename
-         (ecb-source-make filename (get-file-buffer filename))))))
 
 
 ;; XXXX (changed for indirect-buffers)

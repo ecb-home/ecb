@@ -156,7 +156,11 @@
     
 ** Fixed Bugs
 
-*** Fixed a bug which prevented `ecb-rebuild-methods-buffer' to work correctly
+*** Fixed a bug which prevented `ecb-rebuild-methods-buffer' from working
+    correctly
+
+*** Fixed a bug in the internals of the methods-filter which prevented
+    all commands `ecb-methods-filter-*' from working correctly.
 
 *** Fixed problems with the internal download of newer ECB-versions
     Seems that two different URLs are needed:
