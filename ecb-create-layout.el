@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-create-layout.el,v 1.33 2009/04/15 14:22:35 berndl Exp $
+;; $Id: ecb-create-layout.el,v 1.34 2009/04/21 15:23:22 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -668,7 +668,7 @@ never selects the edit-window."
   (setq major-mode 'ecb-create-layout-mode)
   (setq mode-name "ECB Create-Layout")
   (use-local-map ecb-create-layout-mode-map)
-  (make-variable-buffer-local 'buffer-read-only)
+  (make-local-variable 'buffer-read-only)
   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Scheint nicht mehr zu
   ;; funktionieren.
   (ecb-mode-line-set (buffer-name (current-buffer))

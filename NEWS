@@ -1,4 +1,19 @@
-* Changes for ECB version 2.33beta2
+* Changes for ECB version 2.33
+
+** ECB now requires full CEDET-suite being installed (at least version 1.0pre6)
+
+   This means the support for the single packages semantic 1.4.X, eieio 0.X
+   and speedbar 0.X is completely switched off.
+
+   As a consequence ECB is no longer runnable as XEmacs-package via the
+   package-manager of XEmacs. This is because CEDET is not available as
+   XEmacs-package. Therefore ECB can also not be run as XEmacs-package. If
+   CEDET will later become a XEmacs-package then probably ECB will come back
+   as XEmacs-package. But in the meanwhile you have to install ECB "by hand".
+
+   In general the current CEDET is much more powerful than older
+   semantic-versions and ECB uses this power, especially the power of the
+   semantic-analyzer.
 
 ** More user-responsible buffer-parsing based on the idle-mechanism of semantic
 
@@ -41,7 +56,7 @@
    immediatelly and not interruptable (as with the idle-scheduler of
    semantic), which can be quite annoying with big source-files.
 
-** ECB is able to work with indirect buffers it the base-buffer is filebased
+** ECB is able to work with indirect buffers if the base-buffer is filebased
 
    Now you can work with indirect-buffers as well as with normal file-buffers,
    i.e. indirect buffers are shown in the historyÅ¥, their contents are
@@ -153,7 +168,13 @@
     external member-functions (as in C++ or eieio).
 
 *** ECB now works very well with semantic-idle-scheduler-mode (s.a.)
-    
+
+** The commands `ecb-download-ecb' and `ecb-download-semantic' are deactivated
+   These features are not supported anymore. It costs two much effort to keep
+   the needed links and mechanism to the sourceforge-download-area up to date.
+   Please download the needed release-archives and extract and install as
+   described in the shipped README rsp. INSTALL-files.
+
 ** Fixed Bugs
 
 *** Fixed a bug which prevented `ecb-rebuild-methods-buffer' from working
@@ -161,20 +182,6 @@
 
 *** Fixed a bug in the internals of the methods-filter which prevented
     all commands `ecb-methods-filter-*' from working correctly.
-
-*** Fixed problems with the internal download of newer ECB-versions
-    Seems that two different URLs are needed:
-    - "ftp://ftp1.sourceforge.net/pub/sourceforge/e/ec/ecb/" (see variable
-      `ecb-packagelist-ecb-url') for getting a list of all available
-      package-versions
-    - "http://ftp1.sourceforge.net/ecb/" (see option `ecb-download-ecb-url')
-      for the real download of a certain version of the package (e.g.
-      ecb-2.32.tar.gz)
-    Downloading does not work with the former one and getting a packagelist is
-    not possible with the latter one. Therefore ECB now uses both URLs.
-
-    REMARK: Theres no guarantee that this feature works correctly! It is
-    deprecated and will not be supported anymore.
 
 *** Fixed context-menu for VC-operations in the sources- and history-window
     Now all vc-commands are called interactively by ECB.

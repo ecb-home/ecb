@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.71 2009/04/15 14:22:35 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.72 2009/04/21 15:23:22 berndl Exp $
 
 ;;; Commentary:
 
@@ -66,7 +66,7 @@
 
 (require 'speedbar)
 (require 'ecb-util)
-(require 'ecb-semantic-wrapper)
+(require 'ecb-cedet-wrapper)
 (require 'ecb-common-browser)
 
 (eval-when-compile
@@ -254,9 +254,9 @@ the point was not set by `mouse-set-point'."
              (window-live-p ecb-last-edit-window-with-point)
              (equal (window-buffer ecb-last-edit-window-with-point)
                     ecb-last-source-buffer))
-;;     (select-window ecb-last-edit-window-with-point)
-;;     (set-buffer ecb-last-source-buffer)
-    nil
+    (select-window ecb-last-edit-window-with-point)
+    (set-buffer ecb-last-source-buffer)
+;;     nil
     ))
 
 (defun ecb-speedbar-select-speedbar-window ()
@@ -328,7 +328,9 @@ future this could break."
         (if dframe-track-mouse-function
             (set (make-local-variable 'track-mouse) t)) ;this could be messy.
         ;; disable auto-show-mode for Emacs
-        (setq auto-show-mode nil))))
+        ;; obsolete with beginning of Emacs 21...
+;;         (setq auto-show-mode nil)
+        )))
 
   ;;Start up the timer
   (speedbar-reconfigure-keymaps)

@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.76 2007/07/08 16:42:03 berndl Exp $
+;; $Id: ecb-html.el,v 1.77 2009/04/21 15:23:19 berndl Exp $
 
 ;;; Code:
 
@@ -77,6 +77,11 @@
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
       `(
+        ,(h-sub-section "ECB 2.33 released! (2009-04-??)"
+                        "ECB now requires full CEDET being installed (at least 1.0pre6). ECB has now more user-responsible buffer-parsing based on the idle-mechanism of semantic. ECB is able to work with indirect buffers it the base-buffer is filebased. It has a complete reworked history-buffer which can be bucketized and shows dead- and indirect-buffers in different faces. It has new support for Git and Monotone as version-control systems and is now much more compatible with GNU Emacs >= 22. In addition a lot of bugs are fixed."
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 2.32 released! (2005-07-11)"
                         "ECB offers now two new interactors (special ecb-windows): One for the semantic-analyser (of cedet) and one for displaying the definition of current symbol at point. In addition the up- and down-arrow-keys are also smart in the tree-buffers. Much better maximizing and minimizing of the ecb-windows. Support for (X)Emacs < 21 has been officialy removed. Full documentation of the library tree-buffer.el. Some important bug-fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
@@ -87,18 +92,18 @@
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
+        ))
+
+(defvar ecb-rest-news nil
+  "List of older news - these news are displayed in all-news.html ; see ;; ;; ;; ;; ;;
+`ecb-html-all-news'.")
+(setq ecb-rest-news
+      `(
         ,(h-sub-section "ECB 2.30.1 released! (2004-12-01)"
                         "This is mostly a bug-fix-release which fixes the errors occured at load-time with ECB 2.30. In addition there are some enhancements to the VC-support introduced first with ECB 2.30. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
-        ))
-
-(defvar ecb-rest-news nil
-  "List of older news - these news are displayed in all-news.html ; see
-`ecb-html-all-news'.")
-(setq ecb-rest-news
-      `(
         ,(h-sub-section "ECB 2.30 released! (2004-11-26)"
                         "ECB can now display the version-control state of files in the tree-buffers; state is displayed with new image-icons. ECB is now capable of handling remote paths (e.g. TRAMP-, ANGE-FTP- or EFS-paths). Much better performance because all time consuming tasks (e.g. checking directories for emptyness or checking the VC-state) are performed stealthy. Now the current node in the methods-buffer can be expanded very precisely via new commands in the popup-menu. ECB has now the new upgrade policy \"Never touching the customization-files of a user without asking\". Some bug fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
@@ -270,8 +275,9 @@
               (h-p (h-bullet-list
                     "A directory tree,"
                     "a list of source files in the current directory,"
-                    "a list of functions/classes/methods/... in the current file, (ECB uses the Semantic Bovinator, or Imenu, or etags, for getting this list so all languages supported by any of these tools are automatically supported by ECB too)"
+                    "a list of functions/classes/methods/... in the current file, (ECB uses the CEDET-semantic, or Imenu, or etags, for getting this list so all languages supported by any of these tools are automatically supported by ECB too)"
                     "a history of recently visited files,"
+                    "a direct interactor for the semantic-analyzer for some intellisense,"
                     "the Speedbar and"
                     (concat "output from compilation (the " (h-i "compilation") " window) and other modes like help, grep etc. or whatever a user defines to be displayed in this window.")
                     ))
@@ -292,9 +298,10 @@
    (h-section "Dependencies"
 	      (h-bullet-link-list
 	       ecb-bullet
-	       '(("http://cedet.sourceforge.net/semantic.shtml" "Semantic Bovinator" "Version 1.4 or higher.")
-		 ("http://cedet.sourceforge.net/eieio.shtml" "EIEIO" "Version 0.17 or higher.")
-		 ("http://cedet.sourceforge.net/speedbar.shtml" "Speedbar" "Version 0.14beta1 or higher.")
+	       '(("http://cedet.sourceforge.net" "Full CEDET suite (Strongly recommended)" "Newest release offered at website - at least 1.0preX.")
+                 ("http://cedet.sourceforge.net/semantic.shtml" "Semantic Bovinator (outdated)" "Version 1.4 or higher.")
+		 ("http://cedet.sourceforge.net/eieio.shtml" "EIEIO (outdated)" "Version 0.17 or higher.")
+		 ("http://cedet.sourceforge.net/speedbar.shtml" "Speedbar (outdated)" "Version 0.14beta1 or higher.")
 		 ("http://jdee.sunsite.dk" "JDEE (optional)" "If you use ECB for Java development."))
 		 "_top")
 	      (h-p "If you use XEmacs you must have installed the packages mail-lib and c-support (contains hideshow.el)."))
@@ -304,8 +311,6 @@
 	       ecb-bullet
 	       '(
 		 ("mailto:klaus.berndl@sdm.de" "Klaus Berndl")
-		 ("mailto:mayhem@home.se" "Jesper Nordenberg")
-		 ("mailto:burton@apache.org" "Kevin A. Burton")
 		 ("mailto:zappo@gnu.org" "Eric M. Ludlam")
 		 )))
 
@@ -398,7 +403,7 @@
      (h-img ecb-bullet) " " (h-link ecb-gz-url (h-b ecb-gz-name)))
      (h-p
       (h-b "Hosted by: ") h-br
-      (h-link "http://sourceforge.net/projects/ecb" '(target . "_top") (h-img "http://sourceforge.net/sflogo.php?group_id=17484&type=1" "width='88' height='31' border='0' alt='SourceForge Logo'")))
+      (h-link "http://sourceforge.net/projects/ecb" '(target . "_top") (h-img "http://sflogo.sourceforge.net/sflogo.php?group_id=17484&amp;type=13" "width='120' height='30' border='0' alt='Get ECB at SourceForge.net. Fast, secure and Free Open Source software downloads'")))
      (h-p
       (h-b "Updated: ") h-br
       (h-date))
@@ -445,16 +450,6 @@
        "_top"))
      (h-line)
      (h-sub-section
-      "Download Documentation"
-      (h-bullet-link-list
-       ecb-bullet
-       (list
-        `(,ecb-pdf-gz-url ,ecb-pdf-gz-name "Usermanual in PDF format - gzipped.")
-        `(,ecb-pdf-zip-url ,ecb-pdf-zip-name "Usermanual in PDF format - zipped.")
-        )
-       "_top"))
-     (h-line)
-     (h-sub-section
       "Download Patches"
       (concat "There are no patches available for current ECB " ecb-version "!"))
 ;;       (concat "Available patches for ECB " ecb-version ":")
@@ -481,8 +476,8 @@
       (h-bullet-link-list
        ecb-bullet
        (list
-        '("http://www.python.org/emacs" "winring.el" "A nifty window-manager written by Barry A. Warsaw")
-        '("http://www.splode.com/~friedman/software/emacs-lisp/" "escreen.el" "Another nifty window-manager written by Noah Friedman")
+        '("http://www.python.org/emacs/winring/" "winring.el" "A nifty window-manager written by Barry A. Warsaw")
+        '("http://www.splode.com/~friedman/software/emacs-lisp/#ui" "escreen.el" "Another nifty window-manager written by Noah Friedman")
         )
        "_top"))
      (h-line)

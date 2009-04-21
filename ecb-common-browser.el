@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.30 2009/04/15 14:22:35 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.31 2009/04/21 15:23:22 berndl Exp $
 
 
 ;;; History
@@ -1062,7 +1062,10 @@ Currently there are the following subcaches managed within this cache:
 ;; directory separator
 
 (defconst ecb-directory-sep-char
-  (if ecb-running-xemacs directory-sep-char ?/))
+  (if ecb-running-xemacs
+      ;; to avoid compiler complainings
+      (symbol-value 'directory-sep-char)
+    ?/))
 
 (defsubst ecb-directory-sep-char (&optional refdir)
   (if (or (null refdir)

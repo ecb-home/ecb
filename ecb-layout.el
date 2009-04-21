@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.262 2009/04/16 15:51:37 berndl Exp $
+;; $Id: ecb-layout.el,v 1.263 2009/04/21 15:23:22 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1339,10 +1339,10 @@ is no compile-window displayed."
 
 ;; ====== basic advices ======================================================
 
-(defecb-advice-set ecb-basic-adviced-functions
+(defecb-advice-set ecb-layout-basic-adviced-functions
   "All functions  needed to be adviced for the layout-engine of ECB.")
 
-(defecb-advice delete-frame around ecb-basic-adviced-functions
+(defecb-advice delete-frame around ecb-layout-basic-adviced-functions
   "If FRAME is equal to the ECB frame then the user will be asked if he want
 to proceed. If yes then ECB will be deactivated before deleting FRAME. If ECB
 is not activated or FRAME is not equal the ECB-frame then this advice is
@@ -1367,7 +1367,7 @@ either not activated or it behaves exactly like the original version!"
 ;; we have not to deal with special variables like `grep-window-height' (see
 ;; `define-compilation-mode') in the functions `compilation-set-window-height'
 ;; and `ecb-toggle-compile-window-height'!
-(defecb-advice compilation-set-window-height around ecb-basic-adviced-functions
+(defecb-advice compilation-set-window-height around ecb-layout-basic-adviced-functions
   "Makes the function compatible with ECB."
   (if (not (equal (window-frame (ad-get-arg 0)) ecb-frame))
       (ecb-with-original-basic-functions
@@ -1417,7 +1417,7 @@ either not activated or it behaves exactly like the original version!"
 ;; We need this advice only because the ugly implementation of Emacs:
 ;; `scroll-other-window' uses per default not the function
 ;; `other-window-for-scrolling'.
-(defecb-advice scroll-other-window around ecb-basic-adviced-functions
+(defecb-advice scroll-other-window around ecb-layout-basic-adviced-functions
   "See the advice-documentation of `other-window-for-scrolling' to get all
 details which window will be scrolled."
   (if (or (not ecb-minor-mode)
@@ -1518,7 +1518,7 @@ arguments. Do never set this variable; it is only set by
  ;; older XEmacsen the newest display-buffer- and
  ;; shrink-to-fit-mechanism. How this is done is described at beginning
  ;; of `ecb-display-buffer-xemacs'.
- (defecb-advice show-temp-buffer-in-current-frame around ecb-basic-adviced-functions
+ (defecb-advice show-temp-buffer-in-current-frame around ecb-layout-basic-adviced-functions
    "Makes the function compatible with ECB."
    (let ((pre-display-buffer-function nil)) ; turn it off, whatever it is
      ;; Here we run our display-buffer-version which in turn calls
@@ -1557,7 +1557,7 @@ arguments. Do never set this variable; it is only set by
        nil)))
       
  ;; XEmacs-version
- (defecb-advice shrink-window-if-larger-than-buffer around ecb-basic-adviced-functions
+ (defecb-advice shrink-window-if-larger-than-buffer around ecb-layout-basic-adviced-functions
    "Makes the function compatible with ECB."
    (or (ad-get-arg 0) (ad-set-arg 0 (selected-window)))
    (ecb-layout-debug-error "shrink-window-if-larger-than-buffer: window: %s"
@@ -1638,7 +1638,7 @@ arguments. Do never set this variable; it is only set by
                                     nil
                                     (ad-get-arg 0))))))))))
       
- (defecb-advice pop-to-buffer around ecb-basic-adviced-functions
+ (defecb-advice pop-to-buffer around ecb-layout-basic-adviced-functions
    "Chooses the window with the ECB-adviced version of `display-buffer'."
    ad-do-it
    (when (and (equal (selected-frame) ecb-frame)
@@ -1651,7 +1651,7 @@ arguments. Do never set this variable; it is only set by
 
 (when-ecb-running-emacs
  ;; only GNU Emacs basic advices
- (defecb-advice mouse-drag-vertical-line around ecb-basic-adviced-functions
+ (defecb-advice mouse-drag-vertical-line around ecb-layout-basic-adviced-functions
    "Allows manually window-resizing even if `ecb-fix-window-size' is not nil
 for current layout."
    (if (and ecb-minor-mode
@@ -1662,7 +1662,7 @@ for current layout."
      ad-do-it))
 
 
- (defecb-advice mouse-drag-mode-line around ecb-basic-adviced-functions
+ (defecb-advice mouse-drag-mode-line around ecb-layout-basic-adviced-functions
    "Allows manually window-resizing even if `ecb-fix-window-size' is not nil
 for current layout."
    (if (and ecb-minor-mode
@@ -1674,7 +1674,7 @@ for current layout."
        (ecb-do-with-unfixed-ecb-buffers ad-do-it)
      ad-do-it))
 
- (defecb-advice enlarge-window around ecb-basic-adviced-functions
+ (defecb-advice enlarge-window around ecb-layout-basic-adviced-functions
    "Allows manually window-resizing even if `ecb-fix-window-size' is not nil
 for current layout."
    (if (and ecb-minor-mode
@@ -1685,7 +1685,7 @@ for current layout."
        (ecb-do-with-unfixed-ecb-buffers ad-do-it)
      ad-do-it))
 
- (defecb-advice shrink-window around ecb-basic-adviced-functions
+ (defecb-advice shrink-window around ecb-layout-basic-adviced-functions
    "Allows manually window-resizing even if `ecb-fix-window-size' is not nil
 for current layout."
    (if (and ecb-minor-mode
@@ -1697,7 +1697,7 @@ for current layout."
        (ecb-do-with-unfixed-ecb-buffers ad-do-it)
      ad-do-it))
 
- (defecb-advice shrink-window-if-larger-than-buffer around ecb-basic-adviced-functions
+ (defecb-advice shrink-window-if-larger-than-buffer around ecb-layout-basic-adviced-functions
    "Makes the function compatible with ECB."
    (or (ad-get-arg 0) (ad-set-arg 0 (selected-window)))
    (ecb-layout-debug-error "shrink-window-if-larger-than-buffer: window: %s"
@@ -1736,7 +1736,7 @@ for current layout."
              (fit-window-to-buffer (ad-get-arg 0)
                                    (ecb-window-full-height (ad-get-arg 0))))))))
 
- (defecb-advice resize-temp-buffer-window around ecb-basic-adviced-functions
+ (defecb-advice resize-temp-buffer-window around ecb-layout-basic-adviced-functions
    "Makes the function compatible with ECB."
    (ecb-layout-debug-error "resize-temp-buffer-window: buffer: %s, window: %s, frame: %s"
                            (current-buffer) (selected-window) (selected-frame))
@@ -1777,7 +1777,7 @@ for current layout."
                 (funcall temp-buffer-max-height (current-buffer))
               temp-buffer-max-height)))))))
 
- (defecb-advice pop-to-buffer around ecb-basic-adviced-functions
+ (defecb-advice pop-to-buffer around ecb-layout-basic-adviced-functions
    "Chooses the window with the ECB-adviced version of `display-buffer'."
    (if (or (not ecb-minor-mode)
            (null (ad-get-arg 0)))
@@ -2217,8 +2217,8 @@ of `temp-buffer-show-function'."
   "Evaluates BODY with all adviced basic-functions of ECB deactivated \(means
 with their original definition). Restores always the previous state of the ECB
 adviced basic-functions, means after evaluating BODY it activates the advices
-of exactly the functions in `ecb-basic-adviced-functions'!"
-  `(ecb-with-original-adviced-function-set 'ecb-basic-adviced-functions
+of exactly the functions in `ecb-layout-basic-adviced-functions'!"
+  `(ecb-with-original-adviced-function-set 'ecb-layout-basic-adviced-functions
      ,@body))
 
 (defecb-advice-set ecb-permanent-adviced-functions
@@ -2756,7 +2756,7 @@ variable is strictly only for internal usage!")
 ;; `display-buffer' can use (by setting the not choosable windows temporarly
 ;; dedicated) but the real choosing-task is done by the function
 ;; itself - this is much better and smarter than implementing the whole stuff.
-(defecb-advice display-buffer around ecb-basic-adviced-functions
+(defecb-advice display-buffer around ecb-layout-basic-adviced-functions
   "Makes this function compatible with ECB if called in or for the ecb-frame.
 It displays all buffers which are \"compilation-buffers\" in the sense of
 `ecb-compilation-buffer-p' in the compile-window of ECB. If the compile-window
@@ -3154,7 +3154,7 @@ NTH-WINDOW is nil then it is treated as 1."
                                        point-loc
                                        nth-window)))))))
 
-(defecb-advice other-window around ecb-basic-adviced-functions
+(defecb-advice other-window around ecb-layout-basic-adviced-functions
   "The ECB-version of `other-window'. Works exactly like the original function
 with the following ECB-adjustment: The behavior depends on
 `ecb-other-window-behavior'."
@@ -3169,7 +3169,7 @@ with the following ECB-adjustment: The behavior depends on
       (select-window o-w))))
 
 
-(defecb-advice delete-windows-on around ecb-basic-adviced-functions
+(defecb-advice delete-windows-on around ecb-layout-basic-adviced-functions
   "The ECB-version of `delete-windows-on'. Works exactly like the original
 function with the following ECB-adjustment:
 
@@ -3273,7 +3273,7 @@ reported but `delete-window' will be executed correctly."
       (error (ecb-warning "Before-advice delete-window (error-type: %S, error-data: %S)"
                           (car oops) (cdr oops))))))
 
-(defecb-advice delete-window around ecb-basic-adviced-functions
+(defecb-advice delete-window around ecb-layout-basic-adviced-functions
   "The ECB-version of `delete-window'. Works exactly like the original
 function with the following ECB-adjustment:
 
@@ -3358,7 +3358,7 @@ reported but `delete-window' will be executed correctly."
       (error (ecb-warning "Before-advice delete-other-windows (error-type: %S, error-data: %S)"
                           (car oops) (cdr oops))))))
 
-(defecb-advice delete-other-windows around ecb-basic-adviced-functions
+(defecb-advice delete-other-windows around ecb-layout-basic-adviced-functions
   "The ECB-version of `delete-other-windows'. Works exactly like the
 original function with the following ECB-adjustment:
 
@@ -3420,7 +3420,7 @@ behavior depends on `ecb-advice-window-functions-signal-error'."
               (ecb-maximize-ecb-buffer (buffer-name (window-buffer window)) t)))))))
             
   
-(defecb-advice split-window-horizontally around ecb-basic-adviced-functions
+(defecb-advice split-window-horizontally around ecb-layout-basic-adviced-functions
   "The ECB-version of `split-window-horizontally'. Works exactly like the
 original function with the following ECB-adjustment:
 
@@ -3439,7 +3439,7 @@ if this `split-window-horizontally' is not contained in the option
       (ecb-select-edit-window))
     ad-do-it))
 
-(defecb-advice split-window-vertically around ecb-basic-adviced-functions
+(defecb-advice split-window-vertically around ecb-layout-basic-adviced-functions
   "The ECB-version of `split-window-vertically'. Works exactly like the
 original function with the following ECB-adjustment:
 
@@ -3483,7 +3483,7 @@ an error occurs during this before-advice then it will be reported but
                           (car oops) (cdr oops))))))
       
 
-(defecb-advice split-window around ecb-basic-adviced-functions
+(defecb-advice split-window around ecb-layout-basic-adviced-functions
   "The ECB-version of `split-window'. Works exactly like the original function
 with the following ECB-adjustment:
 
@@ -3519,7 +3519,7 @@ version."
             (ecb-error "Only the edit-windows of ECB are split-able!")
           (setq ad-return-value (selected-window)))))))
 
-(defecb-advice switch-to-buffer-other-window around ecb-basic-adviced-functions
+(defecb-advice switch-to-buffer-other-window around ecb-layout-basic-adviced-functions
   "The ECB-version of `switch-to-buffer-other-window'. Works exactly like the
 original but with some adaptions for ECB so this function works in a
 \"natural\" way:
@@ -3561,7 +3561,7 @@ for compilation-buffers \(if a compile-window is used, see above)."
 ;; because with XEmacs there is an error max-lisp-eval-depth exceeded. XEmacs
 ;; implements display-buffer (which is called by pop-to-buffer) internally
 ;; with switch-to-buffer so there is an bidirectional dependency - ugly :-(
-(defecb-advice switch-to-buffer around ecb-basic-adviced-functions
+(defecb-advice switch-to-buffer around ecb-layout-basic-adviced-functions
   "The ECB-version of `switch-to-buffer'. Works exactly like the original but
 with the following enhancements for ECB:
 
@@ -3614,7 +3614,7 @@ an error is reported."
       ;; `ecb-enlarged-compilation-window-max-height'
       (ecb-set-compile-window-height))))
 
-(defecb-advice other-window-for-scrolling around ecb-basic-adviced-functions
+(defecb-advice other-window-for-scrolling around ecb-layout-basic-adviced-functions
   "This function determines the window which is scrolled if any of the
 \"other-window-scrolling-functions\" is called \(e.g. `scroll-other-window'):
 
@@ -3667,7 +3667,7 @@ macro `ecb-with-ecb-advice' instead if you need this adviced version of
                           (ad-get-arg 2)))))
     ad-do-it))
 
-(defecb-advice balance-windows around ecb-basic-adviced-functions
+(defecb-advice balance-windows around ecb-layout-basic-adviced-functions
   "When called in the `ecb-frame' then only the edit-windows are balanced."
   (if (and ecb-minor-mode
            (equal (selected-frame) ecb-frame)
@@ -4208,7 +4208,7 @@ Preconditions for CREATE-CODE:
    selected for types left, right and top. For type left-right the left
    column-window is selected.
 
-4. All ECB-advices for the functions in `ecb-basic-adviced-functions' are
+4. All ECB-advices for the functions in `ecb-layout-basic-adviced-functions' are
    disabled!
 
 Things CREATE-CODE has to do:
@@ -4433,8 +4433,14 @@ WINDOW-CONFIG must be got from the adviced version of
               (list ecb-frame ecb-layout-name ecb-compile-window-height
                     ecb-compile-window-width
                     ecb-windows-width ecb-windows-height))))
-              
-(defecb-advice current-window-configuration after ecb-basic-adviced-functions
+
+;; (defecb-advice make-indirect-buffer after ecb-layout-basic-adviced-functions
+;;   "a testerli"
+;;   (if (ad-get-arg 2) ;; third argument clone is not nil
+;;       t ;; clear the toplevel cache
+;;       ))
+
+(defecb-advice current-window-configuration after ecb-layout-basic-adviced-functions
   "Stores some additional informations about the window-configurations needed
 by ECB."
   (condition-case oops
@@ -4469,7 +4475,7 @@ by ECB."
   ad-return-value)
 
 
-(defecb-advice set-window-configuration after ecb-basic-adviced-functions
+(defecb-advice set-window-configuration after ecb-layout-basic-adviced-functions
   "Resets some internal window-configuration-states needed by ECB. These
 internal ECB-states were stored by `current-window-configuration' in a
 ring-cache as add-on to CONFIGURATION."

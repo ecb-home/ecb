@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-symboldef.el,v 1.4 2009/03/20 16:35:10 berndl Exp $
+;; $Id: ecb-symboldef.el,v 1.5 2009/04/21 15:23:22 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -47,7 +47,7 @@
 (require 'ecb-util)
 (require 'ecb-layout)
 (require 'ecb-common-browser)
-(require 'ecb-semantic-wrapper)
+(require 'ecb-cedet-wrapper)
 
 (eval-when-compile
   (require 'silentcomp))

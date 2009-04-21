@@ -1,6 +1,6 @@
 \input texinfo   @c -*-texinfo-*-
 
-@c Copyright (C) 2000 - 2005 Jesper Nordenberg,
+@c Copyright (C) 2000 - 2009 Jesper Nordenberg,
 @c                           Klaus Berndl,
 @c                           Kevin A. Burton,
 @c                           Free Software Foundation, Inc.
@@ -23,7 +23,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.214 2009/03/20 16:35:10 berndl Exp $
+@c $Id: ecb.texi,v 1.215 2009/04/21 15:23:22 berndl Exp $
 
 @setfilename ecb.info
 
@@ -46,7 +46,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-2.33beta2
+2.33
 @end macro
 
 
@@ -59,7 +59,7 @@
 @sp 10
 @center @titlefont{ECB version @ecbver{} - User manual}
 @vskip 0pt plus 1 fill
-Copyright @copyright{} 2000, 2001, 2002 Jesper Nordenberg, Klaus Berndl
+Copyright @copyright{} 2000 - 2009 Jesper Nordenberg, Klaus Berndl
 @end titlepage
 
 @node Top, Install and first steps, (dir), (dir)
@@ -81,10 +81,13 @@ The informational windows can contain:
 @item A directory tree,
 @item a list of source files in the current directory,
 @item a list of functions/classes/methods/... in the current file,
-(ECB uses the Semantic Bovinator, or Imenu, or etags, for getting this
+(ECB uses the CEDET-Semantic, or Imenu, or etags, for getting this
 list so all languages supported by any of these tools are
 automatically supported by ECB too)
-@item a history of recently visited files, 
+@item a history of recently visited files,
+@item helpful informations and possible completions according to the current
+context which is computed by the semantic-analyzer for some sort of
+intellisense,
 @item the Speedbar and
 @item output from compilation (the "*compilation*" window) and other
 modes like help, grep etc. or whatever a user defines to be displayed
@@ -185,13 +188,14 @@ Installation and first steps of ECB
 
 Installation of ECB
 
-* XEmacs Installation::         Installation of ECB for XEmacs users
-* GNU Emacs Installation::      Installation of ECB for GNU Emacs users
+* Requirements::                Requirements for ECB
+* ECB as XEmacs-package::       Installation of ECB as a XEmacs-package
+* Standard ECB-Installation::   Standard installation of ECB for (X)Emacs
 
 How to set up Emacs for file parsing with ECB
 
 * General hints::               General hints for a correct setup
-* Setting up semantic::         How to setup semantic correctly
+* Setting up CEDET/semantic::   How to setup semantic correctly
 * Non-semantic files::          Setup for file types not supported by semantic
 
 All interactors of ECB
@@ -346,7 +350,7 @@ Entry points for Elisp programmers
 
 * List of variables::           Which variables an Elisp-program can use
 * List of hooks::               All available hooks
-* tree-buffer::                 Some words to the tree-buffer-library
+* tree-buffer::                 Full description of the tree-buffer-library
 * Adviced functions::           How to deal with the adviced functions
 * The layout-engine::           Programming new layouts and special windows
 
@@ -357,7 +361,7 @@ The library tree-buffer.el
 * A new tree-node::             How to add new tree-nodes to a tree-buffer
 * Updating a tree-buffer::      How to update a tree-buffer after changes
 * Tree-buffer keybindings::     Default and customizable keybindings
-* The tree-buffer-API::         All functions available for tree-buffers
+* The tree-buffer-API::         All functions for tree-buffers and -nodes
 * Do not with tree-buffer::     Things which are strictly forbidden
 * Tree-buffer How to::          Dealing with special situations
 
@@ -394,130 +398,139 @@ and what are the first steps after activation of ECB.
 This section describes how to install ECB.
 
 @menu
-* XEmacs Installation::         Installation of ECB for XEmacs users
-* GNU Emacs Installation::      Installation of ECB for GNU Emacs users
+* Requirements::                Requirements for ECB
+* ECB as XEmacs-package::       Installation of ECB as a XEmacs-package
+* Standard ECB-Installation::   Standard installation of ECB for (X)Emacs
 @end menu
 
-@node XEmacs Installation, GNU Emacs Installation, Installation, Installation
-@subsection Installation of ECB for XEmacs users
+@node Requirements, ECB as XEmacs-package, Installation, Installation
+@subsection Requirements
 
-Basic requirement: ECB requires a XEmacs-version >= 21!
-
-For XEmacs-users it is strongly recommended to use the
-package-management-system of XEmacs for first-time
-downloading/installing ECB or for upgrading to a newer version of ECB.
-Here is a short guide (for details about the package-manager of XEmacs
-see the related info-manual):
-
-@strong{Caution}: If ECB is already installed and you just want
-upgrading to a newer version then it is recommended to deactivate ECB
-before proceeding with the steps below!
+This section describes the requirements of ECB. Just follow these steps and
+the requirements of ECB are fulfilled.
 
 @enumerate
-@item Choose a download-site
 
-This can be done via the menu ``Tools --> Packages --> Add Download
-Site'': Choose one of the listed sites. Or you can customize the
-option @code{package-get-remote} by hand and save it for future
-sessions.
+@item Emacs-version:
+ECB works only with (X)Emacs >= 21! If you have an older one, please upgrade.
 
-@item Activate the packages list
+@item Install CEDET-suite:
+Get it from @url{http://cedet.sourceforge.net}, read the setup-instructions in
+@url{http://cedet.sourceforge.net/setup.shtml} and read also the shipped file
+@file{INSTALL}.
 
-This can be done either by the menu ``Tools --> Packages --> List and
-Install'' or via the command @code{pui-list-packages}. After that a
-special packages-buffer is displayed where you can interactively
-install or upgrade packages. At the end of this buffer there is a
-short description how to use this buffer.
+@item Only for XEmacs-users:
+If you use XEmacs you must have installed the
+package c-support (contains hideshow.el). If you want to read the online-help
+of ECB in HTML-format you must have the library browse-url (part of the
+mail-lib XEmacs package) installed; this package is also needed for submitting
+problem-reports to the ECB-maintainers!
 
-@item Install ECB and all required packages
-
-Mark the package named ``ecb'' for install. Do this also for the
-required packages ``semantic'', ``eieio'' and ``speedbar''. The
-package ``mail-lib'' is needed for easy submitting of problem-reports
-to the ECB-maintainers and the package ``c-support'' is needed for
-easy using hideshow within the Methods-buffer of ECB@footnote{All
-required packages can simply autom. marked by hitting @kbd{r} in the
-packages buffer. But this installs a lot of packages more (e.g. the
-Newsreader Gnus) which are really not essential for ECB. Therefore it
-is recommended to mark the required packages by hand.}.
-
-After marking all needed packages for installation hit @kbd{x} to
-install them.
-
-If you have already installed ECB and you want just upgrading to the
-latest available version then proceed as described above - same if you
-want to upgrade one of the required packages.
-
-@item Start ECB
-
-Now you can immediately start ECB via the command @code{ecb-activate};
-there is no need to restart XEmacs! As an alternative you can first
-read the online-help via @code{ecb-show-help}.
+@item Optional for Java-coding:
+If Java code is edited the ECB works best when the JDEE package (
+@url{http://jdee.sourceforge.net}) is installed.
 
 @end enumerate
 
-If you do not like the package-manager of XEmacs but you want
-installing ECB ``by hand'' direct from the ECB-website then you have
-to follow the instructions for GNU Emacs, see @ref{GNU Emacs Installation}.
+Do not install ECB before you have successfully installed the requirements!
 
-@node GNU Emacs Installation, , XEmacs Installation, Installation
-@subsection Installation of ECB for GNU Emacs users
+@node ECB as XEmacs-package, Standard ECB-Installation, Requirements, Installation
+@subsection Installation of ECB as a XEmacs-package
 
-Basic requirement: ECB requires an Emacs-version >= 21!
+This section is only relevant for XEmacs-users!
 
-@strong{IMPORTANT}: If you are a XEmacs-user please read @ref{XEmacs
-Installation} before proceeding with the following instructions!
+In previous versions of ECB XEmacs-users could use the
+package-management-system of XEmacs for first-time downloading/installing ECB
+or for upgrading to a newer version of ECB.
 
-@c TODO: Klaus Berndl <klaus.berndl@sdm.de>: Remove this when we
-@c support upgrading also with cedet.
+Beginning with version 2.33 ECB does no longer support the old versions of
+semantic, eieio and speedbar not part of the CEDET-suite. ECB >= 2.33 requires
+fully installed CEDET-suite with version >= 1.0pre6. This one is not available as
+XEmacs-package. Therefore ECB can also not be run as XEmacs-package. If cedet
+will become a XEmacs-package then probably ECB will come back as
+XEmacs-package. But in the meanwhile you have to install ECB ``by hand'' as
+described in the next section (@pxref{Standard ECB-Installation}).
 
-@strong{Using the new cedet 1.0 suite}: From beginning with version
-2.01 ECB supports the next generation of the cedet-tools. But before
-the cedet 1.0 suite becomes stable this means that ECB runs correctly
-with loaded cedet 1.0 but the ECB-upgrading feature
-(@pxref{Downloading new versions}) does not support autom. upgrading
-to latest available cedet versions. This will be first available after
-first stable release of the new cedet-library 1.0.
+@c @strong{Recommendation}: If you are able to manually install ECB and its
+@c requirements as described in @ref{Standard ECB-Installation} then go on and
+@c proceed with that (you will see, it's easy). You will get a much more powerful
+@c ECB and also CEDET/semantic.
+@c  
+@c If you are desperate to use the package-management-system of ECB for
+@c installing ECB, then here is a short guide (for details about the
+@c package-manager of XEmacs see the related info-manual):
+@c  
+@c @strong{Caution}: If ECB is already installed and you just want
+@c upgrading to a newer version then it is recommended to deactivate ECB
+@c before proceeding with the steps below!
+@c  
+@c @enumerate
+@c @item Choose a download-site
+@c  
+@c This can be done via the menu ``Tools --> Packages --> Add Download
+@c Site'': Choose one of the listed sites. Or you can customize the
+@c option @code{package-get-remote} by hand and save it for future
+@c sessions.
+@c  
+@c @item Activate the packages list
+@c  
+@c This can be done either by the menu ``Tools --> Packages --> List and
+@c Install'' or via the command @code{pui-list-packages}. After that a
+@c special packages-buffer is displayed where you can interactively
+@c install or upgrade packages. At the end of this buffer there is a
+@c short description how to use this buffer.
+@c  
+@c @item Install ECB and all required packages
+@c  
+@c Mark the package named ``ecb'' for install. Do this also for the
+@c required packages ``semantic'', ``eieio'' and ``speedbar''. The
+@c package ``mail-lib'' is needed for easy submitting of problem-reports
+@c to the ECB-maintainers and the package ``c-support'' is needed for
+@c easy using hideshow within the Methods-buffer of ECB@footnote{All
+@c required packages can simply autom. marked by hitting @kbd{r} in the
+@c packages buffer. But this installs a lot of packages more (e.g. the
+@c Newsreader Gnus) which are really not essential for ECB. Therefore it
+@c is recommended to mark the required packages by hand.}.
+@c  
+@c After marking all needed packages for installation hit @kbd{x} to
+@c install them.
+@c  
+@c If you have already installed ECB and you want just upgrading to the
+@c latest available version then proceed as described above - same if you
+@c want to upgrade one of the required packages.
+@c  
+@c @item Start ECB
+@c  
+@c Now you can immediately start ECB via the command @code{ecb-activate};
+@c there is no need to restart XEmacs! As an alternative you can first
+@c read the online-help via @code{ecb-show-help}.
+@c  
+@c @end enumerate
+@c  
+@c If you do not like the package-manager of XEmacs but you want
+@c installing ECB ``by hand'' direct from the ECB-website then you have
+@c to follow the instructions in @ref{Standard ECB-Installation}.
 
-So, if the cedet 1.0 suite is loaded then the min- and max-version of
-semantic, eieio and speedbar (mentioned in the Requirements-section of
-the file @file{README}) have no relevance! If the new cedet 1.0 suite
-should be used then just install and load cedet 1.0 like described in
-the cedet-installation-instructions and go one with step 3. But ensure
-you have loaded - as described in the cedet-@file{INSTALL}-file
-- the file @file{/path/to/cedet/common/cedet.el} because otherwise
-cedet is not properly installed and ECB can not savely recognize that
-the new cedet-suite is loaded and should be used.
+@node Standard ECB-Installation,  , ECB as XEmacs-package, Installation
+@subsection Standard installation of ECB for (X)Emacs
+
+Follow exatly these steps to install ECB:
 
 @enumerate
 
 @item
-Download and unpack the ECB archive (probably you have already done
-this :-)
+Fulfill all requirements ECB needs (@pxref{Requirements})
 
-@item
-Read the file @file{README} in the ECB-directory and install the
-required semantic-, eieio- and speedbar-version@footnote{The
-speedbar-version shipped with GNU Emacs <= 21.3 does not satisfy the
-requirements for this feature - download a newer one!}.
-
-@strong{Please note}: ECB maybe requires a newer version of these
-libraries than shipped with (X)Emacs. You have to install exactly a
-version ECB requires and also to make sure that the correct version is
-loaded into (X)Emacs!
-
-But ECB performs two autom checks:
+ECB performs two autom checks:
 
 @itemize @minus
 @item At load-time:
-It checks if the packages semantic, eieio and speedbar are at least
-installed so ECB can be loaded. If not it offers to download and
-install them.
+It checks if cedet is at least installed so ECB can be loaded. If not it
+reports an error.
 
 @item At start-time:
-It checks if the correct versions of semantic, eieio and speedbar are
-installed and gives you proper feedback. @xref{Download required
-packages}.
+It checks if the correct versions of cedet and semantic are installed and
+gives you proper feedback.
 @end itemize
 
 So if you are not sure if you have installed the required packages at
@@ -527,14 +540,17 @@ installation steps: If ECB is missing something it will give you
 proper feedback and support not later than at load-time or start-time!
 
 @item
+Download and unpack the ECB archive (probably you have already done
+this :-)
+
+@item
 Add the new ECB-directory to your @code{load-path} variable.
 
-You @strong{MUST} add the ECB-install-directory to the
-@code{load-path} either by changing the @code{load-path} variable
-directly in your @file{.emacs} or @file{site-lisp/site-start.el} or by
-working with a file @file{subdirs.el}@footnote{This works at least for
-Emacs but XEmacs may have slightly different mechanisms; see the
-XEmacs documentation}.
+You @strong{MUST} add the ECB-install-directory to the @code{load-path} either
+by changing the @code{load-path} variable directly in your @file{.emacs} or
+@file{site-lisp/site-start.el} or by working with a file
+@file{subdirs.el}@footnote{This works at least for Emacs but XEmacs may have
+slightly different mechanisms; see the XEmacs documentation}.
 
 So for example the needed entry for your @file{.emacs}-file could be:
 
@@ -551,7 +567,7 @@ ECB is NOT properly installed if it's directory is not added to
 (load-file "/path/to/ecb/ecb.el")
 @end example
 
-Do not do this!
+Do not do this! It will not work!
 
 @item
 Load ECB by adding code to your @file{.emacs}:
@@ -655,24 +671,23 @@ working correctly for you.
 
 @menu
 * General hints::               General hints for a correct setup
-* Setting up semantic::         How to setup semantic correctly
+* Setting up CEDET/semantic::   How to setup semantic correctly
 * Non-semantic files::          Setup for file types not supported by semantic
 @end menu
 
-@node General hints, Setting up semantic, Setting up Emacs, Setting up Emacs
+@node General hints, Setting up CEDET/semantic, Setting up Emacs, Setting up Emacs
 @subsection General hints for a correct setup
 
 ECB is for browsing files and therefore you have to setup your
-Emacs-configuration properly so the file-parsing engines like
-semantic, imenu or etags can be activated automatically for parsing
-your Emacs-Lisp, C, C++ or Java buffers@footnote{semantic supports
-some more ``languages'' like Makefiles etc. but these are the most
-important ones.}. For this Emacs must activate the correct
-@code{major-mode} for the source-files and Emacs can only do this if
-the option @code{auto-mode-alist} is setup correctly. The correct
-major-modes and possible file-extensions@footnote{Especially for C++
-and C you can use any extension you want but these are the most common
-ones!} are:
+Emacs-configuration properly so the file-parsing engines like semantic, imenu
+or etags can be activated automatically for parsing your Emacs-Lisp, C, C++ or
+Java buffers@footnote{semantic supports some more ``languages'' like Phython,
+Makefiles and some more. But these are the most important ones.}. For this
+Emacs must activate the correct @code{major-mode} for the source-files and
+Emacs can only do this if the option @code{auto-mode-alist} is setup
+correctly. The correct major-modes and possible
+file-extensions@footnote{Especially for C++ and C you can use any extension
+you want but these are the most common ones!} are:
 
 @multitable @columnfractions 0.20 0.50 0.30
 
@@ -720,45 +735,44 @@ like:
 After this ECB will correctly parse your ``.cpp''-sources and display
 all the parsing information in the ECB-methods buffer.
 
-@node Setting up semantic, Non-semantic files, General hints, Setting up Emacs
-@subsection Setting up semantic
+@node Setting up CEDET/semantic, Non-semantic files, General hints, Setting up Emacs
+@subsection Setting up CEDET/semantic
 
 To ensure ECB and semantic are working correctly for all by semantic
 supported languages you have to pay attention to the following aspects
 concerning your Emacs-setup:
 
 @enumerate
-@item Setting up semantic itself
+@item Setting up CEDET/semantic itself
+
+This section implies that you have already successfully installed
+the CEDET-suite and describes how to setup cedet and here mainly
+semantic.
 
 For all semantic-supported file-types parsing files is done completely
 by semantic. ECB just displays the parsing results. For all needs of
 ECB semantic is completely setup by ECB itself, i.e. ECB sets up
-semantic for you! You have only to add the installation directory of
-semantic to your @code{load-path} (in an appropriate way)!
+semantic for you!
 
-@strong{Please note}: If you setup semantic for yourself following the
-recommendations in the installation instructions of semantic then you
-have probably added code to your startup-file like:
+@strong{Please note}: Nevertheless you should read carefully the file
+@file{INSTALL} shipped with the cedet-suite. In addition the CEDET-website
+offers a link to a ``Gentle introduction to Cedet''. It's worth to read it!
+You find it here:
+@ifhtml
+@uref{http://xtalk.msk.su/~ott/en/writings/emacs-devenv/EmacsCedet.html}
+@end ifhtml
+@ifnothtml
+@url{http://xtalk.msk.su/~ott/en/writings/emacs-devenv/EmacsCedet.html}
+@end ifnothtml
+If CEDET is not correctly installed then ECB can not setup semantic for its
+needs.
 
-@example
-(setq semantic-load-turn-everything-on t)
-(require 'semantic-load)
-@end example
-
-Be aware that this also enables the minor-modes
-@code{semantic-show-dirty-mode} and
-@code{semantic-show-unmatched-syntax-mode} where the former one
-highlights all code which has to be reparsed with dark background
-(which results in large portions of dark background ;-) and the latter
-one underlines all syntax which can not be parsed. Especially the
-former one can be really annoying.
-
-To switch off these modes you can add to your startup-file:
-
-@example
-(global-semantic-show-dirty-mode -1)
-(global-semantic-show-unmatched-syntax-mode -1)
-@end example
+@strong{Minimum setup recommendation}: It is very useful to enable the
+@code{global-semantic-idle-scheduler-mode} and
+@code{global-semanticdb-minor-mode}. Read the manual of cedet/semantic how to
+do this. With CEDET-versions >= 1.0pre6 this can be done by adding
+@code{semantic-load-enable-minimum-features} to your startup-file. Please read
+also the section @ref{Using semanticdb} in the chapter ``Tips and tricks''.
 
 @anchor{Checking your hooks}
 @item Checking your hooks
@@ -794,7 +808,7 @@ If your source-files are ``running'' with correct @code{major-mode}
 and correct major-mode hooks ECB and semantic will do what you expect
 them doing!
 
-@node Non-semantic files, , Setting up semantic, Setting up Emacs
+@node Non-semantic files, , Setting up CEDET/semantic, Setting up Emacs
 @subsection Setup for file types not supported by semantic
 
 From version 1.94 on ECB supports also parsing and displaying
@@ -9121,6 +9135,9 @@ for your personal taste. Or customize the related option in the group
 @node ecb-download, ecb-help, ecb-faces, Customizable options
 @subsection Group ecb-download
 
+@strong{Please note}: THE PACKAGE-DOWNLOAD-FEATURE OF ECB IS COMPLETELY
+DEACTIVATED SINCE VERSION 2.33! SO ALL THE FOLLOWING OPTION TAKE NO EFFECT.
+
 @noindent
 This group contains settings for downloading and installing a new ECB
 from within ECB:
@@ -9786,6 +9803,10 @@ smart things. This is the topic of the second section.
 @section Downloading new versions of ECB and/or required packages
 
 @cindex Download
+
+@strong{Please note}: THE PACKAGE-DOWNLOAD-FEATURE OF ECB IS COMPLETELY
+DEACTIVATED SINCE VERSION 2.33!
+
 ECB offers the possibility to upgrade to newer versions direct from
 the ECB-website. This can be done if the following requirements are
 satisfied:
