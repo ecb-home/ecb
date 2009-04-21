@@ -126,11 +126,6 @@
   (and ecb-running-xemacs
        (file-exists-p (expand-file-name (concat ecb-ecb-dir "_pkg.el")))
        (file-exists-p (expand-file-name (concat ecb-ecb-dir "auto-autoloads.el")))))
-(defconst ecb-semantic-regular-xemacs-package-p
-  (and ecb-running-xemacs
-       ecb-semantic-dir
-       (file-exists-p (expand-file-name (concat ecb-semantic-dir "_pkg.el")))
-       (file-exists-p (expand-file-name (concat ecb-semantic-dir "auto-autoloads.el")))))
 
 (defconst ecb-images-can-be-used
   (and (or (fboundp 'defimage)
@@ -362,7 +357,7 @@ Do not quote ADVICED-FUNCTION, ADVICE-CLASS and ADVICE-SET.
 
 Example:
 
-\(defecb-advice delete-frame around ecb-basic-adviced-functions
+\(defecb-advice delete-frame around ecb-layout-basic-adviced-functions
   \"If FRAME is equal to the ECB frame then...\"
   \(let \(\(frame \(or \(ad-get-arg 0) \(selected-frame))))
     \(if \(and ecb-minor-mode
@@ -467,7 +462,7 @@ occurs.
 
 Example:
 
-\(ecb-with-original-adviced-function-set 'ecb-basic-adviced-functions
+\(ecb-with-original-adviced-function-set 'ecb-layout-basic-adviced-functions
    \(do-something..))"
   (let ((outmost-caller-p (make-symbol "outmost-caller-p")))
     `(let ((,outmost-caller-p 
@@ -1632,9 +1627,6 @@ then an empty string is returned because stripping makes no sense here."
 ;; ECB has thrown away all code which is not needed by ECB
 ;; The original code is written by Eric M. Ludlam <zappo@gnu.org>
 
-;; we need this here so we are independent of the semantic-package so we can
-;; download eieio and semantic even if the user has not installed any version
-;; of semantic.
 
 ;; Variables used in stages
 (defvar ecb-working-message nil

@@ -668,7 +668,7 @@ never selects the edit-window."
   (setq major-mode 'ecb-create-layout-mode)
   (setq mode-name "ECB Create-Layout")
   (use-local-map ecb-create-layout-mode-map)
-  (make-variable-buffer-local 'buffer-read-only)
+  (make-local-variable 'buffer-read-only)
   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Scheint nicht mehr zu
   ;; funktionieren.
   (ecb-mode-line-set (buffer-name (current-buffer))

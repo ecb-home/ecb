@@ -36,7 +36,7 @@ ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el \
             ecb-upgrade.el ecb-create-layout.el silentcomp.el \
             ecb-speedbar.el ecb-examples.el ecb-tod.el ecb-autogen.el \
 	    ecb-jde.el ecb-file-browser.el ecb-method-browser.el \
-	    ecb-winman-support.el ecb-semantic-wrapper.el \
+	    ecb-winman-support.el ecb-cedet-wrapper.el \
 	    ecb-compatibility.el ecb-common-browser.el ecb-analyse.el \
 	    ecb-symboldef.el
 

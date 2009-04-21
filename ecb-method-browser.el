@@ -39,7 +39,7 @@
 (require 'ecb-speedbar)
 (require 'ecb-common-browser)
 
-(require 'ecb-semantic-wrapper)
+(require 'ecb-cedet-wrapper)
 ;; This loads the semantic-setups for the major-modes.
 (require 'semantic-load)
 
@@ -202,14 +202,13 @@ If set the user can easily jump back."
             (cons (intern
                    (concat "ecb-"
                            (mapconcat 'identity
-                                      (cdr (split-string (symbol-name
-                                                          (cdr fkt-elem)) "-"))
+                                      (cdr (split-string (symbol-name fkt-elem) "-"))
                                       "-")))
                   (intern
-                   (concat "ecb--" (symbol-name (cdr fkt-elem))))))
-          ecb--semantic-format-function-alist)
+                   (concat "ecb--" (symbol-name fkt-elem)))))
+          ecb--semantic-format-function-list)
   "Alist containing one element for every member of 
-`ecb--semantic-format-function-alist'")
+`ecb--semantic-format-function-list'")
 
 (defcustom ecb-tag-display-function '((default . ecb-format-tag-uml-prototype))
   "*Function to use for displaying tags in the methods buffer.
@@ -229,14 +228,14 @@ Every function must return the display of the tag as string, colorized if
 the third argument is not nil.
 
 The following functions are predefined:
-- For each element E of `ecb--semantic-format-function-alist' exists a
-  function with name \"ecb--<\(cdr E)>\". These functions are just aliase to
+- For each element E of `ecb--semantic-format-function-list' exists a
+  function with name \"ecb--<E>\". These functions are just aliase to
   the builtin format-functions of semantic. See the docstring of these
   functions to see what they do.
-  Example: \(semantic-name-nonterminal . semantic-format-tag-name) is an
-  element of `ecb--semantic-format-function-alist'. Therefore the
+  Example: `semantic-format-tag-name' is an
+  element of `ecb--semantic-format-function-list'. Therefore the
   alias-function for this element is named `ecb--semantic-format-tag-name'.
-- For every cdr in `ecb--semantic-format-function-alist' with name
+- For each element in `ecb--semantic-format-function-list' with name
   \"semantic-XYZ\" a function with name \"ecb-XYC\" is predefined. The
   differences between the semantic- and the ECB-version are:
   + The ECB-version displays for type tags only the type-name and nothing
@@ -298,7 +297,7 @@ by semantic!"
   "*How to display semantic type-tags in the methods buffer.
 Normally all tag displaying, colorizing and facing is done by semantic
 according to the value of `ecb--semantic-format-face-alist' and the semantic
-display-function \(e.g. one from `ecb--semantic-format-function-alist'). But
+display-function \(e.g. one from `ecb--semantic-format-function-list'). But
 sometimes a finer distinction in displaying the different type specifiers of
 type-tags can be useful. For a description when this option is evaluated look
 at `ecb-tag-display-function'!
@@ -550,6 +549,91 @@ as specified in `ecb-type-tag-expansion'"
                      (ecb-merge-face-into-text text face))
                  text)
              (funcall (quote ,(cdr elem)) tag parent-tag colorize)))))
+
+(defcustom ecb-find-external-tag-functions
+  (list (cons 'default
+              (list (if (fboundp 'semantic-calculate-scope)
+                        'ecb-search-tag-by-semantic-analyzer
+                      'ecb-search-tag-by-semanticdb)))
+        (cons 'jde-mode (list 'ecb-jde-show-class-source)))
+  "*Functions used for searching external tags clicked in the methods buffer.
+The methods buffer displays for oo-languages the parents of a
+type under a special bucket \"Parents\". Languages like C++, CLOS
+and Eieio allow to define the implementation of a method outside
+of the class definition and even in another file. In the
+methods-buffer of ECB such externaly defined methods are
+collected and displayed under a 'virtual' faux type-tag named as
+the class-qualifier of the methods. This faux-tag is virtual
+because it does not extist in the parsed buffer.
+
+If a user clicks either onto such a faux-type-tag or onto a
+parent-tag then ECB tries to find the definition of the
+underlying type on a name-basis, displaying the containing file
+as buffer in the current edit-window and jumping to the start of
+the type-definition in this buffer.
+
+Finding such external types can be very complex and there are
+several roads to success. ECB uses per default methods based on
+the semantic-analyzer. But this option allows to define own
+find-functions and tell ECB to uses them.
+
+This functionality is set on a `major-mode' base, i.e. for every
+`major-mode' a different setting can be used. The value of this
+option is a list of cons-cells:
+- The car is either a `major-mode' symbol or the special symbol 'default.
+- The cdr is a list of find-functions or nil.
+
+ECB first performs all find-functions defined for current
+`major-mode' \(if any) anf then all find-functions defined for
+the special symbol 'default \(if any).
+
+ECB offers some predefined senseful action-functions. Currently there are:
+- `ecb-search-tag-by-semantic-analyzer' (most powerful)
+- `ecb-search-tag-by-semanticdb'
+- `ecb-jde-show-class-source' (for major-mode `jde-mode' when coding in java)
+  This function does not only the searching but displays the founded tag.
+See the documentation of these function for details how they work.
+
+But you can add any arbitrary function if the following conditions are
+fulfilled:
+- The function gets a semantic tag representing the external type which should
+  be found. This is a positionless-tag \(otherwise it would not be hard to go
+  to it) and it's either a faux-tag \(for which `ecb--semantic-faux-tag-p' is
+  not nil; the function can use this check if necessary) or a simple tag
+  containing only a name an a tag-class. The tag-class for both is 'type.
+- The return value of the function must be one of:
+  + nil: No tag is found
+  + t: A tag has been found and also be displayed in the edit-window \(this
+    prevents ECB from running further function of this option because the
+    searched tag is already displayed. So a function should only return t if
+    all is fine and no further actions are needed.
+  + A positioned semantic tag \(for which `ecb--semantic-tag-with-position-p'
+    returns not nil) which represents the found external type-tag.
+  It's strongly recommended for the function not to display the found
+  location for itself but to return a positioned semantic tag! But sometimes
+  the displaying is integrated in a third-party find-function like
+  `jde-show-class-source' which is used by `ecb-jde-show-class-source'. In
+  these cases the function has to return t if the searched tag has been
+  successfully displayed.
+
+Precondition for a find-function:
+Current buffer is the buffer the clicked faux- or parent tag belongs to
+Current point depends on the clicked tag:
+- In case of a faux-tag it's the start of the first child of the
+  faux-tag. There must be at least one adopted child-tag because
+  otherwise we would not have the faux-tag
+- In case of an external parent-tag its the the start of the
+  external tag itself."
+  :group 'ecb-methods
+  :type '(repeat (cons (symbol :tag "Major-mode or default")
+                       (repeat (choice :tag "Find external tag function" :menu-tag "Function list"
+                                       (const :tag "ecb-search-tag-by-semantic-analyzer"
+                                              :value ecb-search-tag-by-semantic-analyzer)
+                                       (const :tag "ecb-search-tag-by-semanticdb"
+                                              :value ecb-search-tag-by-semanticdb)
+                                       (const :tag "ecb-jde-show-class-source"
+                                              :value ecb-jde-show-class-source)
+                                       (function :tag "Function"))))))
 
 (defcustom ecb-display-image-icons-for-semantic-tags ecb-images-can-be-used
   "*Display nice and pretty icons for semantic-tags in the Methods-buffer.
@@ -1466,7 +1550,7 @@ ECB-methods-window is not visible in current layout."
   "Return a list of parent-names already colorized by semantic. Currently
 there is no distinction between superclasses and interfaces."
   (ecb-get-tag-parent-names
-   (append (ecb--semantic-tag-type-superclass tag)
+   (append (ecb--semantic-tag-type-superclasses tag)
            (ecb--semantic-tag-type-interfaces tag))))
 ;;    (ecb--semantic-tag-type-parent tag)))
 
@@ -2709,7 +2793,7 @@ necessary!"
                    (not semantic-idle-scheduler-mode))
                ecb-force-reparse-when-semantic-idle-scheduler-off)
           )
-      (ecb--semantic-fetch-tags t)
+      (ecb--semantic-fetch-tags)
     (ecb--semantic-fetch-available-tags)))
 
 
@@ -2948,8 +3032,6 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
                                                                          (ecb--semantic-format-face-alist)))
                                    (ecb--semantic-format-face-alist)))
            (semantic-format-face-alist my-format-face-alist)
-           ;; the semantic 1.4 compatibility needs this
-           (semantic-face-alist my-format-face-alist)
            (semantic-bucketize-tag-class
             (if ecb-methods-separate-prototypes
                 (function (lambda (tag)
@@ -3185,7 +3267,7 @@ source-buffer and rebuilding the methods-buffer.
 If point is in one of the ecb-windows or in the compile-window then this
 command rebuids the methods-buffer with the contents of the source-buffer the
 last selected edit-window."
-  (interactive)
+  (interactive "P")
   (save-selected-window
     (when (not (ecb-point-in-edit-window-number))
       (let ((ecb-mouse-click-destination 'last-point))
@@ -3612,12 +3694,10 @@ See `semantic-tag-external-class' for details."
     ))
 
 
-;; semantic 1.X does not have this
+;; ;; semantic 1.X does not have this
 (silentcomp-defvar semanticdb-search-system-databases)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: modify this so it can be used by
-;; ecb-find-external-tag-functions 
-(defun ecb--semanticdb-find-result-nth-with-file (result n)
+(defun ecb-semanticdb-find-result-nth-with-file (result n)
   "In RESULT, return the Nth search result.
 This is a 0 based search result, with the first match being element 0. Returns
 a cons cell with car is the searched and found tag and the cdr is the
@@ -3631,89 +3711,91 @@ with a file, then the cdr of the result-cons is nil."
               (ecb--semanticdb-full-filename (cdr result-nth)))
       (cons (car result-nth) nil))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: modify this so it can be used by
-;; ecb-find-external-tag-functions 
 (defun ecb-semanticdb-get-type-definition-list (external-tag)
-  "Search with semanticdb for the definition of the type with name of EXTERNAL-TAG.
+  "Search for the definition of the type with name of EXTERNAL-TAG.
+The search is performed viy semanticdb.
 `semanticdb-search-system-databases' is taken into account.
-Return-value is an alist where each element represents a found
-location for TYPENAME. The car of an element is the full filename
-and the cdr is the tag in this file. If no type-definition can be
-found or if the semanticdb is not active then nil is returned."
+Return-value is either nil \(if no positioned tag can be found
+for external-tag or a positioned semantic-tag for the
+type-definition of EXTERNAL-TAG."
   (when (and (featurep 'semanticdb) (ecb--semanticdb-minor-mode-p))
-    (if (not ecb-semantic-2-loaded)
-        ;; With semantic 1.X we just run a very simplified database search.
-        (let ((search-result (ecb--semanticdb-find-tags-by-name
-                              (ecb--semantic-tag-name external-tag))))
-          (when search-result
-            (list (cons (ecb--semanticdb-full-filename (caar search-result))
-                        (cdar search-result)))))
-      ;; With semantic 2.X we do a full featured database-search.
-      (let* ((search-result (ecb--semanticdb-find-tags-by-name
-                             (ecb--semantic-tag-name external-tag)))
-             (result-tags (and search-result
-                               (ecb--semanticdb-strip-find-results search-result)))
-             (type-tag-numbers nil))
-        (when (and result-tags
-                   ;; some paranoia
-                   (= (length result-tags)
-                      (ecb--semanticdb-find-result-length search-result)))
-          ;; First we check which tags in the stripped search-result
-          ;; (result-tags) are types with positions (means associated with a
-          ;; file) and collect their sequence-positions in type-tag-numbers.
-          (dotimes (i (length result-tags))
-            (if (and (equal (ecb--semantic-tag-class (nth i result-tags))
-                            'type)
-                     (ecb--semantic-tag-with-position-p (nth i result-tags)))
-                (setq type-tag-numbers
-                      (cons i type-tag-numbers))))
-          (setq type-tag-numbers (nreverse type-tag-numbers))
-          ;; Now we get for each element in type-tag-numbers the related
-          ;; filename (where the tag is defined) and collect them in an alist
-          ;; where each element is a cons-cell where car is the filename and
-          ;; cdr is the tag in this file. Especially with scoped languages
-          ;; like C++ or Java a type with the same name can be defined in more
-          ;; than one file - each of these files belonging to another
-          ;; package/library.
-          (delq nil
-                (mapcar (function (lambda (n)
-                                    (let ((r (ecb--semanticdb-find-result-nth-with-file
-                                              search-result n)))
-                                      (if (and (cdr r)
-                                               (stringp (cdr r))
-                                               (ecb-file-readable-p (cdr r)))
-                                          (cons (cdr r) (car r))))))
-                        type-tag-numbers)))))))
+    ;; With semantic 2.X we do a full featured database-search.
+    (let* ((search-result (ecb--semanticdb-find-tags-by-name
+                           (ecb--semantic-tag-name external-tag)))
+           (result-tags (and search-result
+                             (ecb--semanticdb-strip-find-results search-result)))
+           (type-tag-numbers nil))
+      (when (and result-tags
+                 ;; some paranoia
+                 (= (length result-tags)
+                    (ecb--semanticdb-find-result-length search-result)))
+        ;; First we check which tags in the stripped search-result
+        ;; (result-tags) are types with positions (means associated with a
+        ;; file) and collect their sequence-positions in type-tag-numbers.
+        (dotimes (i (length result-tags))
+          (if (and (equal (ecb--semantic-tag-class (nth i result-tags))
+                          'type)
+                   (ecb--semantic-tag-with-position-p (nth i result-tags)))
+              (setq type-tag-numbers
+                    (cons i type-tag-numbers))))
+        (setq type-tag-numbers (nreverse type-tag-numbers))
+        ;; Now we get for each element in type-tag-numbers the related
+        ;; filename (where the tag is defined) and collect them in an alist
+        ;; where each element is a cons-cell where car is the filename and
+        ;; cdr is the tag in this file. Especially with scoped languages
+        ;; like C++ or Java a type with the same name can be defined in more
+        ;; than one file - each of these files belonging to another
+        ;; package/library.
+        (delq nil
+              (mapcar (function (lambda (n)
+                                  (let ((r (ecb-semanticdb-find-result-nth-with-file
+                                            search-result n)))
+                                    (if (and (cdr r)
+                                             (stringp (cdr r))
+                                             (ecb-file-readable-p (cdr r)))
+                                        (cons (cdr r) (car r))))))
+                      type-tag-numbers))))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: modify this so it can be used by
-;; ecb-find-external-tag-functions 
-(defun ecb-semanticdb-get-type-definition (external-tag)
-  "Runs `ecb-semanticdb-get-type-definition-list' for EXTERNAL-TAG
-Return exactly one type-definition cons-cell where car
-is a full filename and cdr is a tag for TYPENAME. "
+(defun ecb-search-tag-by-semanticdb (external-tag)
+  "Uses semanticdb to search for the type-definition of EXTERNAL-TAG.
+Return exactly one semantic tag for the type-definition of
+EXTERNAL-TAG. If more than one definition have been found then
+the user has to make a choice on file-basis.
+
+This function is for usage with `ecb-find-external-tag-functions.'"
   (let ((type-definition-alist (ecb-semanticdb-get-type-definition-list
-                                external-tag)))
+                                external-tag))
+        (result-elem))
     (when type-definition-alist
       ;; if we got more than one file for EXTERNAL-TAG then the user has to
       ;; choose one.
-      (if (> (length type-definition-alist) 1)
-          (assoc (ecb-offer-choices "Select a definition-file: "
-                                    (mapcar #'car type-definition-alist))
-                 type-definition-alist)
-        (car type-definition-alist)))))
+      (setq result-elem
+            (if (> (length type-definition-alist) 1)
+                (assoc (ecb-offer-choices "Select a definition-file: "
+                                          (mapcar #'car type-definition-alist))
+                       type-definition-alist)
+              (car type-definition-alist)))
+      ;; we add the filename to the tag, then all needed informations are
+      ;; within the tag and afterwards `semantic-tag-buffer can do its work
+      (semantic--tag-put-property (cdr result-elem)
+                                  :filename
+                                  (car result-elem)))))
 
-(defun ecb-search-tag-by-analyzer (tag)
+(defun ecb-search-tag-by-semantic-analyzer (tag)
   "Calculate the scope at current point and search for a type with name of TAG.
-Return either a semantic-tag for the found type-definition or nil if nothing
-is found.
-This mechanism uses the semantic-analyzer. Therefore it will work at its best
-if all nneded customizations for the semantic analyzer have been done. \(See
-the manual of the semantic analyzer for how to customizing it).
+
+Return either a positioned semantic-tag for the found
+type-definition or nil if nothing is found. This mechanism uses
+the semantic-analyzer. Therefore it will work at its best if all
+nneded customizations for the semantic analyzer have been done.
+\(See the manual of the semantic analyzer for how to customizing
+it).
 
 This function is for usage with `ecb-find-external-tag-functions'."
-  (let* ((scope (semantic-calculate-scope)))
-    (semantic-analyze-find-tag (ecb--semantic-tag-name tag)
-                               'type scope)))
+  (let* ((scope (ecb--semantic-calculate-scope)))
+    (when scope
+      (ecb--semantic-analyze-find-tag (ecb--semantic-tag-name tag)
+                                      'type scope))))
 
 (defun ecb-next-tag-parent-node (node)
   "Go upward in the parent-hierarchy of NODE and return next node holding a tag."
@@ -3723,83 +3805,10 @@ This function is for usage with `ecb-find-external-tag-functions'."
            parent-node)
           (t (ecb-next-tag-parent-node parent-node)))))
 
-
-(defcustom ecb-find-external-tag-functions '((default . (ecb-search-tag-by-analyzer
-                                                         ;;ecb-semanticdb-get-type-definition
-                                                         ))
-                                             (jde-mode . (ecb-jde-show-class-source)))
-  "*Functions used for searching external tags clicked in the methods buffer.
-The methods buffer displays for oo-languages the parents of a type under a
-special bucket \"Parents\". Languages like C++, CLOS and Eieio allow to define
-the implementation of a method outside of the class definition and even in
-another file. In the methods-buffer of ECB such externaly defined methods are
-collected and displayed under a 'virtual' faux type-tag named as the
-class-qualifier of the methods. This faux-tag is virtual because it does not
-extist in the parsed buffer.
-
-If a user clicks either onto such a faux-type-tag or onto a
-parent-tag then ECB tries to find the definition of the
-underlying type on a name-basis, displaying the containing file
-as buffer in the current edit-window and jumping to the start of
-the type-definition in this buffer.
-
-Finding such external types can be very complex and there are several roads to
-success. ECB uses per default methods based on the semantic-analyzer. But this
-option allows to define own find-functions and tell ECB to uses them.
-
-This functionality is set on a `major-mode' base, i.e. for every `major-mode' a
-different setting can be used. The value of this option is a list of
-cons-cells:
-- The car is either a `major-mode' symbol or the special symbol 'default.
-- The cdr is a list of find-functions or nil.
-
-ECB first performs all find-functions defined for the special
-symbol 'default \(if any) and then all find-functions defined for
-current `major-mode' \(if any).
-
-ECB offers some predefined senseful action-functions. Currently there are:
-- `TODO:'
-See the documentation of these function for details how they work.
-
-But you can add any arbitrary function if the following conditions are
-fulfilled:
-- The function gets a semantic tag representing the external type which should
-  be found. This is a positionless-tag \(otherwise it would not be hard to go
-  to it) and it's either a faux-tag \(for which `ecb--semantic-faux-tag-p' is
-  not nil) or a simple tag containing only a name an a tag-class. The
-  tag-class for both is 'type.
-- The return value of the function must be one of:
-  + nil: No tag is found
-  + t: A tag has been found and also be displayed in the edit-window
-  + A positioned semantic tag \(for which `ecb--semantic-tag-with-position-p'
-    returns not nil) which represents the found external type-tag.
-  It's strongly recommendedfor the function not to display the found
-  location for itself but to return a positioned semantic tag! But sometimes
-  the displaying is integrated in a third-party find-function like
-  `jde-show-class-source' which is used by `ecb-jde-show-class-source'. In
-  these cases the function has to return t if the searched tag has been
-  successfully displayed.
-
-Precondition for a find-function:
-- TODO:
-"
-  :group 'ecb-methods
-  :type '(repeat (cons (symbol :tag "Major-mode or default")
-                       (repeat (choice :tag "Post action" :menu-tag "Post action"
-                                       (const :tag "ecb-tag-visit-smart-tag-start"
-                                              :value ecb-tag-visit-smart-tag-start)
-                                       (const :tag "ecb-tag-visit-highlight-tag-header"
-                                              :value ecb-tag-visit-highlight-tag-header)
-                                       (const :tag "ecb-tag-visit-goto-doc-start"
-                                              :value ecb-tag-visit-goto-doc-start)
-                                       (const :tag "ecb-tag-visit-narrow-tag"
-                                              :value ecb-tag-visit-narrow-tag)
-                                       (const :tag "ecb-tag-visit-recenter-top"
-                                              :value ecb-tag-visit-recenter-top)
-                                       (const :tag "ecb-tag-visit-recenter"
-                                              :value ecb-tag-visit-recenter)
-                                       (function :tag "Function"))))))
-      
+;; (defun klaus-ecb-test-ext-function (tag)
+;;   (progn
+;;     (find-file "~/klaus.cc")
+;;     t))
 
 (defecb-tree-buffer-callback ecb-method-clicked ecb-methods-buffer-name select
                              (&optional no-post-action additional-post-action-list)
@@ -3872,8 +3881,8 @@ Precondition for a find-function:
                 ;; defined in `ecb-find-external-tag-functions' until one of
                 ;; them returns not nil
                 (setq found (catch 'foundit
-                              (dolist (f (append (cdr (assoc 'default ecb-find-external-tag-functions))
-                                                 (cdr (assoc major-mode ecb-find-external-tag-functions))))
+                              (dolist (f (append (cdr (assoc major-mode ecb-find-external-tag-functions))
+                                                 (cdr (assoc 'default ecb-find-external-tag-functions))))
                                 (let ((f-result (funcall f node-tag)))
                                   (if f-result (throw 'foundit f-result))))
                               nil))
@@ -4670,8 +4679,6 @@ by semantic and also killed afterwards."
             (ecb-basic-buffer-sync nil)
             (kill-buffer-hook nil)
             ;; we prevent parsing the custom-file
-            (semantic-before-toplevel-bovination-hook (lambda ()
-                                                        nil))
             (semantic--before-fetch-tags-hook (lambda ()
                                                 nil))
             (semantic-after-toplevel-cache-change-hook nil)

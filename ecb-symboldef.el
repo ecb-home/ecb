@@ -47,7 +47,7 @@
 (require 'ecb-util)
 (require 'ecb-layout)
 (require 'ecb-common-browser)
-(require 'ecb-semantic-wrapper)
+(require 'ecb-cedet-wrapper)
 
 (eval-when-compile
   (require 'silentcomp))

@@ -1720,7 +1720,6 @@ At the end the hooks in `ecb-basic-buffer-sync-hook' run."
   (when (and ecb-minor-mode
              (not ecb-windows-hidden)
              (ecb-point-in-edit-window-number))
-    ;; XXXX (changed for indirect-buffers)
     (let* ((filename (ecb-buffer-file-name (current-buffer))))
       (cond ( ;; synchronizing for real filesource-buffers and indirect
               ;; buffers which have a filesource-buffer as base-buffer
@@ -2304,9 +2303,10 @@ added.")
                       (buffer-list)))))
 
 ;; When a base-buffer of indirect-buffers is killed then automatically all
-;; indirect-buffers are killed too by Emacs - for all these kill-buffer-hook
-;; is called so also this function ==> we must not perform any special logic
-;; because the indirect-buffers nodes are always removed.
+;; indirect-buffers are killed too by Emacs - for all these ind. buffers
+;; kill-buffer-hook is called and therefore also this function ==> we must not
+;; perform any special logic because the indirect-buffers nodes are always
+;; removed.
 (defun ecb-history-kill-buffer-clear (curr-buf)
   "Does all necessary clearence when CURR-BUF is killed."
   (let* ((buffer-file (ecb-fix-filename (ecb-buffer-file-name curr-buf)))
@@ -4723,7 +4723,6 @@ So you get a better overlooking. There are three choices:
                        ecb-common-tree-buffer-after-create-hook
                        ecb-history-buffer-after-create-hook)
    :after-update-hook 'ecb-stealth-tasks-after-history-update))
-
 
 (silentcomp-provide 'ecb-file-browser)
 

@@ -125,7 +125,9 @@ available."
 
 (defun ecb-jde-show-class-source (external-tag)
   "Calls `jde-show-class-source' for th tag-name of EXTERNAL-TAG.
-Returns t if the tag is found and no error occurs otherwise nil."
+Returns t if the tag is found and no error occurs otherwise nil.
+
+This function is for usage with `ecb-find-external-tag-functions'."
   (when (eq major-mode 'jde-mode)
     (condition-case nil
         (progn

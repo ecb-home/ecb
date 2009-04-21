@@ -1062,7 +1062,10 @@ Currently there are the following subcaches managed within this cache:
 ;; directory separator
 
 (defconst ecb-directory-sep-char
-  (if ecb-running-xemacs directory-sep-char ?/))
+  (if ecb-running-xemacs
+      ;; to avoid compiler complainings
+      (symbol-value 'directory-sep-char)
+    ?/))
 
 (defsubst ecb-directory-sep-char (&optional refdir)
   (if (or (null refdir)
