@@ -497,14 +497,19 @@ Depending on the contents of current buffer this command performs different
 synchronizing tasks but only if ECB is active and point stays in an
 edit-window.
 
-- If current buffer is a file-buffer then all special ECB-tree-buffers are
+- If current buffer is a file-buffer \(or an indirect-buffer with a
+  file-buffer as base-buffer) then all special ECB-tree-buffers are
   synchronized with current buffer.
 
 - If current buffer is a dired-buffer then the directory- and
   the sources-tree-buffer are synchronized if visible
 
-In addition to this the hooks in `ecb-basic-buffer-sync-hook' run."
-  (interactive)
+In addition to this the hooks in `ecb-basic-buffer-sync-hook' run.
+
+If optional argument only-basic-windows is not nil then only the basic
+tree-buffer directories, sources, methods and history are synchronized.
+Otherwise all registered special ecb-buffers."
+  (interactive "P")
   (when (and ecb-minor-mode
              (not ecb-windows-hidden)
              (ecb-point-in-edit-window-number))

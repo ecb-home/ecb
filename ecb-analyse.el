@@ -228,18 +228,17 @@ IMPORTANT NOTE: Every time the synchronization is done the hook
 (defcustom ecb-analyse-buffer-sync-delay 2
   "*Time Emacs must be idle before the analyse-buffer is synchronized.
 Synchronizing is done with the current source displayed in the edit window. If
-nil then there is no delay, means synchronization takes place immediately. A
-small value of about 0.25 seconds saves CPU resources and you get even though
-almost the same effect as if you set no delay.
+nil then there is no delay, means synchronization takes place immediately.
 
-CAUTION: With analysing a value to too small is strongly recommended because
+CAUTION: With analysing a value not too small is strongly recommended because
 it can be very annoying if more or less after each typing the current context
-is analysed.
+is analysed. If set to nil then *each* keyboard hit refreshes the
+analyse-buffer which will make ECB quite unusable!
 
 If the special value 'basic is set then ECB uses the setting of the option
 `ecb-basic-buffer-sync-delay'"
   :group 'ecb-analyse
-  :type '(radio (const :tag "use basic value" :value basic)
+  :type '(radio (const :tag "Use basic value" :value basic)
                 (const :tag "No synchronizing delay" :value nil)
                 (number :tag "Idle time before synchronizing" :value 2))
   :set (function (lambda (symbol value)
@@ -468,10 +467,6 @@ used as window."
     (when (or (= type ecb-analyse-nodetype-completions)
               (= type ecb-analyse-nodetype-localvars))
       (tree-buffer-highlight-node-by-data/name data)
-      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: here we must handle
-      ;; indirect buffers - probbaly with a smart new function
-      ;; ecb-display-source which decides smartly if to switch to a buffer or
-      ;; if to find-file....
       (ecb-display-source ecb-path-selected-source nil)
       (let* ((a (ecb--semantic-analyze-current-context (point)))
              (bounds (if a (oref a bounds)))
@@ -672,8 +667,6 @@ analyse-buffer."
    :frame ecb-frame
    :mouse-action-trigger ecb-tree-mouse-action-trigger
    :is-click-valid-fn 'ecb-interpret-mouse-click
-   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe we should make own
-   ;; callbacks for analyse...
    :node-selected-fn 'ecb-tree-buffer-node-select-callback
    :node-expanded-fn 'ecb-tree-buffer-node-expand-callback
    :node-collapsed-fn 'ecb-tree-buffer-node-collapsed-callback
@@ -685,6 +678,9 @@ analyse-buffer."
    :menu-creator 'ecb-analyse-menu-creator
    :menu-titles (ecb-analyse-gen-menu-title-creator)
    :modeline-menu-creator 'ecb-common-tree-buffer-modeline-menu-creator
+   :sticky-parent-p ecb-tree-make-parent-node-sticky
+   :sticky-indent-string ecb-tree-stickynode-indent-string
+   :sticky-parent-fn nil
    :trunc-lines (ecb-member-of-symbol/value-list ecb-analyse-buffer-name
                                                  ecb-tree-truncate-lines)
    :read-only t

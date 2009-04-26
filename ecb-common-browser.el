@@ -354,6 +354,41 @@ nil then no keys for horizontal scrolling are bound."
                 (const :tag "No hor. mouse scrolling" :value nil)
                 (integer :tag "Scroll step")))
 
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add this to the texi
+(defcustom ecb-tree-make-parent-node-sticky t
+  "*Make the parent-node sticky in the headerline of the tree-buffer.
+
+If not nil then the first line of the tree-buffer is used as header-line which
+is used to display the next unvisible parent of the first visible node as
+sticky, so always the parent of a node is visible and clickable. If a node has
+no parent then just the next node above is displayed in the header-line. The
+node displayed in the header-line is exactly in the same manner clickable as
+all other nodes.
+
+This feature is only available with Gnu Emacs, not with XEmacs."
+  :group 'ecb-tree-buffer
+  :group 'ecb-most-important
+  :type 'boolean)
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add to texi
+(defcustom ecb-tree-stickynode-indent-string (tree-buffer-sticky-default-indent-string)
+  "*String used to indent the stickynode.
+This string is used to match the space used by scrollbars and
+fringe so it does not appear that the node-name is moving left/right
+when it lands in the sticky line.
+
+Normally the needed value is computed automatically by ECB. But if the result
+is not matching this option allows to customize the indent-string.
+The default value is computet by the function
+`tree-buffer-sticky-default-indent-string', so you can change the needed value
+with that starting-point.
+
+Changing this option takes only effect after restarting Emacs!"
+  :group 'ecb-tree-buffer
+  :type 'string)
+  
+
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we should change this to a
 ;; type analogous to ecb-tree-truncate-lines
 (defcustom ecb-truncate-long-names t
@@ -361,7 +396,6 @@ nil then no keys for horizontal scrolling are bound."
 If you change this during ECB is activated you must deactivate and activate
 ECB again to take effect."
   :group 'ecb-tree-buffer
-  :group 'ecb-most-important
   :type 'boolean)
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we should change this to a
@@ -745,36 +779,6 @@ In all other cases of TYPE always that value is returned
     (buffername (ecb-source-get-buffername ecb-path-selected-source))
     (buffer (ecb-source-get-buffer ecb-path-selected-source))
     (otherwise ecb-path-selected-source)))
-
-
-
-(defvar ecb-basic-buffer-sync-old '(Info-mode dired-mode))
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: rename this in the info-file
-;; was ecb-window-sync
-(defun ecb-toggle-basic-buffer-sync (&optional arg)
-  "Toggle auto synchronizing of the ECB-windows.
-With prefix argument ARG, switch on if positive, otherwise switch off. If the
-effect is that auto-synchronizing is switched off then the current value of
-the option `ecb-basic-buffer-sync' is saved so it can be used for the next switch on
-by this command. See also the option `ecb-basic-buffer-sync'."
-  (interactive "P")
-  (let ((new-value (if (null arg)
-                       (if ecb-basic-buffer-sync
-                           (progn
-                             (setq ecb-basic-buffer-sync-old
-                                   ecb-basic-buffer-sync)
-                             nil)
-                         ecb-basic-buffer-sync-old)
-                     (if (<= (prefix-numeric-value arg) 0)
-                         (progn
-                           (if ecb-basic-buffer-sync
-                               (setq ecb-basic-buffer-sync-old ecb-basic-buffer-sync))
-                           nil)
-                       (or ecb-basic-buffer-sync ecb-basic-buffer-sync-old)))))
-    (setq ecb-basic-buffer-sync new-value)
-    (message "Automatic synchronizing the ECB-windows is %s \(Value: %s\)."
-             (if new-value "on" "off")
-             new-value)))
 
 
 ;; all defined tree-buffer creators
@@ -1199,7 +1203,7 @@ has been contained)."
                                                 buffer-sync-option-symbol
                                                 interactive-p docstring
                                                 &rest body)
-  "Define a function run either by idle-timer or before por after each command.
+  "Define a function run either by idle-timer or before or after each command.
 Such a function is used either for automatic self-controlling certain aspects
 of ECB or for synchronizing a special window/buffer of ECB with contents of
 the active buffer in the edit-area.
@@ -1257,6 +1261,7 @@ hold in the variable `ecb-a-special-buffer-name'.
 "
   `(eval-and-compile
      (ecb-register-autocontrol/sync-function (quote ,fcn) (quote ,buffer-name-symbol))
+
      (defun ,fcn (&optional force)
        ,docstring
        ,(if interactive-p

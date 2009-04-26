@@ -112,14 +112,6 @@ If current layout does not display a compile-window \(see
   :group 'ecb-eshell
   :type 'boolean)
 
-(defcustom ecb-eshell-synchronize t
-  "*Synchronize eshell with the default-directory of current source-buffer.
-The synchronization is done by `ecb-eshell-buffer-sync' which can be
-called interactively but normally it is called autom. by internal
-idle-mechanism."
-  :group 'ecb-eshell
-  :type 'boolean)
-
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: was ecb-eshell-synchronize -->
 ;; rename in texi and also to ecb-upgrade (also with value-upgrade!)
 (defcustom ecb-eshell-buffer-sync 'basic
