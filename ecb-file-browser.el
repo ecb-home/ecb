@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.70 2009/04/21 15:23:22 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.71 2009/04/26 16:04:38 berndl Exp $
 
 ;;; Commentary:
 
@@ -3969,7 +3969,13 @@ Directory- and sources nodes are handled appropriately."
   "Does all necessary when a user clicks onto a node in the history-buffer."
   (if shift-mode
       (ecb-mouse-over-history-node node nil nil 'force))
-  (ecb-source-item-clicked node ecb-button edit-window-nr shift-mode meta-mode))
+  (if (= (tree-node->type node) ecb-history-nodetype-bucket)
+      ;; Just expand/collapse the node
+      (progn
+        (tree-node-toggle-expanded node)
+        ;; Update the tree-buffer with optimized display of NODE
+        (tree-buffer-update node))      
+    (ecb-source-item-clicked node ecb-button edit-window-nr shift-mode meta-mode)))
 
 (defun ecb-expand-directory-nodes (level)
   "Set the expand level of the nodes in the ECB-directories-buffer.
@@ -4589,6 +4595,9 @@ So you get a better overlooking. There are three choices:
                       (cons ecb-directories-nodetype-sourcepath
                             ecb-directories-menu-title-creator))
    :modeline-menu-creator 'ecb-common-tree-buffer-modeline-menu-creator
+   :sticky-parent-p ecb-tree-make-parent-node-sticky
+   :sticky-indent-string ecb-tree-stickynode-indent-string
+   :sticky-parent-fn nil
    :trunc-lines (ecb-member-of-symbol/value-list ecb-directories-buffer-name
                                                  ecb-tree-truncate-lines)
    :read-only t
@@ -4644,6 +4653,8 @@ So you get a better overlooking. There are three choices:
    :menu-titles (list (cons ecb-sources-nodetype-sourcefile
                             ecb-sources-menu-title-creator))
    :modeline-menu-creator 'ecb-common-tree-buffer-modeline-menu-creator
+   :sticky-parent-p nil
+   :sticky-parent-fn nil
    :trunc-lines (ecb-member-of-symbol/value-list ecb-sources-buffer-name
                                                  ecb-tree-truncate-lines)
    :read-only t
@@ -4698,6 +4709,9 @@ So you get a better overlooking. There are three choices:
    :menu-titles (list (cons ecb-history-nodetype-filebuffer
                             ecb-history-menu-title-creator))
    :modeline-menu-creator 'ecb-common-tree-buffer-modeline-menu-creator
+   :sticky-parent-p ecb-tree-make-parent-node-sticky
+   :sticky-indent-string ecb-tree-stickynode-indent-string
+   :sticky-parent-fn nil
    :trunc-lines (ecb-member-of-symbol/value-list ecb-history-buffer-name
                                                  ecb-tree-truncate-lines)
    :read-only t

@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-eshell.el,v 1.82 2009/04/15 14:22:35 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.83 2009/04/26 16:04:38 berndl Exp $
 
 ;;; Commentary:
 
@@ -109,14 +109,6 @@ eshell-command."
   "*Startup the eshell and display it in the compile-window.
 If current layout does not display a compile-window \(see
 `ecb-compile-window-height') then nothing is done."
-  :group 'ecb-eshell
-  :type 'boolean)
-
-(defcustom ecb-eshell-synchronize t
-  "*Synchronize eshell with the default-directory of current source-buffer.
-The synchronization is done by `ecb-eshell-buffer-sync' which can be
-called interactively but normally it is called autom. by internal
-idle-mechanism."
   :group 'ecb-eshell
   :type 'boolean)
 

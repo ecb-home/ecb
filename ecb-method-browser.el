@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.87 2009/04/21 15:23:22 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.88 2009/04/26 16:04:38 berndl Exp $
 
 ;;; Commentary:
 
@@ -3381,9 +3381,9 @@ current buffer."
                    ;; bucket-node and try highlighting again.
                    (when (and highlight-tag
                               bucket-data ;; tag has no containing type
-                              ;;                                (member (car (cdr (assoc (ecb--semantic-tag-class highlight-tag)
-                              ;;                                                         (ecb-get-show-tags-list))))
-                              ;;                                        '(expanded collapsed))
+                              ;;(member (car (cdr (assoc (ecb--semantic-tag-class highlight-tag)
+                              ;;                         (ecb-get-show-tags-list))))
+                              ;;        '(expanded collapsed))
                               (or (equal ecb-auto-expand-tag-tree 'all)
                                   (member (ecb--semantic-tag-class highlight-tag)
                                           (ecb-normalize-expand-spec
@@ -4570,6 +4570,9 @@ moved over it."
                       (cons ecb-methods-nodetype-bucket ecb-methods-menu-title-creator)
                       (cons ecb-methods-nodetype-externtag ecb-methods-menu-title-creator))
    :modeline-menu-creator 'ecb-common-tree-buffer-modeline-menu-creator
+   :sticky-parent-p ecb-tree-make-parent-node-sticky
+   :sticky-indent-string ecb-tree-stickynode-indent-string
+   :sticky-parent-fn nil
    :trunc-lines (ecb-member-of-symbol/value-list ecb-methods-buffer-name
                                                  ecb-tree-truncate-lines)
    :read-only t

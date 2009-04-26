@@ -23,7 +23,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.215 2009/04/21 15:23:22 berndl Exp $
+@c $Id: ecb.texi,v 1.216 2009/04/26 16:04:38 berndl Exp $
 
 @setfilename ecb.info
 
@@ -299,7 +299,6 @@ All customizable options of ECB
 * ecb-create-layout::           Customizing options for creating layouts
 * ecb-face-options::            Customizing options for faces
 * ecb-faces::                   Customizing the faces
-* ecb-download::                Customizing how to download ECB
 * ecb-help::                    Customizing the online help of ECB
 * ecb-eshell::                  Customizing the eshell-integration
 * ecb-speedbar::                Customizing the speedbar-integration
@@ -418,6 +417,10 @@ ECB works only with (X)Emacs >= 21! If you have an older one, please upgrade.
 Get it from @url{http://cedet.sourceforge.net}, read the setup-instructions in
 @url{http://cedet.sourceforge.net/setup.shtml} and read also the shipped file
 @file{INSTALL}.
+
+@strong{Please note}: ECB requires now a complete CEDET-installation! It will
+not longer work with outdated separate packages semantic 1.4.X, eieio 0.X and
+speedbar 0.X!
 
 @item Only for XEmacs-users:
 If you use XEmacs you must have installed the
@@ -1477,9 +1480,8 @@ any kind of tags (e.g. sections and subsections for texinfo
 buffers).
 
 Per default the content of the methods-interactor is automatically
-synchronized and updated with current point of the current
-source-buffer in the edit-area (see @code{ecb-window-sync} and
-@ref{ECB-window synchronizing}).
+synchronized and updated with current point of the current source-buffer in
+the edit-area (@pxref{ECB-window synchronizing}).
 
 @subsubsection Usage of the methods interactor
 
@@ -1556,9 +1558,9 @@ symbol the cursor is on), and a list of all possible completions (see
 completions available via the semantic-analyser).
 
 Per default the content of the analyser-interactor is automatically
-synchronized and updated with current point of the current
-source-buffer in the edit-area (see @code{ecb-window-sync} and
-@ref{ECB-window synchronizing}).
+synchronized and updated with current point of the current source-buffer in
+the edit-area (see @code{ecb-analyse-buffer-sync} and @ref{ECB-window
+synchronizing}).
 
 The analyser-interactor is of type tree-buffer. See @ref{Tree-buffer
 basics} for basic informations how to use such a tree-buffer.
@@ -4345,8 +4347,115 @@ Now you will edit at the same place in the function.
 @section Synchronization of the ECB-windows
 
 Per default ECB synchronizes automatically the contents of the
-ECB-windows/tree-buffers with the current active edit-window (rsp. the
-current buffer of the edit window):
+ECB-interactors@footnote{Another term for interactor is ``special
+ecb-window/buffer''} (e.g. tree-buffers) with the current active edit-window
+(rsp. the current buffer of the edit window).
+
+ECB distinguishes between the so called ``basic'' interactors (for a general
+description see @ref{Basic interactors}) and add-on
+interactors (@pxref{Add-on interactors}). This distinction is also important
+concerning synchronization:
+
+The basic interactors are always synchronized together whereas for each add-on
+interactor a separate synchronization option is offered.
+
+This section describes at beginning some general synchronization aspects
+(common for all interactors, basic ones as well as add-ons), then the
+synchronization of the basic-interactors and finally the synchronization of
+the add-on interactors.
+
+
+
+@menu
+* General synchronization aspects::       General synchronization aspects
+* Synchronization of basic interactors::  Synchronization of basic interactors
+* Add-on synchronization::                Synchronization of add-on interactors
+@end menu
+
+@node General synchronization aspects, Synchronization of basic interactors, ECB-window synchronizing, ECB-window synchronizing
+@subsection General synchronization aspects
+
+For each separate interactor-synchronization (remember: One common for the basic
+interactors, one for each add-on interactor) ECB offers the following
+option-triple (demonstrated for the basic interactors):
+
+@itemize
+
+@item @code{ecb-basic-buffer-sync}:
+
+Enables or disables the synchronization in general.
+
+If active then the synchronization for the related interactor-buffers/windows
+takes place whenever a buffer changes in an edit window or if another
+edit-window with another buffer will be selected, if deactivated then never.
+But you can also set this option to a list of major-modes and then the sync.
+will only be done if the major-mode of the current buffer does NOT belong to
+this list.
+
+But in every case the synchronization only takes place if the
+major-mode of the current-buffer in the current selected edit-window
+has a relation to files or directories. Examples for the former one
+are all programming-language-modes like @code{c++-mode} or
+@code{java-mode}, @code{Info-mode} too, an example for the latter one
+is @code{dired-mode}. For all major-modes related to
+non-file/directory-buffers like @code{help-mode},
+@code{customize-mode} and others a synchronization will never be done!
+
+It's recommended to exclude at least @code{Info-mode} because it makes
+no sense to synchronize the ECB-windows after calling the Info help.
+Per default also @code{dired-mode} is excluded but it can also making
+sense to synchronize the ECB-directories/sources windows with the
+current directory of the dired-buffer in the edit-window.
+
+@item @code{ecb-basic-buffer-sync-delay}:
+
+This option takes only effect if the synchronization is switched on via
+@code{ecb-basic-buffer-sync} and determines when ECB synchronizes.
+
+This option sets the time in seconds (fractions allowed) Emacs must be idle
+before the related interactor(s) are synchronized. If nil then there is no
+delay, means synchronization takes place immediately. A small value of about
+0.25 seconds saves CPU resources and you get even though almost the same
+effect as if you set no delay.
+
+Per default ECB always synchronizes on idle-basis and it is strongly
+recommened not to change this (ie. not setting the delay-option to nil)
+because this can be very performance consuming (e.g. at least the check if a
+synchronization must be performed is done after @strong{every} key- or
+mouse-button press!
+
+Some fraction of a second is probably always the best choice, because it does
+not cost cpu-power and nonetheless the synchronization takes place quite
+immediately. So in most cases there is no need to bother with this option,
+just use the default value.
+
+@item @code{ecb-basic-buffer-sync-hook}:
+
+For each separate synchronization a hook variable is offered where you can
+hook in with some elisp code if you need some tasks performed afterwards the
+synchronization has been finished.
+
+In most cases no hook will be needed.
+
+@end itemize
+
+Analogous to the shown options for the basic interactors each add-on
+interactor has its own separate triple of these options, named congruent to
+the name of the buffer-name of the add-on interactor (e.g. for the analyse
+interactor with the buffer-name hold in @code{ecb-analyse-buffer-name} these
+three options are named @code{ecb-analyse-buffer-sync},
+@code{ecb-analyse-buffer-sync-delay} and @code{ecb-analyse-buffer-sync-hook}.
+For some specialities see @ref{Add-on synchronization}.
+
+@strong{Please note}: With the command @code{ecb-window-sync} you can
+do a manual synchronization if the automatic one is switched off or
+if you just want to do this! See the documantation of this command.
+
+@node Synchronization of basic interactors, Add-on synchronization, General synchronization aspects, ECB-window synchronizing
+@subsection Synchronization of the basic interactors
+
+This section describes some special aspects of the synchronizing of the basic
+interactors:
 
 @itemize @bullet
 
@@ -4378,37 +4487,50 @@ edit-window if this buffer is a source-file.
 
 @end itemize
 
-This feature can be customized with the option @code{ecb-window-sync}:
+The synchronization can be customized via the option triple
+@code{ecb-basic-buffer-sync}, @code{ecb-basic-buffer-sync-delay} and
+@code{ecb-basic-buffer-sync-hook}. The four basic interactors of ECB are
+always synchonized together, never separate!
 
-If active then the synchronization takes place whenever a buffer
-changes in an edit window or if another edit-window with another
-buffer will be selected, if deactivated then never. But you can also
-set this option to a list of major-modes and then the sync. will only
-be done if the major-mode of the current buffer does NOT belong to
-this list.
+@node Add-on synchronization, , Synchronization of basic interactors, ECB-window synchronizing
+@subsection Synchronization of add-on interactors
 
-But in every case the synchronization only takes place if the
-major-mode of the current-buffer in the current selected edit-window
-has a relation to files or directories. Examples for the former one
-are all programming-language-modes like @code{c++-mode} or
-@code{java-mode}, @code{Info-mode} too, an example for the latter one
-is @code{dired-mode}. For all major-modes related to
-non-file/directory-buffers like @code{help-mode},
-@code{customize-mode} and others a synchronization will never be done!
+Currently ECB has a separate synchronization for the add-on interactors
+ECB-analyse and ECB-symboldef and also for the eshell and
+speedbar-integration. Customizing can be done via:
 
-It's recommended to exclude at least @code{Info-mode} because it makes
-no sense to synchronize the ECB-windows after calling the Info help.
-Per default also @code{dired-mode} is excluded but it can also making
-sense to synchronize the ECB-directories/sources windows with the
-current directory of the dired-buffer in the edit-window.
+@itemize
 
-If you often need to toggle between autom. synchronization on and off
-then customizing the option @code{ecb-window-sync} is inefficient and
-therefore ECB offers the command @code{ecb-toggle-window-sync}.
+@item ECB-analyse:
+@code{ecb-analyse-buffer-sync}, @code{ecb-analyse-buffer-sync-delay} and
+@code{ecb-analyse-buffer-sync-hook}
 
-@strong{Please note}: With the command @code{ecb-window-sync} you can
-do a manual synchronization if the automatic one is switched off or
-if you just want to do this!
+@item ECB-symboldef:
+@code{ecb-symboldef-buffer-sync}, @code{ecb-symboldef-buffer-sync-delay} and
+@code{ecb-symboldef-buffer-sync-hook}
+
+@item ECB-eshell:
+@code{ecb-eshell-buffer-sync}, @code{ecb-eshell-buffer-sync-delay} and
+@code{ecb-eshell-buffer-sync-hook}
+
+@item ECB-speedbar:
+@code{ecb-speedbar-buffer-sync}, @code{ecb-speedbar-buffer-sync-delay} and
+@code{ecb-speedbar-buffer-sync-hook}
+
+@end itemize
+
+Each enabling- and delay-option has an additonal special value 'basic which is
+the default for all these options because it allows to use the current setting
+of @code{ecb-basic-buffer-sync} rsp. @code{ecb-basic-buffer-sync-delay} for
+the add-on synchronization too. Example: If @code{ecb-basic-buffer-sync} is
+set to the value @code{(Info-mode dired-mode)} then a setting of 'basic for
+@code{ecb-analyse-buffer-sync} means that synchronization is always done
+unless the current major-mode is Info-mode or dired-mode. Per default all
+add-on synchronization enabling- and delay-options are set to 'basic with one
+exeption: @code{ecb-analyse-buffer-sync-delay}: See the documentation of this
+option for a detailed description.
+
+In general it is recommended to read the documentation of all these options.
 
 @node Stealthy background tasks, Interactive ECB commands, ECB-window synchronizing, Usage of ECB
 @section Stealthy background-tasks of ECB
@@ -4621,59 +4743,6 @@ the upgraded options, so you never lose the contents of your
 customization-file!
 @end deffn
 
-
-@deffn Command download-ecb
-Download ECB from the ECB-website and install it. For this the option
-@code{ecb-download-url} must be set correct, whereas the default value of
-this option should always be correct.
-
-If @code{ecb-download-package-version-type} is set to -1 (means asking
-for a version) then you will be ask in the minibuffer for the version
-to download. Otherwise ECB downloads autom. the latest version
-available for the type specified in
-@code{ecb-download-package-version-type}. If no newer version than the
-current one is available no download will be done.
-
-For details about downloading and what requirements must be satisfied
-see function @code{ecb-package-download} and option
-@code{ecb-download-package-version-type}!
-
-After successful downloading the new ECB will be installed in a
-subdirectory of @code{ecb-download-install-parent-dir}. After adding
-this subdirectory to @code{load-path} and restarting Emacs the new ECB
-version can be activated by @code{ecb-activate}.
-
-If current running ECB is installed as regular XEmacs-package and not
-with the archive available at the ECB website then this function asks
-for proceeding!
-@end deffn
-
-@deffn Command download-semantic
-Download semantic from the semantic-website and install it. For this
-the variable @code{ecb-cedet-url} must be set correct,
-whereas the default value of this variable should always be correct.
-
-If @code{ecb-download-package-version-type} is set to -1 (means asking
-for a version) then you will be ask in the minibuffer for the version
-to download. Otherwise ECB downloads autom. the latest version
-available for the type specified in
-@code{ecb-download-package-version-type}. If no newer version than the
-current one is available no download will be done.
-
-For details about downloading and what requirements must be satisfied
-see function @code{ecb-package-download} and option
-@code{ecb-download-package-version-type}!
-
-After successful downloading the new semantic will be installed in a
-subdirectory of @code{ecb-download-install-parent-dir}. After adding
-this new subdirectory to @code{load-path} and restarting Emacs the new
-semantic version is loaded and is used after next start of ECB.
-
-If current running semantic is installed as regular XEmacs-package and
-not with the archive available at the semantic website then this
-function asks for proceeding!
-@end deffn
-
 @deffn Command expand-methods-nodes &optional force-all
 Set the expand level of the nodes in the ECB-methods-buffer.
 
@@ -4724,7 +4793,7 @@ Dump the current semantic-tags in special buffer and display them.
 Synchronize the eshell with the directory of current source-buffer.
 This is only done if the eshell is currently visible in the
 compile-window of ECB and if either this function is called
-interactively or @code{ecb-eshell-synchronize} is not nil.
+interactively or @code{ecb-eshell-buffer-sync} is not nil.
 @end deffn
 
 @deffn Command eshell-recenter
@@ -5231,15 +5300,6 @@ all details about the scroll-behavior of @code{scroll-other-window}
 see the advice documentation of @code{other-window-for-scrolling}.
 @end deffn
 
-@deffn Command toggle-window-sync &optional arg
-Toggle auto synchronizing of the ECB-windows. With prefix argument
-@var{ARG}, switch on if positive, otherwise switch off. If the effect
-is that auto-synchronizing is switched off then the current value of
-the option @code{ecb-window-sync} is saved so it can be used for the
-next switch on by this command. See also the option
-@code{ecb-window-sync}.
-@end deffn
-
 @deffn Command update-directories-buffer
 Updates the ECB directories buffer.
 @end deffn
@@ -5253,24 +5313,29 @@ upgrade/reset) and new values.
 @end deffn
 
 @deffn Command window-sync
-Synchronizes all special ECB-buffers with current buffer.
-
+ynchronizes all special ECB-buffers with current buffer.
 Depending on the contents of current buffer this command performs different
 synchronizing tasks but only if ECB is active and point stays in an
 edit-window.
 
 @itemize
 @item
-If current buffer is a file-buffer then all special ECB-tree-buffers are
-synchronized with current buffer.
+If current buffer is a file-buffer (or an indirect-buffer with a file-buffer
+as base-buffer) then all basic interactors (directories, sources, methods and
+history) are synchronized with current buffer.
 
 @item
 If current buffer is a dired-buffer then the directory- and
 the sources-tree-buffer are synchronized if visible
 @end itemize
 
-In addition to this the hooks in @code{ecb-current-buffer-sync-hook}
-run.
+In addition to this the hooks in @code{ecb-basic-buffer-sync-hook} run.
+
+If optional argument ONLY-BASIC-WINDOWS is not nil then only the basic
+tree-buffer directories, sources, methods and history are synchronized.
+Otherwise all registered special ecb-buffers are synchronized too.
+
+See @ref{ECB-window synchronizing}.
 @end deffn
 
 Most of these functions are also available via the menu ``ECB'' and
@@ -5342,7 +5407,11 @@ Elisp-code but only with the customize-feature!
 @item @code{ecb-type-tag-display}
 @item @code{ecb-type-tag-expansion}
 @item @code{ecb-use-speedbar-instead-native-tree-buffer}
-@item @code{ecb-window-sync-delay}
+@item @code{ecb-basic-buffer-sync-delay}
+@item @code{ecb-analyse-buffer-sync-delay}
+@item @code{ecb-symboldef-buffer-sync-delay}
+@item @code{ecb-speedbar-buffer-sync-delay}
+@item @code{ecb-eshell-buffer-sync-delay}
 @item @code{ecb-windows-height}
 @item @code{ecb-windows-width}
 @end itemize
@@ -5592,7 +5661,6 @@ been done for a better readable option index. @xref{Option Index}.
 * ecb-create-layout::           Customizing options for creating layouts
 * ecb-face-options::            Customizing options for faces
 * ecb-faces::                   Customizing the faces
-* ecb-download::                Customizing how to download ECB
 * ecb-help::                    Customizing the online help of ECB
 * ecb-eshell::                  Customizing the eshell-integration
 * ecb-speedbar::                Customizing the speedbar-integration
@@ -6428,16 +6496,15 @@ There are three options:
 @end defopt
 
 @defopt after-directory-change-hook
-Hook which run directly after the selected directory has changed. This
-means not onyl after a click onto a directory in the directory-window
-of ECB but it means this hook runs always when the current directory
-changes regardless of the trigger of this change. So for example it
-runs also when you just switches from one buffer to another via
-@code{switch-to-buffer} or @code{switch-to-buffer-other-window} and
-the directory of these filebuffers is different but only when
-auto-synchronizing of the ECB-windows is on (see
-@code{ecb-window-sync}). It runs not when switching between buffers
-and the associated files reside in the same directory.
+Hook which run directly after the selected directory has changed. This means
+not onyl after a click onto a directory in the directory-window of ECB but it
+means this hook runs always when the current directory changes regardless of
+the trigger of this change. So for example it runs also when you just switches
+from one buffer to another via @code{switch-to-buffer} or
+@code{switch-to-buffer-other-window} and the directory of these filebuffers is
+different but only when auto-synchronizing of the ECB-windows is on (see
+@code{ecb-basic-buffer-sync}). It runs not when switching between buffers and
+the associated files reside in the same directory.
 
 Each function added to this hook will be called with two arguments:
 The directory which was current _before_ the directory-change-trigger
@@ -6690,8 +6757,8 @@ Do NOT set this option directly via setq but use always customize!
 Automatically display current default-directory after activating ECB.
 
 If a file-buffer is displayed in the current active edit-window then
-ECB synchronizes its tree-buffers to this file-buffer - at least if
-the option @code{ecb-window-sync} it not nil. So for this situation
+ECB synchronizes its basic tree-buffers to this file-buffer - at least if
+the option @code{ecb-basic-buffer-sync} it not nil. So for this situation
 @code{ecb-display-default-dir-after-start} takes no effect but this
 option is for the case if no file-buffer is displayed in the
 edit-window after startup:
@@ -7923,6 +7990,72 @@ Changes for this option at runtime will take affect only after
 deactivating and then activating ECB again!
 @end defopt
 
+@defopt analyse-buffer-sync
+Synchronize the analyse buffer automatically with current edit buffer.
+
+If 'always then the synchronization takes place always a buffer changes in the
+edit window, if nil then never. If a list of major-modes then only if the
+@code{major-mode} of the new buffer belongs NOT to this list.
+
+Normally it's not necessary to exclude some major-modes because with
+not-semantic supported major-modes simply nothing happens. But maybe it can be
+helpful for certain situations...
+
+If the special value 'basic is set then ECB uses the setting of the option
+@code{ecb-basic-buffer-sync}.
+
+IMPORTANT NOTE: Every time the synchronization is done the hook
+@code{ecb-analyse-buffer-sync-hook} is evaluated.
+@end defopt
+
+@defopt analyse-buffer-sync-delay
+Time Emacs must be idle before the analyse-buffer is synchronized.
+Synchronizing is done with the current source displayed in the edit window. If
+nil then there is no delay, means synchronization takes place immediately.
+
+CAUTION: With analysing a value not too small is strongly recommended because
+it can be very annoying if more or less after each typing the current context
+is analysed. If set to nil then *each* keyboard hit refreshes the
+analyse-buffer which will make ECB quite unusable!
+
+If the special value 'basic is set then ECB uses the setting of the option
+@code{ecb-basic-buffer-sync-delay}
+@end defopt
+
+@defopt analyse-buffer-sync-hook
+ook run at the end of @code{ecb-analyse-buffer-sync}.
+See documentation of @code{ecb-analyse-buffer-sync} for conditions when
+synchronization takes place and so in turn these hooks are evaluated.
+
+Preconditions for such a hook:
+
+@itemize
+
+@item Current buffer is the buffer of the currently selected
+edit-window.
+
+@item The analyse-buffer is displayed in a visible window of the
+ecb-frame (so no check for visibilty of the analyse-buffer in
+the ecb-frame is necessary in a hook function)
+@end itemize
+
+Postcondition for such a hook:
+Point must stay in the same edit-window as before evaluating the hook.
+
+Important note: If the option @code{ecb-analyse-buffer-sync} is not
+nil the function @code{ecb-analyse-buffer-sync} is running either
+every time Emacs is idle or even after every command (see
+@code{ecb-analyse-buffer-sync-delay}). So if the anaylse-buffer is
+displayed in a window of the ecb-frame (see preconditions above)
+these hooks can be really called very often! Therefore each
+function of this hook should/must check in an efficient way at
+beginning if its task have to be really performed and then do
+them only if really necessary! Otherwise performance of Emacs
+could slow down dramatically!
+@end defopt
+
+
+
 @defopt analyse-collapsed-buckets
 Buckets collapsed when displaying the current semantic analysis. The
 semantic analyse-modul offers several categories of analysis which are
@@ -8995,7 +9128,7 @@ clicking onto a node in the methods buffer.
 
 
 
-@node ecb-faces, ecb-download, ecb-face-options, Customizable options
+@node ecb-faces, ecb-help, ecb-face-options, Customizable options
 @subsection Group ecb-faces
 
 @noindent
@@ -9132,107 +9265,8 @@ Just call @code{customize-face <face-name>} to customize these faces
 for your personal taste. Or customize the related option in the group
 @ref{ecb-face-options}.
 
-@node ecb-download, ecb-help, ecb-faces, Customizable options
-@subsection Group ecb-download
 
-@strong{Please note}: THE PACKAGE-DOWNLOAD-FEATURE OF ECB IS COMPLETELY
-DEACTIVATED SINCE VERSION 2.33! SO ALL THE FOLLOWING OPTION TAKE NO EFFECT.
-
-@noindent
-This group contains settings for downloading and installing a new ECB
-from within ECB:
-
-@defopt download-delete-archive
-Should the downloaded archive be deleted after successful
-installation or after failure during the installation-process.
-Possible values are:
-
-@itemize @minus
-@item @code{only-after-success}:
-Archive is only deleted after successful installation
-but not if a failure occurs during the installation process.
-@item @code{always}:
-Archive is also deleted if an error occurs.
-@item @code{nil}:
-Archive will never be deleted.
-@end itemize
-@end defopt
-
-@defopt download-install-parent-dir
-Parent directory where downloaded packages are installed.
-
-ECB installs a downloaded package in this directory, i.e. the downloaded
-archive X.tar.gz will be extracted in this directory so afterwards this
-directory contains a new subdirectory X which contains the downloaded package.
-
-This directory must be write-able!
-@end defopt
-
-@defopt download-package-version-type
-Version type ECB is allowed to download for upgrading.
-
-If you want to upgrade to a newer ECB-version via
-@code{ecb-download-ecb} or if you must upgrade to newer semantic-
-eieio- and/or speedbar-versions (because ECB requires these newer
-versions) then this option specifies which version-types are allowed.
-ECB checks on the download-sites of ECB/semantic/eieio/speedbar which
-versions are currently available and then downloads always the latest
-version matching the specified type:
-
-@itemize @minus
-@item 2: Get the newest version of all stable versions available.
-@item 1: Get the newest version of all stable and beta versions available.
-@item 0: Get the newest version of all stable, beta and alpha versions
-available.
-@item -1: Ask before downloading in the minibuffer for a version
-(TAB-completion of all available versions is possible).
-@end itemize
-
-So, 2 means stable, 1 means stable and betas, 0 means stable, betas and alphas
-and -1 means ask the user for a version.
-
-Per default stable and beta-versions are allowed (value 1).
-
-But all versions must match the restrictions of the specified min- and
-max-versions of the required packages. For this see the file README!
-@end defopt
-
-@defopt download-url
-URL where download-able ECB-versions are located. The ECB-archive-file
-(e.g. ecb-1.70.tar.gz) will be appended to this URL and
-@code{ecb-download-ecb} will try to download this archive.
-
-Note: Normally this URL should never change but who knows...
-@end defopt
-
-@defopt gzip-setup
-Configuration for the gzip-utility. For a description about the
-possible settings see @code{ecb-wget-setup}.
-@end defopt
-
-@defopt tar-setup
-Configuration for the tar-utility. For a description about the
-possible settings see @code{ecb-wget-setup}.
-@end defopt
-
-@defopt wget-setup
-Configuration for the wget-utility. Value is a cons-cell where:
-
-@itemize @bullet
-
-@item
-car is the name of the wget-executable - if the executable can not be
-found in the @var{PATH} then it must be a full path.
-
-@item
-cdr is the path type of the file-arguments of this binary. Possible
-values are @code{cygwin}, @code{windows} and @code{other} whereas the
-latter one is used for all Unix, Linux, Mac OS etc... If @code{cygwin} is
-set then the cygpath-utility must be in the PATH!
-@end itemize
-@end defopt
-
-@node ecb-help, ecb-eshell, ecb-download, Customizable options
+@node ecb-help, ecb-eshell, ecb-faces, Customizable options
 @subsection Group ecb-help
 
 @noindent
@@ -9295,6 +9329,33 @@ layout does not display a compile-window (see
 @code{ecb-compile-window-height}) then nothing is done.
 @end defopt
 
+@defopt eshell-buffer-sync
+Synchronize eshell with the default-directory of current source-buffer.
+
+This option takes only effect if a permanant compile-window is used in the
+current layout.
+
+If 'always then the synchronization takes place always a buffer changes in the
+edit window and if after this the default-directory of the new edit-buffer is
+different from the default-directory of the current eshell-buffer. If value is
+nil then never a synchronization will take place. If a list of major-modes
+then only if the @code{major-mode} of the new buffer belongs NOT to this list.
+
+If the special value 'basic is set then ECB uses the setting of the option
+@code{ecb-basic-buffer-sync}.
+@end defopt
+
+@defopt eshell-buffer-sync-delay
+Time Emacs must be idle before the eshell-buffer of ECB is synchronized.
+Synchronizing is done with the current source displayed in the edit window. If
+nil then there is no delay, means synchronization takes place immediately. A
+small value of about 0.25 seconds saves CPU resources and you get even though
+almost the same effect as if you set no delay.
+
+If the special value 'basic is set then ECB uses the setting of the option
+@code{ecb-basic-buffer-sync-delay}.
+@end defopt
+
 @defopt eshell-enlarge-when-eshell
 Enlarge the compile-window if it is selected by @code{eshell}. This
 takes only effect if the command @code{eshell} is called!
@@ -9307,14 +9368,6 @@ added to @code{eshell-post-command-hook} ie. which is running autom.
 after each eshell-command.
 @end defopt
 
-@defopt eshell-synchronize
-Synchronize eshell with the default-directory of current
-source-buffer. The synchronization is done by
-@code{ecb-eshell-current-buffer-sync} which can be called
-interactively but normally it is called autom. by the
-@code{ecb-current-buffer-sync-hook-internal}.
-@end defopt
-
 @node ecb-speedbar, ecb-non-semantic, ecb-eshell, Customizable options
 @subsection Group ecb-speedbar
 
@@ -9324,6 +9377,64 @@ Hook running directly before ECB activates the integrated speedbar.
 For example this hook can be used to change the expansion-mode of the
 integrated speedbar via @code{speedbar-change-initial-expansion-list}.
 Example: (speedbar-change-initial-expansion-list ``buffers'').
+@end defopt
+
+@defopt speedbar-buffer-sync
+Synchronize the speedbar-buffer of ECB automatically with current
+edit buffer.
+
+If 'always then the synchronization takes place always a buffer changes in the
+edit window, if nil then never. If a list of major-modes then only if the
+@code{major-mode} of the new buffer belongs NOT to this list.
+
+If the special value 'basic is set then ECB uses the setting of the option
+@code{ecb-basic-buffer-sync}.
+
+IMPORTANT NOTE: Every time the synchronization is done the hook
+@code{ecb-speedbar-buffer-sync-hook} is evaluated.
+@end defopt
+
+@defopt speedbar-buffer-sync-delay
+Time Emacs must be idle before the speedbar-buffer of ECB is synchronized.
+Synchronizing is done with the current source displayed in the edit window. If
+nil then there is no delay, means synchronization takes place immediately. A
+small value of about 0.25 seconds saves CPU resources and you get even though
+almost the same effect as if you set no delay.
+
+If the special value 'basic is set then ECB uses the setting of the option
+@code{ecb-basic-buffer-sync-delay}.
+@end defopt
+
+@defopt speedbar-buffer-sync-hook
+ook run at the end of @code{ecb-speedbar-buffer-sync}.
+See documentation of @code{ecb-speedbar-buffer-sync} for conditions when
+synchronization takes place and so in turn these hooks are evaluated.
+
+Preconditions for such a hook:
+
+@itemize
+
+@item Current buffer is the buffer of the currently selected
+edit-window.
+
+@item The speedbar-buffer is displayed in a visible window of the
+ecb-frame (so no check for visibilty of the speedbar-buffer in
+the ecb-frame is necessary in a hook function)
+@end itemize
+
+Postcondition for such a hook:
+Point must stay in the same edit-window as before evaluating the hook.
+
+Important note: If the option @code{ecb-speedbar-buffer-sync} is not
+nil the function @code{ecb-speedbar-buffer-sync} is running either
+every time Emacs is idle or even after every command (see
+@code{ecb-speedbar-buffer-sync-delay}). So if the speedbar-buffer is
+displayed in a window of the ecb-frame (see preconditions above)
+these hooks can be really called very often! Therefore each
+function of this hook should/must check in an efficient way at
+beginning if its task have to be really performed and then do
+them only if really necessary! Otherwise performance of Emacs
+could slow down dramatically!
 @end defopt
 
 @node ecb-non-semantic, ecb-winman, ecb-speedbar, Customizable options
@@ -9788,7 +9899,7 @@ ECB.
 
 The first section describes how to download and install a new
 package from the web, where ``package'' means either ECB itself or the
-required libraries semantic, eieio and speedbar.
+required library CEDET
 
 After installing a new ECB-version ECB checks if the values of the
 customized ECB-options are still compatible. If not ECB does some
@@ -9800,115 +9911,16 @@ smart things. This is the topic of the second section.
 @end menu
 
 @node Downloading new versions, Auto. option-upgrading, Upgrading, Upgrading
-@section Downloading new versions of ECB and/or required packages
+@section Downloading new versions of ECB and/or CEDET
 
 @cindex Download
 
 @strong{Please note}: THE PACKAGE-DOWNLOAD-FEATURE OF ECB IS COMPLETELY
 DEACTIVATED SINCE VERSION 2.33!
 
-ECB offers the possibility to upgrade to newer versions direct from
-the ECB-website. This can be done if the following requirements are
-satisfied:
-
-@enumerate
-@item A connection to the web is available
-@item The tools ``wget'', ``tar'' and ``gzip'' are installed
-
-With Unix-systems these tools are in the
-standard-distribution. If you are running any Microsoft Windows system
-then you need cygwin@footnote{cygwin is available at
-@ifhtml
-@uref{http://cygwin.com/}
-@end ifhtml
-@ifnothtml
-@url{http://cygwin.com/}
-@end ifnothtml
-} which offers these tools too. On every
-system these tools must reside in the @env{PATH} environment-variable!
-
-If you are behind a firewall and you have to use a proxy you maybe
-need the following wget-configuration in your file @file{~/.wgetrc}:
-
-@example
-@group
-# Define your proxies (where 8080 and 8081 are examples
-# for the port-numbers)
-http_proxy = http://your.proxy.com:8080
-ftp_proxy  = http://your.ftpproxy.com:8081
-  
-# If you do not want to use proxy at all, set this to off.
-use_proxy = on
-@end group
-@end example
-@end enumerate
-
-If these requirements are satisfied you can download and install both
-ECB itself and also the required versions of semantic, eieio and
-speedbar:
-
-@itemize @bullet
-@item Download a new ECB-version with @code{ecb-download-ecb}:
-
-A description for this command you will find in @ref{Interactive ECB
-commands}. Check also the options of the customize-group
-'ecb-download' (@pxref{ecb-download}).
-
-@anchor{Download required packages}
-@item Download and install of required packages:
-
-ECB checks at load-time if the packages semantic, eieio and speedbar
-are at least installed and at start-time if the required versions of
-semantic, eieio and speedbar (see @file{README}) are installed and
-loaded into Emacs. If not you will be asked if you want auto. download
-and install them. If you confirm this then ECB does the following:
-
-@enumerate
-@item
-Checking which versions are available at the download-site of the
-required packages. With the option
-@code{ecb-download-package-version-type} you can specify which type of
-versions (only stable, stable and betas or stable, betas and alphas)
-you allow to download and install. This option offers also the choice
-of asking you for a certain version. Depending on this setting ECB
-either ask you which version it should download and install or chooses
-autom. the newest version available which is matching both its
-min-max-requirements and the setting in
-@code{ecb-download-package-version-type}.
-
-NOTE: Currently there are only beta-versions of speedbar available
-therefore this option has to be set to 1 (allow stable and beta
-versions). But the speedbar beta-versions are very stable!
-
-@item
-Downloading and installing the right version (see 1.) of the required
-packages. ECB downloads and installs the new package versions in
-subdirectories of @code{ecb-download-install-parent-dir}.
-@end enumerate
-
-If both of these actions succeed then you will get a message-buffer
-which tells you something like:
-
-@example
-@group
------------------------------------------------------------------
-Current state of the required packages semantic, eieio, speedbar:
-
-- semantic author-version must be [1.4, 1.4.9]:
-  Installed in /usr/local/lib/site-lisp/semantic-1.4
-  
-- eieio author-version must be [0.17, 0.17.9]:
-  Correct version already loaded!
-
-- speedbar author-version must be [0.14beta1, 0.15.9]:
-  Correct version already loaded!
-
-After adding the new directory to your @code{load-path} and then
-restarting Emacs the new package(s) can be activated.
------------------------------------------------------------------
-
-@end group
-@end example
+@c TODO: Klaus Berndl <klaus.berndl@sdm.de>: describe shortly how to get, save
+@c and extract a release of ECB and CEDET.
+@c cedet must be [1.4, 1.4.9]: describe what this means:
 
 @strong{Remark 1}: "P author-version must be [x y]" means, that ECB
 requires package P in a version-number >= x and <= y.
@@ -9917,7 +9929,6 @@ requires package P in a version-number >= x and <= y.
 @code{nil} you can prevent ECB from checking correct versions of
 semantic, eieio and speedbar but it's strongly recommended not to do
 this!
-@end itemize
 
 @node Auto. option-upgrading, , Downloading new versions, Upgrading
 @section Automatic upgrading of options
@@ -10891,7 +10902,7 @@ ECB tries also to recenter the eshell-buffer as best as possible.
 Normally this is done autom. but you can do it on demand with the
 command @code{ecb-eshell-recenter}.
 
-If option @code{ecb-eshell-synchronize} is true then ECB always
+If option @code{ecb-eshell-buffer-sync} is true then ECB always
 synchronizes the command prompt of eshell with the directory of
 current source-buffer of the current active edit-window.
 
@@ -11481,7 +11492,11 @@ The following hooks are available:
 @item @code{ecb-before-activate-hook}
 @item @code{ecb-before-deactivate-hook}
 @item @code{ecb-common-tree-buffer-after-create-hook}
-@item @code{ecb-current-buffer-sync-hook}
+@item @code{ecb-basic-buffer-sync-hook}
+@item @code{ecb-analyse-buffer-sync-hook}
+@item @code{ecb-symboldef-buffer-sync-hook}
+@item @code{ecb-speedbar-buffer-sync-hook}
+@item @code{ecb-eshell-buffer-sync-hook}
 @item @code{ecb-deactivate-hook}
 @item @code{ecb-directories-buffer-after-create-hook}
 @item @code{ecb-hide-ecb-windows-after-hook}
@@ -13618,7 +13633,7 @@ YOUR PROGRAMS!
 
 User-options and hooks related to the layout-engine API:
 @itemize @minus
-@item @code{ecb-current-buffer-sync-hook}
+@item @code{ecb-basic-buffer-sync-hook}
 @item @code{ecb-hide-ecb-windows-after-hook}
 @item @code{ecb-hide-ecb-windows-before-hook}
 @item @code{ecb-redraw-layout-after-hook}
