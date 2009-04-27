@@ -23,7 +23,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.216 2009/04/26 16:04:38 berndl Exp $
+@c $Id: ecb.texi,v 1.217 2009/04/27 16:31:47 berndl Exp $
 
 @setfilename ecb.info
 
@@ -162,7 +162,7 @@ how to do this.
 * Install and first steps::     Installing ECB and first steps
 * Overview::                    Compact introducing of basic concepts
 * Manual usage::                How to use this manual
-* ECB-interactors::             Description of all interactors of ECB
+* ECB-windows::                 Description of all ECB-windows of ECB
 * Activation and Deactivation:: How to start and end ECB
 * Usage of ECB::                How to use ECB
 * Customizing::                 How to customize ECB
@@ -198,18 +198,18 @@ How to set up Emacs for file parsing with ECB
 * Setting up CEDET/semantic::   How to setup semantic correctly
 * Non-semantic files::          Setup for file types not supported by semantic
 
-All interactors of ECB
+All ECB-windows of ECB
 
-* Basic interactors::           Description of the basic interactors
-* Add-on interactors::          Description of additional interactors
+* Basic ECB-windows::           Description of the basic ECB-windows
+* Add-on ECB-windows::          Description of additional ECB-windows
 
-The basic interactors of ECB
+The basic ECB-windows of ECB
 
 * Tree-buffer basics::          General introduction into tree-buffers
 * Tree-buffer styles::          Displaying the trees with different styles
-* ECB Directories-buffer::      Contents of the ECB Directories-buffer
-* ECB Sources-buffer::          Contents of the ECB Sources/history-buffer
-* ECB Methods-buffer::          Contents of the ECB Methods-buffer
+* ECB Directories-window::      Contents of the ECB Directories-window
+* ECB Sources-window::          Contents of the ECB Sources/history-window
+* ECB Methods-window::          Contents of the ECB Methods-window
 
 Displaying the trees with different styles
 
@@ -218,7 +218,7 @@ Displaying the trees with different styles
 * Tree-buffers with images::    Which images are used for the tree
 * Images for Methods-buffer::   Images for the tags in the Methods-buffer
 
-Add-on interactors of ECB
+Add-on ECB-windows of ECB
 
 * Semantic analyser::           Analyses and displays semantic context
 * Symboldefinition::            Displays definition of current symbol
@@ -274,6 +274,12 @@ Changing, customizing, redrawing and creating layouts
 * Fixing window sizes::         Fixing sizes of the ECB-windows
 * Creating a new ECB-layout::   Interactively creating new layouts
 
+Synchronization of the ECB-windows
+
+* General synchronization aspects::       General synchronization aspects
+* Synchronization of basic ECB-windows::  Synchronization of basic ECB-windows
+* Add-on synchronization::                Synchronization of add-on ECB-windows
+
 Customizing ECB
 
 * General aspects::             General aspects for customizing ECB
@@ -290,10 +296,10 @@ All customizable options of ECB
 * ecb-general::                 General customizing ECB
 * ecb-tree-buffer::             Customizing the general tree layout
 * ecb-directories::             Customizing the ECB-directories-tree
-* ecb-sources::                 Customizing the ECB-sources-tree
-* ecb-methods::                 Customizing the ECB-methods-tree
-* ecb-history::                 Customizing the ECB-history-tree
-* ecb-analyse::                 Customizing the ECB-analyse-interactor
+* ecb-sources::                 Customizing the ECB-sources-window
+* ecb-methods::                 Customizing the ECB-methods-window
+* ecb-history::                 Customizing the ECB-history-window
+* ecb-analyse::                 Customizing the ECB-analyse-window
 * ecb-layout::                  Customizing the ECB-layout
 * ecb-compilation::             Customizing the compile-window
 * ecb-create-layout::           Customizing options for creating layouts
@@ -886,22 +892,19 @@ The chapter ``Tips and tricks'' is also very interesting!
 
 @cindex tree-buffer
 @cindex ECB-windows
-@cindex interactor
 ECB is a global minor-mode which offers a couple of @dfn{ECB-windows}
 for browsing your sources comfortable with the mouse and the keyboard.
-These ``special'' windows are also called @dfn{interactors} in this
-manual.
 
-ECB offers some basic interactors to browse your sources:
+ECB offers some basic ECB-windows to browse your sources:
 @itemize @minus
 @item ECB-Directories for browsing directories
 @item ECB-Sources for browsing source-files and a file-history
 @item ECB-Methods for browsing the contents of a source
 @end itemize
 
-See @ref{Basic interactors} for a detailled description what these
-basic interactors offer. See @ref{ECB-interactors} for a general
-introduction in the interactor-concept of ECB.
+See @ref{Basic ECB-windows} for a detailled description what these
+basic ECB-windows offer. See @ref{ECB-windows} for a general
+introduction in the ECB-window-concept of ECB.
 
 In addition to these ``special'' ECB-windows you have always an
 @dfn{edit-area} where you can edit your source-files. The edit-area
@@ -941,7 +944,7 @@ see @ref{Changing the ECB-layout}}:
 @end group
 @end example
 
-@node Manual usage, ECB-interactors, Overview, Top
+@node Manual usage, ECB-windows, Overview, Top
 @chapter How to use this manual
 
 @strong{IMPORTANT}: You should have read the chapter @ref{Overview}
@@ -953,11 +956,11 @@ for.
 
 @table @asis
 
-@item All interactors of ECB (@pxref{ECB-interactors})
-Gives an introduction into the concept of interactors of ECB, what
+@item All ECB-windows of ECB (@pxref{ECB-windows})
+Gives an introduction into the concept of ECB-windows of ECB, what
 they are, which different types exist, how they look, how they can be
 used and last but not least what they do in detail, i.e. explains
-every interactor of ECB in detail.
+every ECB-window of ECB in detail.
 
 @item Activation and Deactivation (@pxref{Activation and Deactivation})
 Describes how to activate and deactivate ECB and which different types
@@ -1017,47 +1020,47 @@ List of all concepts introduced by ECB
 
 
 
-@node ECB-interactors, Activation and Deactivation, Manual usage, Top
-@chapter All interactors of ECB
+@node ECB-windows, Activation and Deactivation, Manual usage, Top
+@chapter All ECB-windows of ECB
 
 ECB displays a number of informational windows that allow for easy
 source code navigation and overview. These informational windows are
-called @dfn{interactors}. Each interactor is displayed in its own
+called @dfn{ECB-windows}. Each ECB-window is displayed in its own
 special window/buffer which is dedicated and read-only.
 
-There are some ``basic'' interactors (e.g. for browsing directories
-and sources) and some ``add-on'' interactors for special purposes like
+There are some ``basic'' ECB-windows (e.g. for browsing directories
+and sources) and some ``add-on'' ECB-windows for special purposes like
 displaying the definition of the current symbol under point. This
-chapter describes all interactors of ECB in detail.
+chapter describes all ECB-windows of ECB in detail.
 
 @menu
-* Basic interactors::           Description of the basic interactors
-* Add-on interactors::          Description of additional interactors
+* Basic ECB-windows::           Description of the basic ECB-windows
+* Add-on ECB-windows::          Description of additional ECB-windows
 @end menu
 
-@node Basic interactors, Add-on interactors, ECB-interactors, ECB-interactors
-@section The basic interactors of ECB
+@node Basic ECB-windows, Add-on ECB-windows, ECB-windows, ECB-windows
+@section The basic ECB-windows of ECB
 
-ECB offers basic interactors for browsing directory-structures, files
+ECB offers basic ECB-windows for browsing directory-structures, files
 of a directory and contents of source-files (e.g. methods and
-variables). These basic interactors are build from a special class of
-interactors, called @dfn{tree-buffer}. See @ref{Tree-buffer basics}
+variables). These basic ECB-windows are build from a special class of
+ECB-windows, called @dfn{tree-buffer}. See @ref{Tree-buffer basics}
 for more details about the functionality of tree-buffers. See
 @ref{Tree-buffer styles} to get an impression about the look&feel of
 these tree-buffers.
 
-In the following subsections these basic interactors of ECB will be
+In the following subsections these basic ECB-windows of ECB will be
 explained in detail.
 
 @menu
 * Tree-buffer basics::          General introduction into tree-buffers
 * Tree-buffer styles::          Displaying the trees with different styles
-* ECB Directories-buffer::      Contents of the ECB Directories-buffer
-* ECB Sources-buffer::          Contents of the ECB Sources/history-buffer
-* ECB Methods-buffer::          Contents of the ECB Methods-buffer
+* ECB Directories-window::      Contents of the ECB Directories-window
+* ECB Sources-window::          Contents of the ECB Sources/history-window
+* ECB Methods-window::          Contents of the ECB Methods-window
 @end menu
 
-@node Tree-buffer basics, Tree-buffer styles, Basic interactors, Basic interactors
+@node Tree-buffer basics, Tree-buffer styles, Basic ECB-windows, Basic ECB-windows
 @subsection General introduction into tree-buffers
 
 ECB displays most of its informations (e.g. about directory-structures
@@ -1105,26 +1108,26 @@ see @ref{Using the keyboard}.} (e.g. clicking onto ``leaf-node-1'' or
 ``parent-node-1'' in the example above). Which actions depends on the
 type of the tree-buffer. For example clicking on a tree-node in the
 ECB-sources-buffer (which is the name of a source-file) opens the
-relelated file in the edit-area of ECB (@pxref{ECB Sources-buffer})
+relelated file in the edit-area of ECB (@pxref{ECB Sources-window})
 whereas clicking onto a node in the ECB-methods-buffer (which is the
 name of a tag in the current source-file displayed in the edit-area)
 ``jumps'' to the location of this tag in the source-buffer in the
-edit-area (@pxref{ECB Methods-buffer}).
+edit-area (@pxref{ECB Methods-window}).
 
-Almost every interactor of ECB offers a special popup-menu when
+Almost every ECB-window of ECB offers a special popup-menu when
 clicking with the right mouse-button (of course also possible via
 keyboard, see @ref{Using the keyboard}) onto a tree-node (e.g. some
 senseful actions possible for directory-nodes like grepping this
 directory or performing version-control actions for this directory or
 something else).
 
-See @ref{ECB Directories-buffer}, @ref{ECB Sources-buffer}, @ref{ECB
-Methods-buffer} and @ref{Add-on interactors} for a detailed
-description which actions are triggered and which popup-menus are
-offered in all the interactors of ECB.
+See @ref{ECB Directories-window}, @ref{ECB Sources-window}, @ref{ECB
+Methods-window} and @ref{Add-on ECB-windows} for a detailed description which
+actions are triggered and which popup-menus are offered in all the ECB-windows
+of ECB.
 
 
-@node Tree-buffer styles, ECB Directories-buffer, Tree-buffer basics, Basic interactors
+@node Tree-buffer styles, ECB Directories-window, Tree-buffer basics, Basic ECB-windows
 @subsection Displaying the trees with different styles
 
 ECB offers three different styles for the tree-buffers in the
@@ -1331,8 +1334,8 @@ can be disabled/enabled via the option
 images are located in that directory where the option
 @code{ecb-tree-image-icons-directories} point to for methods.
 
-@node ECB Directories-buffer, ECB Sources-buffer, Tree-buffer styles, Basic interactors
-@subsection ECB Directories-interactor
+@node ECB Directories-window, ECB Sources-window, Tree-buffer styles, Basic ECB-windows
+@subsection ECB Directories-window
 
 @cindex Directories
 The ECB directories interactor is for browsing directories. The direct
@@ -1341,13 +1344,13 @@ can be defined with the option @code{ecb-source-path}. Each
 source-path is the starting-node of the complete directory-structure
 below this path and can be browsed with the directories-interactor.
 
-When a sources interactor is contained in the current layout then per
+When a sources ECB-window is contained in the current layout then per
 default only directories and subdirectories are displayed in the
 directories tree-buffer (the source-files are displayed in the sources
-tree-buffer - see @ref{ECB Sources-buffer}) but this can be changed
+tree-buffer - see @ref{ECB Sources-window}) but this can be changed
 with the option @code{ecb-show-sources-in-directories-buffer}.
 
-@subsubsection Usage of the directories interactor
+@subsubsection Usage of the directories ECB-window
 
 @itemize @bullet
 @item
@@ -1384,30 +1387,30 @@ adding a new source-path.
 
 When source-files-nodes are displayed in the directories-buffer (see
 @code{ecb-show-sources-in-directories-buffer}) then for these nodes
-all descriptions of section @ref{ECB Sources-buffer} are valid.
+all descriptions of section @ref{ECB Sources-window} are valid.
 
-@subsubsection Activating/Displaying the directories interactor
+@subsubsection Activating/Displaying the directories ECB-window
 
 Either use one of the predefined layouts which contain the directories
-interactor (@pxref{Changing the ECB-layout}) (e.g. via @kbd{C-c . l
+ECB-window (@pxref{Changing the ECB-layout}) (e.g. via @kbd{C-c . l
 c}) or create a new ecb-layout via the command
 @code{ecb-create-new-layout} and add a buffer of type ``directories''
 into this new layout (@pxref{Creating a new ECB-layout}).
 
-@subsubsection Customizing the directories interactor
+@subsubsection Customizing the directories ECB-window
 
 See @ref{ecb-directories} for a list of all options currently
-available for customizing this interactors to your needs.
+available for customizing this ECB-windows to your needs.
 
-@node ECB Sources-buffer, ECB Methods-buffer, ECB Directories-buffer, Basic interactors
-@subsection ECB Sources- and history-interactor
+@node ECB Sources-window, ECB Methods-window, ECB Directories-window, Basic ECB-windows
+@subsection ECB Sources- and history-ECB-window
 
 @cindex Sources
 @cindex History
-ECB offers two interactors for displaying source-file-names: The
-sources- and the history-interactor. The former one displays all
+ECB offers two ECB-windows for displaying source-file-names: The
+sources- and the history-ECB-window. The former one displays all
 source-file names of the currently selected directory of the
-directories-interactor (@pxref{ECB Directories-buffer}) whereas the
+directories-ECB-window (@pxref{ECB Directories-window}) whereas the
 latter one displays the names of all currently loaded source-files
 regardless in which directory they reside so it works as a ``history''
 of source-files.
@@ -1416,7 +1419,7 @@ Both the sources- and the history-tree-buffer are ``flat''
 tree-buffers means all nodes are direct children of the invisible
 root-node and can not be expanded.
 
-@subsubsection Usage of the sources/history interactor
+@subsubsection Usage of the sources/history ECB-window
 
 @itemize @bullet
 @item
@@ -1433,7 +1436,7 @@ or RETURN (@pxref{Using the keyboard})) on a source row in the
 ECB-Sources or ECB-History windows then the source will not be
 displayed in an edit-window but it will be scanned in the background
 and all its contents (e.g. methods and variables) are listed in the
-@dfn{ECB Methods} window (@pxref{ECB Methods-buffer}. So you can get an
+@dfn{ECB Methods} window (@pxref{ECB Methods-window}. So you can get an
 overlook over the source without changing the buffer in the
 edit-window.
 
@@ -1452,25 +1455,25 @@ deleting the related file from disk.
 
 @end itemize
 
-@subsubsection Activating/Displaying the sources/history interactor
+@subsubsection Activating/Displaying the sources/history ECB-window
 
 Either use one of the predefined layouts which contain the sources
-(rsp. history) interactor (@pxref{Changing the ECB-layout}) (e.g. via
+(rsp. history) ECB-window (@pxref{Changing the ECB-layout}) (e.g. via
 @kbd{C-c . l c}) or create a new ecb-layout via the command
 @code{ecb-create-new-layout} and add a buffer of type ``sources''
 (rsp. ``history'') into this new layout (@pxref{Creating a new
 ECB-layout}).
 
-@subsubsection Customizing the sources/history interactor
+@subsubsection Customizing the sources/history ECB-window
 
 See @ref{ecb-sources} and @ref{ecb-history} for a list of all options
-currently available for customizing these interactors to your needs.
+currently available for customizing these ECB-windows to your needs.
 
-@node ECB Methods-buffer, , ECB Sources-buffer, Basic interactors
-@subsection The ECB Methods interactor
+@node ECB Methods-window,  , ECB Sources-window, Basic ECB-windows
+@subsection The ECB Methods ECB-window
 
 @cindex Methods
-The @dfn{ECB-Methods} interactor contains all parsed and recognized tags
+The @dfn{ECB-Methods} ECB-window contains all parsed and recognized tags
 of the current source-buffer. It is called ``Method-buffer'' because
 ECB is mostly designed for browsing sourcecode files and for
 programming-languages these tags are often methods (and variables
@@ -1479,11 +1482,11 @@ methods and variables - but in general the method-buffer can contain
 any kind of tags (e.g. sections and subsections for texinfo
 buffers).
 
-Per default the content of the methods-interactor is automatically
+Per default the content of the methods-ECB-window is automatically
 synchronized and updated with current point of the current source-buffer in
 the edit-area (@pxref{ECB-window synchronizing}).
 
-@subsubsection Usage of the methods interactor
+@subsubsection Usage of the methods ECB-window
 
 @itemize @bullet
 @item
@@ -1515,25 +1518,25 @@ expansion-level.
 
 @end itemize
 
-@subsubsection Activating/Displaying the methods interactor
+@subsubsection Activating/Displaying the methods ECB-window
 
 Either use one of the predefined layouts which contain the methods
-interactor (@pxref{Changing the ECB-layout}) (e.g. via @kbd{C-c . l
+ECB-window (@pxref{Changing the ECB-layout}) (e.g. via @kbd{C-c . l
 c}) or create a new ecb-layout via the command
 @code{ecb-create-new-layout} and add a buffer of type ``methods'' into
 this new layout (@pxref{Creating a new ECB-layout}).
 
-@subsubsection Customizing the methods interactor
+@subsubsection Customizing the methods ECB-window
 
 See @ref{ecb-methods} for a list of all options currently available
-for customizing this interactor to your needs.
+for customizing this ECB-window to your needs.
 
 
-@node Add-on interactors, , Basic interactors, ECB-interactors
-@section Add-on interactors of ECB
+@node Add-on ECB-windows, , Basic ECB-windows, ECB-windows
+@section Add-on ECB-windows of ECB
 
 This chapter gives detailled informations about available add-on
-interactors. This includes basic desciptions what they do as well as
+ECB-windows. This includes basic desciptions what they do as well as
 how to use them.
 
 @menu
@@ -1541,7 +1544,7 @@ how to use them.
 * Symboldefinition::            Displays definition of current symbol
 @end menu
 
-@node Semantic analyser, Symboldefinition, Add-on interactors, Add-on interactors
+@node Semantic analyser, Symboldefinition, Add-on ECB-windows, Add-on ECB-windows
 @subsection Displaying the current semantic context
 
 @cindex Analyse
@@ -1550,22 +1553,22 @@ library tool that performs context analysis and can derive useful
 information. See the related node in the info-manual of cedet/semantic
 for more detailed informations about this tool.
 
-The analyzer output can be used through a special ECB-interactor. This
+The analyzer output can be used through a special ECB-window. This
 interface lists details about the analysis, such as the current
 function, local arguments and variables, details on the prefix (the
 symbol the cursor is on), and a list of all possible completions (see
 @code{semantic-analyze-possible-completions} for more details about
 completions available via the semantic-analyser).
 
-Per default the content of the analyser-interactor is automatically
+Per default the content of the analyser-ECB-window is automatically
 synchronized and updated with current point of the current source-buffer in
 the edit-area (see @code{ecb-analyse-buffer-sync} and @ref{ECB-window
 synchronizing}).
 
-The analyser-interactor is of type tree-buffer. See @ref{Tree-buffer
+The analyser-ECB-window is of type tree-buffer. See @ref{Tree-buffer
 basics} for basic informations how to use such a tree-buffer.
 
-@subsubsection Usage of the analyser-interactor
+@subsubsection Usage of the analyser-ECB-window
 
 @itemize @bullet
 @item
@@ -1585,16 +1588,16 @@ setting in @code{ecb-mouse-click-destination}.
 @item
 If you click on a node-name in the "Completions"-bucket, then the text
 that was recently analyzed will be replaced with the name of the tag
-that was clicked on in the analyser-interactor.
+that was clicked on in the analyser-ECB-window.
 
 @item
 Right clicking with the mouse (or with the keyboard, see @ref{Using
 popup-menus}) onto a tree-node opens a popup-menu which allows to
 display additional (if available) informations to the current node.
 
-@subsubsection Interactive commands of the analyser-interactor
+@subsubsection Interactive commands of the analyser-ECB-window
 
-ECB offers the following commands for the analyser-interactor:
+ECB offers the following commands for the analyser-ECB-window:
 
 @itemize @minus
 @item @code{ecb-analyse-buffer-sync}
@@ -1605,13 +1608,13 @@ ECB offers the following commands for the analyser-interactor:
 See @ref{Interactive ECB commands} for details about these commands.
 But you should not have any need to call
 @code{ecb-analyse-buffer-sync} directly because ECB automatically
-syncronizes the analyser-interactor with current active edit-buffer. 
+syncronizes the analyser-ECB-window with current active edit-buffer. 
 
 @c TODO: Ev. adding the interactive commands of ecb-analyse here?!
 
 @end itemize
 
-@subsubsection Activating/Displaying the analyser-interactor
+@subsubsection Activating/Displaying the analyser-ECB-window
 
 Either use one of the predefined layouts "left-analyse" or
 ``leftright-analyse'' (e.g. via @kbd{C-c . l c}) or create a new
@@ -1619,17 +1622,17 @@ ecb-layout via the command @code{ecb-create-new-layout} and add a
 buffer of type ``other'' and name ``analyse'' into this new layout
 (@pxref{Creating a new ECB-layout}).
 
-@subsubsection Customizing the analyser interactor
+@subsubsection Customizing the analyser ECB-window
 
 See @ref{ecb-analyse} for a list of all options currently available
-for customizing this interactor to your needs.
+for customizing this ECB-window to your needs.
 
-@node Symboldefinition, ,Semantic analyser, Add-on interactors
+@node Symboldefinition, ,Semantic analyser, Add-on ECB-windows
 @subsection Displaying the definition of the current symbol under point
 
 @c TODO
 
-@node Activation and Deactivation, Usage of ECB, ECB-interactors, Top
+@node Activation and Deactivation, Usage of ECB, ECB-windows, Top
 @chapter Activation and Deactivation
 
 @noindent
@@ -2936,12 +2939,12 @@ offered by ECB. It displays all parsing informations of the current
 source-buffer (the buffer displayed in the current active
 edit-window).
 
-Normally ECB gets all informations displayed in this Methods-buffer
-from the semantic-library - at least for semantic-sources. This
-library parses auto. the current source-buffer in the edit-window of
-ECB and returns all information in form of @dfn{tags} to ECB which
-displays them in a browse-able form in its Method-buffer. See @ref{ECB
-Methods-buffer} for information how to use the Methods-buffer.
+Normally ECB gets all informations displayed in this Methods-buffer from the
+semantic-library - at least for semantic-sources. This library parses auto.
+the current source-buffer in the edit-window of ECB and returns all
+information in form of @dfn{tags} to ECB which displays them in a browse-able
+form in its Method-buffer. See @ref{ECB Methods-window} for information how to
+use the Methods-buffer.
 
 There are several options to customize which tags ECB should display
 in general, if the tags should be collapsed or expanded, how to
@@ -3286,7 +3289,7 @@ selecting another layout during current Emacs-session use the command
 
 With the option @code{ecb-show-sources-in-directories-buffer} you can
 define if sources are displayed in the directory-window of a layout
-(@pxref{ECB Directories-buffer}).
+(@pxref{ECB Directories-window}).
 
 In addition to the general layout you can specify if the layout should
 contain a persistent compilation-window at the bottom of the frame, see
@@ -4347,37 +4350,36 @@ Now you will edit at the same place in the function.
 @section Synchronization of the ECB-windows
 
 Per default ECB synchronizes automatically the contents of the
-ECB-interactors@footnote{Another term for interactor is ``special
-ecb-window/buffer''} (e.g. tree-buffers) with the current active edit-window
+ECB-windows (e.g. tree-buffers) with the current active edit-window
 (rsp. the current buffer of the edit window).
 
-ECB distinguishes between the so called ``basic'' interactors (for a general
-description see @ref{Basic interactors}) and add-on
-interactors (@pxref{Add-on interactors}). This distinction is also important
+ECB distinguishes between the so called ``basic'' ECB-windows (for a general
+description see @ref{Basic ECB-windows}) and add-on
+ECB-windows (@pxref{Add-on ECB-windows}). This distinction is also important
 concerning synchronization:
 
-The basic interactors are always synchronized together whereas for each add-on
-interactor a separate synchronization option is offered.
+The basic ECB-windows are always synchronized together whereas for each add-on
+ECB-window a separate synchronization option is offered.
 
 This section describes at beginning some general synchronization aspects
-(common for all interactors, basic ones as well as add-ons), then the
-synchronization of the basic-interactors and finally the synchronization of
-the add-on interactors.
+(common for all ECB-windows, basic ones as well as add-ons), then the
+synchronization of the basic-ECB-windows and finally the synchronization of
+the add-on ECB-windows.
 
 
 
 @menu
 * General synchronization aspects::       General synchronization aspects
-* Synchronization of basic interactors::  Synchronization of basic interactors
-* Add-on synchronization::                Synchronization of add-on interactors
+* Synchronization of basic ECB-windows::  Synchronization of basic ECB-windows
+* Add-on synchronization::                Synchronization of add-on ECB-windows
 @end menu
 
-@node General synchronization aspects, Synchronization of basic interactors, ECB-window synchronizing, ECB-window synchronizing
+@node General synchronization aspects, Synchronization of basic ECB-windows, ECB-window synchronizing, ECB-window synchronizing
 @subsection General synchronization aspects
 
-For each separate interactor-synchronization (remember: One common for the basic
-interactors, one for each add-on interactor) ECB offers the following
-option-triple (demonstrated for the basic interactors):
+For each separate ECB-window-synchronization (remember: One common for the basic
+ECB-windows, one for each add-on ECB-window) ECB offers the following
+option-triple (demonstrated for the basic ECB-windows):
 
 @itemize
 
@@ -4385,7 +4387,7 @@ option-triple (demonstrated for the basic interactors):
 
 Enables or disables the synchronization in general.
 
-If active then the synchronization for the related interactor-buffers/windows
+If active then the synchronization for the related ECB-window-buffers/windows
 takes place whenever a buffer changes in an edit window or if another
 edit-window with another buffer will be selected, if deactivated then never.
 But you can also set this option to a list of major-modes and then the sync.
@@ -4413,7 +4415,7 @@ This option takes only effect if the synchronization is switched on via
 @code{ecb-basic-buffer-sync} and determines when ECB synchronizes.
 
 This option sets the time in seconds (fractions allowed) Emacs must be idle
-before the related interactor(s) are synchronized. If nil then there is no
+before the related ECB-window(s) are synchronized. If nil then there is no
 delay, means synchronization takes place immediately. A small value of about
 0.25 seconds saves CPU resources and you get even though almost the same
 effect as if you set no delay.
@@ -4439,10 +4441,10 @@ In most cases no hook will be needed.
 
 @end itemize
 
-Analogous to the shown options for the basic interactors each add-on
-interactor has its own separate triple of these options, named congruent to
-the name of the buffer-name of the add-on interactor (e.g. for the analyse
-interactor with the buffer-name hold in @code{ecb-analyse-buffer-name} these
+Analogous to the shown options for the basic ECB-windows each add-on
+ECB-window has its own separate triple of these options, named congruent to
+the name of the buffer-name of the add-on ECB-window (e.g. for the analyse
+ECB-window with the buffer-name hold in @code{ecb-analyse-buffer-name} these
 three options are named @code{ecb-analyse-buffer-sync},
 @code{ecb-analyse-buffer-sync-delay} and @code{ecb-analyse-buffer-sync-hook}.
 For some specialities see @ref{Add-on synchronization}.
@@ -4451,11 +4453,11 @@ For some specialities see @ref{Add-on synchronization}.
 do a manual synchronization if the automatic one is switched off or
 if you just want to do this! See the documantation of this command.
 
-@node Synchronization of basic interactors, Add-on synchronization, General synchronization aspects, ECB-window synchronizing
-@subsection Synchronization of the basic interactors
+@node Synchronization of basic ECB-windows, Add-on synchronization, General synchronization aspects, ECB-window synchronizing
+@subsection Synchronization of the basic ECB-windows
 
 This section describes some special aspects of the synchronizing of the basic
-interactors:
+ECB-windows:
 
 @itemize @bullet
 
@@ -4489,13 +4491,13 @@ edit-window if this buffer is a source-file.
 
 The synchronization can be customized via the option triple
 @code{ecb-basic-buffer-sync}, @code{ecb-basic-buffer-sync-delay} and
-@code{ecb-basic-buffer-sync-hook}. The four basic interactors of ECB are
+@code{ecb-basic-buffer-sync-hook}. The four basic ECB-windows of ECB are
 always synchonized together, never separate!
 
-@node Add-on synchronization, , Synchronization of basic interactors, ECB-window synchronizing
-@subsection Synchronization of add-on interactors
+@node Add-on synchronization, , Synchronization of basic ECB-windows, ECB-window synchronizing
+@subsection Synchronization of add-on ECB-windows
 
-Currently ECB has a separate synchronization for the add-on interactors
+Currently ECB has a separate synchronization for the add-on ECB-windows
 ECB-analyse and ECB-symboldef and also for the eshell and
 speedbar-integration. Customizing can be done via:
 
@@ -4643,12 +4645,15 @@ calling @code{ecb-minor-mode} with a positive argument.
 @end deffn
 
 @deffn Command add-all-buffers-to-history
-Add all current file-buffers to the history-buffer of ECB. Dependend
-on the value of @code{ecb-history-sort-method} afterwards the history
-is sorted either by name or by extension. If
+Add all current file-buffers to the history-buffer of ECB.
+Dependend on the values of @code{ecb-history-make-buckets} and
+@code{ecb-history-sort-method} afterwards the history is bucketized or
+not and sorted either by name or by extension (if bucketized
+then the sorting is only within each bucket). If
 @code{ecb-history-sort-method} is nil the most recently used buffers
 are on the top of the history and the seldom used buffers at the
-bottom.
+bottom (again: when bucketized then this holds only within each
+bucket).
 @end deffn
 
 @deffn Command analyse-buffer-sync
@@ -5321,7 +5326,7 @@ edit-window.
 @itemize
 @item
 If current buffer is a file-buffer (or an indirect-buffer with a file-buffer
-as base-buffer) then all basic interactors (directories, sources, methods and
+as base-buffer) then all basic ECB-windows (directories, sources, methods and
 history) are synchronized with current buffer.
 
 @item
@@ -5652,10 +5657,10 @@ been done for a better readable option index. @xref{Option Index}.
 * ecb-general::                 General customizing ECB
 * ecb-tree-buffer::             Customizing the general tree layout
 * ecb-directories::             Customizing the ECB-directories-tree
-* ecb-sources::                 Customizing the ECB-sources-tree
-* ecb-methods::                 Customizing the ECB-methods-tree
-* ecb-history::                 Customizing the ECB-history-tree
-* ecb-analyse::                 Customizing the ECB-analyse-interactor
+* ecb-sources::                 Customizing the ECB-sources-window
+* ecb-methods::                 Customizing the ECB-methods-window
+* ecb-history::                 Customizing the ECB-history-window
+* ecb-analyse::                 Customizing the ECB-analyse-window
 * ecb-layout::                  Customizing the ECB-layout
 * ecb-compilation::             Customizing the compile-window
 * ecb-create-layout::           Customizing options for creating layouts
@@ -6719,32 +6724,24 @@ the whole menu can be re-arranged with
 @end defopt
 
 @defopt directories-show-node-info
-When to display which node-info in the directories-buffer. Define
-which node info should displayed after moving the mouse over a node
-(or after a shift click onto the node) in the directories-buffer.
+When to display which node-info in the directories-buffer.
+Define which node info should be displayed after moving the mouse
+over a node (or after a shift click onto the node) in the
+directories-buffer.
 
 You can define ``when'' a node-info should be displayed:
-
 @itemize @minus
-@item always:
-Node info is displayed by moving with the mouse over a node.
-
-@item if-too-long:
-Node info is only displayed by moving with the mouse over a node does
-not fit into the window-width of the tree-buffer window. In the ECB
-directories buffer this means also if a node is shortend or if the
-node has an alias (see @code{ecb-source-path}).
-
-@item shift-click:
-Node info is only displayed after a shift click with the primary mouse
-button onto the node.
-
-@item never:
-Node info is never displayed.
+@item always: Node info is displayed by moving with the mouse over a node.
+@item if-too-long: Node info is only displayed by moving with the mouse over a
+node does not fit into the window-width of the tree-buffer window.
+In the ECB directories buffer this means also if a node is shortend or if
+the node has an alias (see @code{ecb-source-path}).
+@item shift-click: Node info is only displayed after a shift click with the
+primary mouse button onto the node.
+@item never: Node info is never displayed.
 @end itemize
 
-You can define what info should be displayed:
-
+You can define ``which'' info should be displayed:
 @itemize @minus
 @item name: Only the full node-name is displayed.
 @item path: The full-path of the node is displayed.
@@ -7035,18 +7032,22 @@ For the guidelines for such a sorter-function see
 @code{ecb-directories-menu-sorter}.
 @end defopt
 
-
 @defopt sources-menu-user-extension
-Static user extensions for the popup-menu of the sources buffer. For
-further explanations see @code{ecb-directories-menu-user-extension}.
+Static user extensions for the popup-menu of the sources buffer.
+For further explanations see @code{ecb-directories-menu-user-extension}.
 
-The node-argument of a menu-function contains as data the filename of
-the source for which the popup-menu has been opened.
+The node-argument of a menu-function contains as data the source
+for which the popup-menu has been opened. Use always
+@code{ecb-source-get-*} to extract whatever you need from the
+node-data. E.g. use @code{ecb-source-get-filename} to get the full
+filename of the source of the node.
 
-Per default the static user-extensions are added at the beginning of
-the built-in menu-entries of @code{ecb-sources-menu} but the whole
-menu can be re-arranged with @code{ecb-sources-menu-sorter}.
+Per default the static user-extensions are added at the beginning of the
+built-in menu-entries of @code{ecb-sources-menu} but the whole menu can be
+re-arranged with @code{ecb-sources-menu-sorter}.
 @end defopt
+
+
 
 @defopt sources-menu-user-extension-function
 Dynamic user extensions for the popup-menu of the sources buffer. A
@@ -7083,14 +7084,14 @@ the read-only state-check.
 @end defopt
 
 @defopt sources-show-node-info
-When to display which node-info in the sources-buffer. Define which
-node info should displayed after moving the mouse over a node (or
-after a shift click onto the node) in the sources-buffer.
+When to display which node-info in the sources-buffer.
+Define which node info should be displayed after moving the mouse
+over a node (or after a shift click onto the node) in the
+sources-buffer.
 
-You can define ``when'' a node-info should be displayed: See
-@code{ecb-directories-show-node-info} for the possible choices.
+You can define ``when'' a node-info should be displayed:
+See @code{ecb-directories-show-node-info} for the possible choices.
 
-You can define what info should be displayed:
 @itemize @minus
 @item name: Only the full node-name is displayed.
 @item file-info: File infos for this file are displayed.
@@ -7099,6 +7100,7 @@ You can define what info should be displayed:
 
 Do NOT set this option directly via setq but use always customize!
 @end defopt
+
 
 
 @defopt sources-sort-ignore-case
@@ -7857,6 +7859,42 @@ beginning with ^!
 The name to use for items in the history buffer.
 @end defopt
 
+@defopt history-make-buckets
+Bucketize the entries of the history-buffer.
+
+There are several options how the bucketizing should be done:
+@itemize
+@item 'never:
+
+No bucketizing at all, ie. all entries of the history-buffer we be
+displayed flat.
+
+@item 'directory:
+
+All entries with related filesources residing in the same
+directory will be contained in a bucket named with that directory.
+
+@item 'mode:
+
+All entries with related buffers have the same
+major-mode will be contained in a bucket named with that major-mode
+
+@item 'extension:
+
+All entries with related filesources having the
+same extension will be contained in a bucket named with that extension
+@end itemize
+
+If the value is a list of regular expressions then all entries where the
+buffername matches the same regular expression will be contained in one
+bucket. If the value is nil then this is interpreted as an empty list of
+regular expressions!
+
+The default value is 'directory.
+@end defopt
+
+
+
 @defopt history-menu-sorter
 Function which re-sorts the menu-entries of the directories buffer.
 
@@ -7870,18 +7908,27 @@ For the guidelines for such a sorter-function see
 @code{ecb-directories-menu-sorter}.
 @end defopt
 
-
 @defopt history-menu-user-extension
-Static user extensions for the popup-menu of the history buffer. For
-further explanations see @code{ecb-directories-menu-user-extension}.
+Static user extensions for the popup-menu of the history buffer.
+For further explanations see @code{ecb-directories-menu-user-extension}.
 
-The node-argument of a menu-function contains as data the filename of
-the source for which the popup-menu has been opened.
+The node-argument of a menu-function contains as data a cons:
 
-Per default the static user-extensions are added at the beginning of
-the built-in menu-entries of @code{ecb-history-menu} but the whole
-menu can be re-arranged with @code{ecb-history-menu-sorter}.
+car is the filename of the source for which the popup-menu has
+been opened. cdr is the related buffer-name; but be careful,
+because the node can point to a dead buffer (see
+@code{ecb-kill-buffer-clears-history}). Use always @code{ecb-source-get-*}
+to extract whatever you need from the node-data. E.g. use
+@code{ecb-source-get-filename} to get the full filename of the source
+of the node and use @code{ecb-source-get-buffername} or @code{ecb-source-get-buffer} to
+get the buffername rsp. the buffer-object.
+
+Per default the static user-extensions are added at the beginning of the
+built-in menu-entries of @code{ecb-history-menu} but the whole menu can be
+re-arranged with @code{ecb-history-menu-sorter}.
 @end defopt
+
+
 
 @defopt history-menu-user-extension-function
 Dynamic user extensions for the popup-menu of the history buffer. A
@@ -7899,19 +7946,23 @@ whole menu can be re-arranged with @code{ecb-history-menu-sorter}.
 @end defopt
 
 @defopt history-show-node-info
-When to display which node-info in the history-buffer. Define which
-node info should displayed after moving the mouse over a node (or
-after a shift click onto the node) in the history-buffer.
+When to display which node-info in the history-buffer.
+Define which node info should be displayed after moving the mouse
+over a node (or after a shift click onto the node) in the
+history-buffer.
 
-You can define ``when'' a node-info should be displayed: See
-@code{ecb-directories-show-node-info} for the possible choices.
+You can define ``when'' a node-info should be displayed:
+See @code{ecb-directories-show-node-info} for the possible choices.
 
-You can define what info should be displayed: See
-@code{ecb-directories-show-node-info} for the possible choices.
+You can define ``which'' info should be displayed:
+@itemize
+@item name: Only the full node-name is displayed.
+@item path: The full-path of the node is displayed.
+@item name-path: The full node-name and the full-path is displayed.
+@end itemize
 
 Do NOT set this option directly via setq but use always customize!
 @end defopt
-
 
 @defopt history-sort-ignore-case
 Ignore case for sorting the history-entries. See also
@@ -7931,7 +7982,30 @@ history and the seldom used buffers at the bottom.
 @end itemize
 
 See also @code{ecb-history-sort-ignore-case}.
+
+If the history is bucketized (see @code{ecb-history-make-buckets}) then this
+sorting applies to the sorting within each bucket.
 @end defopt
+
+@defopt history-stick-indirect-buffers-to-basebuffer
+Stick all indirect-buffers as subnodes to their base-buffer.
+
+If nil then indirect-buffers are treated as non-indirect-buffers
+and sorted into the history-buffer-sequence according to the
+setting of @code{ecb-history-sort-method}.
+
+If not nil then indirect-buffers are always sticked to their base-buffer, ie.
+the base-buffer is displayed as expandable node with all its indirect-buffers
+as children-nodes, so the history looks like:
+
+@example
+[-] <base-buffer BB>
+ |  <indirect-buffer 1 of BB>
+ `- <indirect-buffer 2 of BB>
+@end example
+@end defopt
+
+
 
 @defopt kill-buffer-clears-history
 Define if @code{kill-buffer} should also clear the history. There are
@@ -9048,6 +9122,20 @@ Changes take first effect after finishing and reactivating ECB!
 Face for not accessible dirs in the directories buffer.
 @end defopt
 
+@defopt history-bucket-node-face
+Basic face for displaying a bucket-node in the ECB-history-buffer.
+This defines the basic face for the bucket-nodes used to bucketize the
+history-entries as defined with the option @code{ecb-history-make-buckets}.
+
+Changes take first effect after finishing and reactivating ECB!
+@end defopt
+
+@defopt history-dead-buffer-face
+Face for history entries pointing to dead buffers.
+
+Changes take first effect after finishing and reactivating ECB!
+@end defopt
+
 @defopt history-face
 Face used for highlighting current history-entry in the history
 buffer. If the face @code{ecb-default-highlight-face} is used then the
@@ -9066,6 +9154,14 @@ ECB-tree-buffers can be changed by modifying only the face
 
 Changes take first effect after finishing and reactivating ECB!
 @end defopt
+
+@defopt history-indirect-buffer-face
+Face for indirect buffers in the history buffer.
+
+Changes take first effect after finishing and reactivating ECB!
+@end defopt
+
+
 
 @defopt method-face
 Face used for highlighting current method, class or variable in the
@@ -9185,6 +9281,26 @@ buffer.
 @item ecb-directory-not-accessible-face
 Define a face for not accessible dirs in the directories buffer.
 
+@item ecb-history-bucket-node-face:
+Face used for displaying a bucket-node in the ECB-history-buffer.
+
+In GNU Emacs 21.X this face inherits from the face
+@code{ecb-bucket-node-face}. With XEmacs and GNU Emacs 20.X there is no
+inheritance-feature so if the buckets in the ECB-history-buffer should be
+displayed with the same basic attributes set by @code{ecb-bucket-node-face}
+this set of basic attributes have to be set in
+@code{ecb-history-bucket-node-face} too!
+
+@item ecb-history-dead-buffer-face:
+Face used for history entries pointing to dead buffers.
+
+In GNU Emacs 21.X this face inherits from the face
+@code{ecb-history-general-face}. With XEmacs and GNU Emacs 20.X there is no
+inheritance-feature so if the buckets in the ECB-history-buffer should be
+displayed with the same basic attributes set by
+@code{ecb-history-general-face} this set of basic attributes have to be set in
+@code{ecb-history-dead-buffer-face} too!
+
 @item ecb-history-face:
 Define face used for highlighting current history-entry in the history
 buffer.
@@ -9192,6 +9308,16 @@ buffer.
 @item ecb-history-general-face:
 Basic face for the ECB history buffer. It´s recommended to define here
 the font-family, the font-size, the basic color etc.
+
+@item ecb-history-indirect-buffer-face:
+Face used for history entries pointing to dead buffers.
+
+In GNU Emacs 21.X this face inherits from the face
+@code{ecb-history-general-face}. With XEmacs and GNU Emacs 20.X there is no
+inheritance-feature so if the buckets in the ECB-history-buffer should be
+displayed with the same basic attributes set by
+@code{ecb-history-general-face} this set of basic attributes have to be set in
+@code{ecb-history-indirect-buffer-face} too!
 
 @item ecb-method-face:
 Define face used for highlighting current method, class or variable in
@@ -11611,7 +11737,7 @@ tree-buffer beginning from creation and ending with the display.
 Creating a new tree-buffer has to be done with
 @code{tree-buffer-create} for non ECB-tree-buffers and with the macro
 @code{defecb-tree-buffer-creator} when the tree-buffer should be used
-as an ECB-tree-buffer, so it is an ECB-interactor. See @ref{A new
+as an ECB-tree-buffer, so it is an ECB-window. See @ref{A new
 tree-buffer} for all details.
 
 @item Add tree-nodes to the tree-buffer
@@ -11640,7 +11766,7 @@ tree-nodes display anything; this just builds the internal
 tree-structure.
 
 @strong{IMPORTANT}: See @ref{Programming special windows} for details
-about programming interactors (special windows) regardless if they
+about programming ECB-windows (special windows) regardless if they
 were build as tree or not. There you can find a.o. how to
 automatically synchronizing a special window with the current
 edit-buffer.
@@ -11649,8 +11775,8 @@ edit-buffer.
 @subsection How to create a new tree-buffer
 
 The creator-function for a new tree-buffer depends on the fact if the
-new tree-buffer should be used as an ECB-interactor or not. For a new
-ECB-interactor the macro @code{defecb-tree-buffer-creator} has to be
+new tree-buffer should be used as an ECB-window or not. For a new
+ECB-window the macro @code{defecb-tree-buffer-creator} has to be
 used, otherwise the function @code{tree-buffer-create}. In the end
 both methods use @code{tree-buffer-create} because the BODY-argument
 of @code{defecb-tree-buffer-creator} must contain a call to this
