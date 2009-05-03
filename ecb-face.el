@@ -227,11 +227,11 @@ Changes take first effect after finishing and reactivating ECB!"
                                                         'ecb-bucket-node-face)
   "*Face used for displaying a bucket-node in the ECB-history-buffer.
 
-In GNU Emacs 21.X this face inherits from the face 'ecb-default-general-face'.
+In GNU Emacs 21.X this face inherits from the face 'ecb-bucket-node-face'.
 
 With XEmacs and GNU Emacs 20.X there is no inheritance-feature so if the
 buckets in the ECB-history-buffer should be displayed with the same basic
-attributes set by 'ecb-default-general-face' this set of basic attributes have
+attributes set by 'ecb-bucket-node-face' this set of basic attributes have
 to be set in 'ecb-history-bucket-node-face' too!"
   :group 'ecb-faces)
 
@@ -250,7 +250,14 @@ Changes take first effect after finishing and reactivating ECB!"
 
 (defface ecb-history-indirect-buffer-face (ecb-face-default nil nil t
                                                             'ecb-history-general-face)
-  "*Define a face for displaying indirect buffers in the history buffer."
+  "*Define a face for displaying indirect buffers in the history buffer.
+
+In GNU Emacs 21.X this face inherits from the face 'ecb-history-general-face'.
+
+With XEmacs and GNU Emacs 20.X there is no inheritance-feature so if the
+buckets in the ECB-history-buffer should be displayed with the same basic
+attributes set by 'ecb-history-general-face' this set of basic attributes have
+to be set in 'ecb-history-indirect-buffer-face' too!"
   :group 'ecb-faces)
  
 (defcustom ecb-history-indirect-buffer-face 'ecb-history-indirect-buffer-face
@@ -268,7 +275,14 @@ Changes take first effect after finishing and reactivating ECB!"
                                                         "gray60"
                                                         nil nil
                                                         nil "gray60")
-  "*Define a face for history entries pointing to dead buffers"
+  "*Define a face for history entries pointing to dead buffers.
+
+In GNU Emacs 21.X this face inherits from the face 'ecb-history-general-face'.
+
+With XEmacs and GNU Emacs 20.X there is no inheritance-feature so if the
+buckets in the ECB-history-buffer should be displayed with the same basic
+attributes set by 'ecb-history-general-face' this set of basic attributes have
+to be set in 'ecb-history-dead-buffer-face' too!"
   :group 'ecb-faces)
  
 (defcustom ecb-history-dead-buffer-face 'ecb-history-dead-buffer-face

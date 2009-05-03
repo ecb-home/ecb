@@ -1985,7 +1985,7 @@ nothing happens and nil is returned."
 which can be either a buffer-object or a buffer-name. If that window is not
 visible then BODY is not evaluated and the symbol 'window-not-visible is
 returned. Otherwise the return value of BODY is returned. Runs encapsulated in
-`save-selected-window'."
+`save-selected-window' and `save-excursion'."
   `(save-selected-window
      (if (not (ecb-window-select ,buffer-or-name))
          'window-not-visible

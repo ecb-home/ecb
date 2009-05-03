@@ -178,6 +178,7 @@
                "ECB is able to work with indirect buffers it the base-buffer is filebased."
                "The history can now be bucketized, see new `ecb-history-make-buckets'."
                "New faces `ecb-history-bucket-node-face', `ecb-history-dead-buffer-face', `ecb-history-indirect-buffer-face'."
+               "Sticky parwnt-node for all ECB-windows of type tree-buffer."
                "New support for Git and Monotone as version-control systems."
                "New command `ecb-goto-window-edit-by-smart-selection'."
                "New command `ecb-goto-window-ecb-by-smart-selection'."
@@ -186,8 +187,8 @@
                "Better compatibility with CEDET 1.0preX and semantic 2.0preX - see NEWS file."
                "The internal download-feature of ECB has been completely disabled."
                ))
-    ("2.32" . ("New tree-interactor for the semantic-analyser."
-               "New interactor for displaying definition for current symbol at point."
+    ("2.32" . ("New ECB-window (tree-buffer) for the semantic-analyser."
+               "New ECB-window for displaying definition for current symbol at point."
                "Up- and down-arrow are now also smart in the tree-buffers."
                "Much better maximizing/minimizing of the ecb-tree-windows."
                "New option `ecb-maximize-next-after-maximized-select'."

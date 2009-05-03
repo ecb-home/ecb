@@ -176,7 +176,6 @@ layouts sources should be displayed in the directories window."
                         (string :tag "Layout name"))))
 
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: replace in texi
 (defcustom ecb-directories-show-node-info '(if-too-long . path)
   "*When to display which node-info in the directories-buffer.
 Define which node info should be displayed after moving the mouse
@@ -600,7 +599,6 @@ then activating ECB again!"
   :group 'ecb-sources
   :type 'string)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: replace in texi
 (defcustom ecb-sources-show-node-info '(if-too-long . name)
   "*When to display which node-info in the sources-buffer.
 Define which node info should be displayed after moving the mouse
@@ -749,7 +747,6 @@ these regexps! Therefore be carefore with regexps beginning with ^!"
 (defsubst ecb-check-filename-for-history-exclude (filename)
   (ecb-match-regexp-list filename ecb-history-exclude-file-regexps))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: replace in texi
 (defcustom ecb-history-show-node-info '(always . name-path)
   "*When to display which node-info in the history-buffer.
 Define which node info should be displayed after moving the mouse
@@ -776,9 +773,6 @@ Do NOT set this option directly via setq but use always customize!"
                        (const :tag "Full path" :value path)
                        (const :tag "Node-name \(Full path)" :value name-path))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we need a
-;; tree-buffer-command which allows changing on the fly...
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add this to texi
 (defcustom ecb-history-make-buckets 'directory
   "*Bucketize the entries of the history-buffer.
 
@@ -801,10 +795,11 @@ The default value is 'directory."
   :group 'ecb-history
   :initialize 'custom-initialize-default
   :set (function (lambda (symbol value)
-                   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we must
-                   ;; update the history when ecb is active and the
-                   ;; history-window is visible
-		   (set symbol value)))
+		   (set symbol value)
+                   (when (and (boundp 'ecb-minor-mode)
+                              ecb-minor-mode)
+                     (ecb-exec-in-window ecb-history-buffer-name
+                       (ecb-add-buffers-to-history-new)))))
   :type '(radio (const :tag "Never" :value never)
                 (const :tag "By directory" :value directory)
                 (const :tag "By major-mode" :value mode)
@@ -812,16 +807,28 @@ The default value is 'directory."
                 (repeat :tag "By regexps"
                         (regexp :tag "A bucket regexp"))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add the new face to the texi,
-;; also this option
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: we need a set-function for all
-;; options changing the history-display, so we can call within this
-;; set-function the new history-build-function - s.b.
 (defcustom ecb-history-stick-indirect-buffers-to-basebuffer t
-  ""
+  "*Stick all indirect-buffers as subnodes to their base-buffer.
+
+If nil then indirect-buffers are treated as non-indirect-buffers
+and sorted into the history-buffer-sequence according to the
+setting of `ecb-history-sort-method'.
+
+If not nil then indirect-buffers are always sticked to their base-buffer, ie.
+the base-buffer is displayed as expandable node with all its indirect-buffers
+as children-nodes, so the history looks like:
+\[-] <base-buffer BB>
+ |  <indirect-buffer 1 of BB>
+ `- <indirect-buffer 2 of BB>"
   :group 'ecb-history
-  :type 'boolean
-  )
+  :initialize 'custom-initialize-default
+  :set (function (lambda (symbol value)
+		   (set symbol value)
+                   (when (and (boundp 'ecb-minor-mode)
+                              ecb-minor-mode)
+                     (ecb-exec-in-window ecb-history-buffer-name
+                       (ecb-add-buffers-to-history-new)))))
+  :type 'boolean)
 
 (defcustom ecb-history-sort-method 'name
   "*Defines how the entries in the history-buffer are sorted.
@@ -829,8 +836,18 @@ The default value is 'directory."
 - 'extension: Sorting first by extension and then by name.
 - nil: No sorting, means the most recently used buffers are on the top of the
        history and the seldom used buffers at the bottom.
-See also `ecb-history-sort-ignore-case'."
+See also `ecb-history-sort-ignore-case'.
+
+If the history is bucketized \(see `ecb-history-make-buckets') then this
+sorting applies to the sorting within each bucket."
   :group 'ecb-history
+  :initialize 'custom-initialize-default
+  :set (function (lambda (symbol value)
+		   (set symbol value)
+                   (when (and (boundp 'ecb-minor-mode)
+                              ecb-minor-mode)
+                     (ecb-exec-in-window ecb-history-buffer-name
+                       (ecb-add-buffers-to-history-new)))))
   :type '(radio (const :tag "By name"
                        :value name)
                 (const :tag "By extension"
@@ -842,6 +859,13 @@ See also `ecb-history-sort-ignore-case'."
   "*Ignore case for sorting the history-entries.
 See also `ecb-history-sort-method'."
   :group 'ecb-history
+  :initialize 'custom-initialize-default
+  :set (function (lambda (symbol value)
+		   (set symbol value)
+                   (when (and (boundp 'ecb-minor-mode)
+                              ecb-minor-mode)
+                     (ecb-exec-in-window ecb-history-buffer-name
+                       (ecb-add-buffers-to-history-new)))))
   :type 'boolean)
 
 (defcustom ecb-kill-buffer-clears-history nil
@@ -858,15 +882,6 @@ There are three options:
                        :value ask)
                 (const :tag "Do not clear the history"
                        :value nil)))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: remove this also from the texi
-;; (defcustom ecb-history-item-name 'buffer-name
-;;   "*The name to use for items in the history buffer."
-;;   :group 'ecb-history
-;;   :type '(radio (const :tag "Buffer name"
-;;                        :value buffer-name)
-;;                 (const :tag "File name"
-;;                        :value file-name)))
 
 (defcustom ecb-directories-menu-user-extension
   '(("Version Control"
@@ -929,7 +944,6 @@ re-arranged with `ecb-directories-menu-sorter'."
   :group 'ecb-directories
   :type 'function)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: update in texi
 (defcustom ecb-sources-menu-user-extension
   '(("Version control"
      (ecb-file-popup-ediff-revision "Ediff against revision")
@@ -972,7 +986,6 @@ re-arranged with `ecb-sources-menu-sorter'."
   :group 'ecb-sources
   :type 'function)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: adjust this also in the texi
 (defcustom ecb-history-menu-user-extension
   '(("Version control"
      (ecb-file-popup-ediff-revision "Ediff against revision")
@@ -2248,7 +2261,6 @@ then nothing is done unless first optional argument FORCE is not nil."
         f
       (ecb-file-name-sans-extension f))))
 
-;; XXXX changed for indirect buffers.
 (defun ecb-select-source (&optional force)
   "Updates the directories, sources and history buffers to match the filename
 given. If FORCE is not nil then the update of the directories buffer is done
@@ -2334,7 +2346,6 @@ added.")
         (setq buffer-name-to-ignore-list-for-rebuild (list (buffer-name curr-buf))))
       (ecb-add-buffers-to-history-new nil buffer-name-to-ignore-list-for-rebuild))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: update the texi for this command
 (defun ecb-add-all-buffers-to-history ()
   "Add all current file-buffers to the history-buffer of ECB.
 Dependend on the values of `ecb-history-make-buckets' and
@@ -2348,6 +2359,8 @@ bucket)."
   (interactive)
   (ecb-reset-history-filter)
   (ecb-add-buffers-to-history-new 'no-dead-buffers))
+
+(defalias 'ecb-clear-history 'ecb-add-all-buffers-to-history)
 
 (defun ecb-history-content-all-dead-buffers-alist ()
   "Return alist with items \(<buffer-name> . <file-name>) for dead buffers
@@ -2646,7 +2659,6 @@ by the option `ecb-mode-line-prefixes'."
        (format "[Filter: %s]" (cdr ecb-history-filter))))
 
 
-;; XXXX (changed for indirect-buffers)
 (defun ecb-set-selected-source (source other-edit-window
                                        no-edit-buffer-selection)
   "Updates all the ECB buffers and loads the SOURCE. The source is also
@@ -2679,19 +2691,6 @@ indirect-buffer."
     (setq ecb-major-mode-selected-source major-mode)
     (ecb-tag-sync 'force))
   (ecb-select-source t))
-
-(defun ecb-clear-history ()
-  "Clears the ECB history-buffer."
-  (interactive)
-  (unless (or (not ecb-minor-mode)
-              (not (equal (selected-frame) ecb-frame)))
-    (ecb-exec-in-window ecb-history-buffer-name
-      (tree-buffer-clear-tree)
-      (tree-buffer-update)
-      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: fix this - i can't work -
-      ;; just call synchronize
-      (tree-buffer-highlight-node-by-data/name (ecb-path-selected-source 'file)))))
-
 
 
 (defun ecb-update-directory-node (node)
@@ -3001,25 +3000,6 @@ when called. Return the new state-value."
       (if (> state lines-of-buffer)
           (setq state 'done)))
     state))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: The best would be using the
-;; new macro `while-no-input' with Emacs 22 but currently it seems not to work
-;; properly:
-;;
-;; (defun klaus-test-input ()
-;;   (interactive)
-;;   (let ((result nil)
-;;         (i 0))
-;;     (setq result (while-no-input
-;;                   (while t
-;;                     (setq i (1+ i)))))
-;;     (message "Klausi: %s" result)))
-;;
-;; What is wrong??
-;; Seems that it works on *nix but not an windows - have already filed a
-;; bug-report to the Emacs-team...
-; when it works also on windows then we should build in this macro in the
-; stealthy stuff - the best would be to use it within `ecb-exit-on-input'.
 
 (defecb-stealthy ecb-stealthy-ro-check-in-directories-buf
   "Check for all sourcefile-nodes in the directories-buffer if the associated
@@ -3474,8 +3454,6 @@ all the preceding stuff added by one of these functions."
                                 0))))
     (substring nodename prefix-length)))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we have to check if this
-;; works with the new history-mechanism too!
 (defun ecb-stealthy-vc-check--dir/history (state)
   "Check for all sourcefile-nodes either in the directories- or the
 history-buffer the VC-state. This function does the real job and is is only
@@ -3511,7 +3489,6 @@ state-value."
               (ecb-throw-on-input 'lines-of-buffer-loop)
               (goto-line state)
               (setq curr-node (tree-buffer-get-node-at-point))
-              ;; XYZ: change this to work with modified node-data - file needed
               (when (member (tree-node->type curr-node) node-types-to-check)
                 (setq curr-dir (ecb-file-name-directory
                                 (ecb-source-get-filename (tree-node->data curr-node))))
@@ -3937,7 +3914,6 @@ Directory- and sources nodes are handled appropriately."
       (ecb-source-item-clicked node ecb-button edit-window-nr shift-mode meta-mode)
       )))
 
-;; XXXX (changed for indirect-buffers)
 (defun ecb-source-item-clicked (node ecb-button edit-window-nr shift-mode meta-mode)
   ;; if we are in a maximized sources-window and if a methods-buffer is
   ;; contained in current layout then we have to redraw the full layout first
@@ -3953,7 +3929,6 @@ Directory- and sources nodes are handled appropriately."
           (ecb-maximize-ecb-buffer ecb-methods-buffer-name)
           (ecb-window-select ecb-methods-buffer-name))
       (ecb-undo-maximize-ecb-buffer t)))
-  ;; XXXX (changed for indirect-buffers)
   (ecb-set-selected-source (tree-node->data node)
                            (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)
 			   shift-mode)
@@ -4098,7 +4073,6 @@ the help-text should be printed here."
 
 (defun ecb-grep-directory-internal (node find)
   (ecb-select-edit-window)
-  ;; XYZ: change this to work with modified node-data - file needed
   (let* ((node-data-file (ecb-source-get-filename (tree-node->data node)))
          (default-directory (concat (ecb-fix-filename
                                      (if (ecb-file-directory-p node-data-file)
@@ -4142,7 +4116,6 @@ the help-text should be printed here."
 
 (defun ecb-dired-directory-internal (node &optional other)
   (ecb-select-edit-window)
-  ;; XYZ: change this to work with modified node-data - file needed
   (let* ((node-data-file (ecb-source-get-filename (tree-node->data node)))
          (dir (ecb-fix-filename
                (funcall (if (ecb-file-directory-p node-data-file)
@@ -4314,18 +4287,15 @@ edit-windows. Otherwise return nil."
 
 (tree-buffer-defpopup-command ecb-delete-source
   "Deletes current sourcefile."
-  ;; XYZ: change this to work with modified node-data
-  ;; What about indirect buffers? should be always delete the underlying
-  ;; sourcefile - if called for a source-buffer (not an indirect one) should
-  ;; be then remove the history-entry for existing indirect buffer fot this
-  ;; source... is this done by the kill-buffer-hook???
   (let* ((file (ecb-source-get-filename (tree-node->data node)))
          (dir (ecb-fix-filename (ecb-file-name-directory file))))
     (when (ecb-confirm (concat "Really delete " (ecb-file-name-nondirectory file) "? "))
-      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: here we must search all
-      ;; current buffers to find all indirect-buffers pointing to file because
-      ;; these ones have to be killed when we kill the source-file!
       (when (get-file-buffer file)
+        ;; if there is an open buffer for this source then we kill them - this
+        ;; ensures also that if there are indirect-buffers to this base-buffer
+        ;; these buffers will be killed too by Emacs and the called
+        ;; kill-buffer-hook is called for each indirect-buffer - so all
+        ;; history-nodes for these are removed.
         (kill-buffer (get-file-buffer file)))
       (ecb-delete-file file)
       (ecb-remove-dir-from-caches dir)
@@ -4334,47 +4304,40 @@ edit-windows. Otherwise return nil."
 
 (tree-buffer-defpopup-command ecb-file-popup-ediff-revision
   "Diff file against repository with ediff."
-  ;; XYZ: change this to work with modified node-data - file needed
   (let ((file (ecb-source-get-filename (tree-node->data node))))
     (ediff-revision file)))
 
 
 (tree-buffer-defpopup-command ecb-file-popup-vc-next-action
   "Checkin/out file."
-  ;; XYZ: change this to work with modified node-data  - file needed
   (ecb-display-source (tree-node->data node) nil)
   (call-interactively 'vc-next-action))
 
 
 (tree-buffer-defpopup-command ecb-file-popup-vc-log
   "Print revision history of file."
-  ;; XYZ: change this to work with modified node-data  - file-needed
   (ecb-display-source (tree-node->data node) nil)
   (call-interactively 'vc-print-log))
 
 
 (tree-buffer-defpopup-command ecb-file-popup-vc-annotate
   "Annotate file"
-  ;; XYZ: change this to work with modified node-data  - file needed
   (ecb-display-source (tree-node->data node) nil)
   (call-interactively 'vc-annotate))
 
 (tree-buffer-defpopup-command ecb-file-popup-vc-diff
   "Diff file against last version in repository."
-  ;; XYZ: change this to work with modified node-data  - file needed
   (ecb-display-source (tree-node->data node) nil)
   (call-interactively 'vc-diff))
 
 (tree-buffer-defpopup-command ecb-file-popup-vc-refresh-file
   "Recompute the VC-state for this file."
-  ;; XYZ: change this to work with modified node-data  - file is needed
   (let ((file (ecb-source-get-filename (tree-node->data node))))
     (ecb-vc-cache-remove file)
     (ecb-vc-reset-vc-stealthy-checks)))
 
 (tree-buffer-defpopup-command ecb-file-popup-vc-refresh-dir
   "Recompute the VC-state-values for the whole directory."
-  ;; XYZ: change this to work with modified node-data  - file is needed
   (let ((dir (ecb-fix-filename
               (ecb-file-name-directory
                (ecb-source-get-filename (tree-node->data node))))))
@@ -4428,7 +4391,6 @@ edit-windows. Otherwise return nil."
 
 (tree-buffer-defpopup-command ecb-history-kill-buffer
   "Kills the buffer for current entry."
-  ;; XYZ: change this to work with modified node-data  - file and buffer are needed
   (let* ((buf (ecb-source-get-buffer (tree-node->data node))))
     (when buf
       ;; current buffer is always the history-buffer - we have to set
@@ -4436,7 +4398,8 @@ edit-windows. Otherwise return nil."
       ;; ecb-kill-buffer-hook would not run correctly
       (save-excursion
         (set-buffer buf)
-        (kill-buffer buf)))))
+        (kill-buffer buf)
+        (ecb-add-buffers-to-history-new)))))
 
 (defun ecb-history-filter-by-ext (ext-str)
   "Filter history entries by extension. Returns t if the filter has been
@@ -4461,8 +4424,6 @@ applied otherwise nil."
   "Filter history entries by extension."
   (let ((ext-str (read-string "Insert the filter-extension without leading dot: "
                               (and node
-                                   ;; XYZ: change this to work with modified
-                                   ;; node-data - file is needed
                                    (ecb-file-name-extension
                                     (ecb-source-get-filename (tree-node->data node)))))))
     (ecb-history-filter-by-ext ext-str)))
@@ -4495,13 +4456,46 @@ applied otherwise nil."
   "Recompute the VC-state for the whole history."
   (when (equal (buffer-name) ecb-history-buffer-name)
     (let ((files (mapcar (function (lambda (node)
-                                     ;; XYZ: change this to work with modified
-                                     ;; node-data - file needed
                                      (ecb-source-get-filename (tree-node->data node))))
                          (tree-node->children (tree-buffer-get-root)))))
       (dolist (file files)
         (ecb-vc-cache-remove file))
       (ecb-vc-reset-vc-stealthy-checks))))
+
+(tree-buffer-defpopup-command ecb-popup-history-bucketize-by-dir
+  "Bucketize the history by directory.
+
+It changes temporaly the option `ecb-history-make-buckets' to the value
+'directory."
+  (customize-set-variable 'ecb-history-make-buckets 'directory))
+
+(tree-buffer-defpopup-command ecb-popup-history-bucketize-by-mode
+  "Bucketize the history by major-mode.
+
+It changes temporaly the option `ecb-history-make-buckets' to the value
+'mode."
+  (customize-set-variable 'ecb-history-make-buckets 'mode))
+
+(tree-buffer-defpopup-command ecb-popup-history-bucketize-by-ext
+  "Bucketize the history by file-extension.
+
+It changes temporaly the option `ecb-history-make-buckets' to the value
+'extension."
+  (customize-set-variable 'ecb-history-make-buckets 'extension))
+
+(tree-buffer-defpopup-command ecb-popup-history-bucketize-by-reg
+  "Bucketize the history by regular expressions.
+
+It opens the customize-buffer for the option `ecb-history-make-buckets' so the
+regular expressions can be inserted."
+  (customize-option 'ecb-history-make-buckets))
+
+(tree-buffer-defpopup-command ecb-popup-history-bucketize-never
+  "Remove all bucketizing in the history - display it \"flat\".
+
+It changes temporaly the option `ecb-history-make-buckets' to the value
+'never."
+  (customize-set-variable 'ecb-history-make-buckets 'never))
 
 (defun ecb-history-filter ()
   "Apply a filter to the history-buffer to reduce the number of entries.
@@ -4521,29 +4515,40 @@ So you get a better overlooking. There are three choices:
            (ecb-history-filter-by-regexp))
           (t (ecb-add-all-buffers-to-history)))))
 
+(defvar ecb-history-common-menu nil
+  "Common menu entries for history-nodes")
+(setq ecb-history-common-menu
+      '((ecb-popup-history-filter-all-existing "Exactly all living file-buffers")
+        ("---")
+        ("Bucketize"
+         (ecb-popup-history-bucketize-never "No bucketizing")
+         (ecb-popup-history-bucketize-by-dir "by directory")
+         (ecb-popup-history-bucketize-by-mode "by major-mode")
+         (ecb-popup-history-bucketize-by-ext "by file-extension")
+         (ecb-popup-history-bucketize-by-reg "by reg. expr."))
+        ("---")
+        (ecb-maximize-ecb-window-menu-wrapper "Maximize window")))        
+
+
 (defvar ecb-history-menu nil
   "Built-in menu for the history-buffer.")
-
-
 (setq ecb-history-menu
-      '(("Grep"
-         (ecb-grep-directory "Grep Directory")
-         (ecb-grep-find-directory "Grep Directory recursive"))
-        ;;("---")
-        ("Dired"
-         (ecb-dired-directory "Open Dir in Dired")
-         (ecb-dired-directory-other-window "Open Dir in Dired other window"))
-	("Filter"
-         (ecb-popup-history-filter-by-ext "Filter by extension")
-         (ecb-popup-history-filter-by-regexp "Filter by regexp")
-         (ecb-popup-history-filter-all-existing "No filter"))
-        ("---")
-        (ecb-popup-history-filter-all-existing "Exactly all living file-buffers")
-        (ecb-history-kill-buffer "Kill Buffer")
-        (ecb-delete-source "Delete Sourcefile")
-        ("---")
-        (ecb-maximize-ecb-window-menu-wrapper "Maximize window")))
-
+      (append
+       '(("Grep"
+          (ecb-grep-directory "Grep Directory")
+          (ecb-grep-find-directory "Grep Directory recursive"))
+         ;;("---")
+         ("Dired"
+          (ecb-dired-directory "Open Dir in Dired")
+          (ecb-dired-directory-other-window "Open Dir in Dired other window"))
+         ("Filter"
+          (ecb-popup-history-filter-by-ext "Filter by extension")
+          (ecb-popup-history-filter-by-regexp "Filter by regexp")
+          (ecb-popup-history-filter-all-existing "No filter"))
+         ("---")
+         (ecb-history-kill-buffer "Kill Buffer")
+         (ecb-delete-source "Delete Sourcefile"))
+       ecb-history-common-menu))
 
 (defvar ecb-history-menu-title-creator
   (function (lambda (node)
@@ -4560,6 +4565,16 @@ So you get a better overlooking. There are three choices:
                        tree-buffer-name node)))
         (dyn-builtin-extension (ecb-dir/source/hist-menu-editwin-entries)))
     (list (cons ecb-history-nodetype-filebuffer
+                (funcall (or ecb-history-menu-sorter 'identity)
+                         (append dyn-user-extension
+                                 ecb-history-menu-user-extension
+                                 ecb-history-menu
+                                 dyn-builtin-extension)))
+          (cons ecb-history-nodetype-bucket
+                (funcall (or ecb-history-menu-sorter 'identity)
+                         (append dyn-user-extension
+                                 ecb-history-common-menu)))
+          (cons ecb-history-nodetype-indirect-filebuffer
                 (funcall (or ecb-history-menu-sorter 'identity)
                          (append dyn-user-extension
                                  ecb-history-menu-user-extension
@@ -4707,6 +4722,10 @@ So you get a better overlooking. There are three choices:
    :leaf-node-types nil
    :menu-creator 'ecb-history-menu-creator
    :menu-titles (list (cons ecb-history-nodetype-filebuffer
+                            ecb-history-menu-title-creator)
+                      (cons ecb-history-nodetype-indirect-filebuffer
+                            ecb-history-menu-title-creator)
+                      (cons ecb-history-nodetype-bucket
                             ecb-history-menu-title-creator))
    :modeline-menu-creator 'ecb-common-tree-buffer-modeline-menu-creator
    :sticky-parent-p ecb-tree-make-parent-node-sticky

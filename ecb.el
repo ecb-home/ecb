@@ -373,8 +373,7 @@ perform the check and reset manually with `ecb-upgrade-options'."
 
 (defcustom ecb-version-check t
   "*Checks at start-time if the requirements are fulfilled.
-It checks if the required versions of the libraries semantic, eieio and
-speedbar are installed and loaded into Emacs.
+It checks if the required versio of CEDET is installed and loaded into Emacs.
 
 It is strongly recommended to set this option to not nil!"
   :group 'ecb-general
