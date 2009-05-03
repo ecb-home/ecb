@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.145 2009/04/21 15:23:22 berndl Exp $
+;; $Id: ecb-util.el,v 1.146 2009/05/03 13:16:11 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1985,7 +1985,7 @@ nothing happens and nil is returned."
 which can be either a buffer-object or a buffer-name. If that window is not
 visible then BODY is not evaluated and the symbol 'window-not-visible is
 returned. Otherwise the return value of BODY is returned. Runs encapsulated in
-`save-selected-window'."
+`save-selected-window' and `save-excursion'."
   `(save-selected-window
      (if (not (ecb-window-select ,buffer-or-name))
          'window-not-visible

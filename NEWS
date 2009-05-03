@@ -73,9 +73,12 @@
     history-buffer all the history entries are sorted in (e.g. by major-mode,
     directory, file-extension or regular expressions).
 
-    The latter one allows in combination with the indirect-buffer ability to
-    work with something like "virtual folders" (well, "virtual folders"
-    light).
+    You can change the bucketizing type on the fly via the popup-menu of the
+    history-window.
+
+    The regular expressions bucketizing allows in combination with the
+    indirect-buffer ability to work with something like "virtual folders"
+    (well, "virtual folders" light).
 
     For example, there is a large project with a huge number of files, and
     there are various tasks in this project. So it could be convenient to
@@ -103,6 +106,14 @@
     See new options `ecb-history-bucket-node-face',
     `ecb-history-dead-buffer-face' and `ecb-history-indirect-buffer-face' and
     equaly named new faces.
+
+** Sticky parent-node for all ECB-windows of type tree-buffer
+
+   In the header-line (only for GNU Emacs) of a tree-buffer always the
+   current-parent node of the first visible node is displayed (if there is a
+   parent node). This sticky node is exactly in the same manner clickable as
+   all other nodes. There is a new option `ecb-tree-make-parent-node-sticky'
+   which enabales/disables this new feature (default is enabled).
 
 ** Much saver advice-backbone for all advices needed by ECB
 
@@ -162,7 +173,7 @@
 
 ** Better compatibility with CEDET 1.0preX and semantic 2.0preX
 
-*** The ECB-analyse-interactor now works very well with current semantic analyzer
+*** The ECB-analyse-window now works very well with current semantic analyzer
 
 *** Fix compatibility about some changes of semantic concerning adopting
     external member-functions (as in C++ or eieio).
@@ -218,15 +229,15 @@
    Thanks to Hauke Wintjen <hauke.jans@tietoenator.com> for having the idea
    and writing the first implementation
 
-   This add-on interactor of ECB is currently in beta or gamma stage but works
+   This add-on ECB-window of ECB is currently in beta or gamma stage but works
    already quite well. So please try it out and send feedback to the
    ECB-mailing-list. Every suggestion is highly appretiated!
 
-** New native ECB-display interactor for the semantic-analyzer
+** New native ECB-window (tree-buffer) for the semantic-analyzer
    There is a new tree-buffer ECB-analyse which displays the tags and
    informations of the semanic-analyzer in a smooth way. There are already new
    prebuild layouts "left-analyse" and "leftright-analyse" which contain this
-   new tree-buffer interactor. But of course it can be added to own build
+   new tree-buffer ECB-window. But of course it can be added to own build
    layouts - either via the command `ecb-create-new-layout' (add a buffer of
    type "other" and name "analyse" into the new layout) or via a
    elisp-programmed new layout.

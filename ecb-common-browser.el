@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.32 2009/04/26 16:04:38 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.33 2009/05/03 13:16:11 berndl Exp $
 
 
 ;;; History
@@ -355,7 +355,6 @@ nil then no keys for horizontal scrolling are bound."
                 (integer :tag "Scroll step")))
 
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add this to the texi
 (defcustom ecb-tree-make-parent-node-sticky t
   "*Make the parent-node sticky in the headerline of the tree-buffer.
 
@@ -366,12 +365,13 @@ no parent then just the next node above is displayed in the header-line. The
 node displayed in the header-line is exactly in the same manner clickable as
 all other nodes.
 
+See also `ecb-tree-stickynode-indent-string'.
+
 This feature is only available with Gnu Emacs, not with XEmacs."
   :group 'ecb-tree-buffer
   :group 'ecb-most-important
   :type 'boolean)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add to texi
 (defcustom ecb-tree-stickynode-indent-string (tree-buffer-sticky-default-indent-string)
   "*String used to indent the stickynode.
 This string is used to match the space used by scrollbars and
@@ -380,7 +380,7 @@ when it lands in the sticky line.
 
 Normally the needed value is computed automatically by ECB. But if the result
 is not matching this option allows to customize the indent-string.
-The default value is computet by the function
+The default value is computed by the function
 `tree-buffer-sticky-default-indent-string', so you can change the needed value
 with that starting-point.
 
@@ -552,8 +552,6 @@ The following keys must not be rebind in all tree-buffers:
   :group 'ecb-tree-buffer
   :type 'hook)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: was ecb-window-sync --> rename
-;; this also in the info-file
 (defcustom ecb-basic-buffer-sync '(Info-mode dired-mode)
   "*Synchronize the basic ECB-buffers automatically with current edit buffer.
 
@@ -586,8 +584,6 @@ IMPORTANT NOTE: Every time the synchronization is done the hook
                 (repeat :tag "Not with these modes"
                         (symbol :tag "mode"))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: was ecb-window-sync-delay --> rename
-;; this also in the info-file
 (defcustom ecb-basic-buffer-sync-delay 0.25
   "*Time Emacs must be idle before the special ECB-buffers are synchronized.
 Synchronizing is done with the current source displayed in the edit window. If
@@ -606,8 +602,6 @@ almost the same effect as if you set no delay."
                         value 'ecb-basic-buffer-sync))))
   :initialize 'custom-initialize-default)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: was ecb-current-buffer-sync-hook
-;; --> rename this also in the info-file...
 (defcustom ecb-basic-buffer-sync-hook nil
   "*Hook run at the end of `ecb-basic-buffer-sync'.
 See documentation of `ecb-basic-buffer-sync' for conditions when
@@ -739,9 +733,6 @@ name of an indirect-buffer."
 (defvar ecb-path-selected-directory nil
   "Path to currently selected directory.")
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
-;; XXXX here we have to check all usages of this var and check if this works
-;; also for indirect buffers
 (defvar ecb-path-selected-source nil
   "Path to currently selected source.
 

@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.88 2009/04/26 16:04:38 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.89 2009/05/03 13:16:11 berndl Exp $
 
 ;;; Commentary:
 
@@ -587,7 +587,7 @@ ECB first performs all find-functions defined for current
 `major-mode' \(if any) anf then all find-functions defined for
 the special symbol 'default \(if any).
 
-ECB offers some predefined senseful action-functions. Currently there are:
+ECB offers some predefined senseful finding-functions. Currently there are:
 - `ecb-search-tag-by-semantic-analyzer' (most powerful)
 - `ecb-search-tag-by-semanticdb'
 - `ecb-jde-show-class-source' (for major-mode `jde-mode' when coding in java)
@@ -1389,52 +1389,38 @@ check the result if `ecb-debug-mode' is nil in which case the function
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: This workaround should be removed
 ;; after semantic is available in a release which deals correctly with
-;; indirect buffers!!
-(defun ecb-semantic-tag-buffer-indirect-buffer-check (tag)
-  "Makes `semantic-tag-buffer' working well with indirect-buffers.
-If current selected source-buffer is an indirect buffer and the tag-buffer of
-TAG is not equal to this indirect-buffer but the underlying files of both
-buffers are identical then we return the indirect buffer as tag-buffer of TAG.
+;; indirect buffers!! Currently we do not use and need it because we have
+;; adviced make-indirect-buffer.
+;; (defun ecb-semantic-tag-buffer-indirect-buffer-check (tag)
+;;   "Makes `semantic-tag-buffer' working well with indirect-buffers.
+;; If current selected source-buffer is an indirect buffer and the tag-buffer of
+;; TAG is not equal to this indirect-buffer but the underlying files of both
+;; buffers are identical then we return the indirect buffer as tag-buffer of TAG.
 
-This is ncessary because semantic is file-focussed and `semantic-tag-buffer'
-returns always the buffer of the underlying base-buffer when called for tag of
-the indirect-buffer.
+;; This is ncessary because semantic is file-focussed and `semantic-tag-buffer'
+;; returns always the buffer of the underlying base-buffer when called for tag of
+;; the indirect-buffer.
 
-This is not a full fix for the semantic problems with indirect buffers but it
-is sufficient for the needs of ECB.
+;; This is not a full fix for the semantic problems with indirect buffers but it
+;; is sufficient for the needs of ECB.
 
-NOTE: This workaround should be removed after semantic is available in a
-release which deals correctly with indirect buffers!!"
-  (let ((source-buffer (ecb-path-selected-source 'buffer))
-        (buffer-of-tag (ecb--semantic-tag-buffer tag)))
-    (if (and (buffer-base-buffer source-buffer)
-             (not (equal source-buffer buffer-of-tag))
-             (equal (ecb-path-selected-source 'file)
-                    (ecb-fix-filename (ecb-buffer-file-name buffer-of-tag))))
-        source-buffer
-      buffer-of-tag)))
+;; NOTE: This workaround should be removed after semantic is available in a
+;; release which deals correctly with indirect buffers!!"
+;;   (let ((source-buffer (ecb-path-selected-source 'buffer))
+;;         (buffer-of-tag (ecb--semantic-tag-buffer tag)))
+;;     (if (and (buffer-base-buffer source-buffer)
+;;              (not (equal source-buffer buffer-of-tag))
+;;              (equal (ecb-path-selected-source 'file)
+;;                     (ecb-fix-filename (ecb-buffer-file-name buffer-of-tag))))
+;;         source-buffer
+;;       buffer-of-tag)))
 
 (defun ecb-semantic-tag-buffer (tag)
   ;; if ecb-debug-mode is not nil then the TAG is valid if we pass the
   ;; assert. If ecb-debug-mode is nil then we call simply the semantic
   ;; function and see what happens.
   (ecb-semantic-assert-valid-tag tag)
-
-  ;; if we have this hook and if semantic has added the necessary stuff to it
-  ;; then we do not need our workaround.
-
-  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: check if this hook is the
-  ;; correct one or if there is already another hook, e.g. named
-  ;; make-indirect-buffer-hook!! Without such a solution with this hook
-  ;; semantic is not able to work with indirect buffers in a reliable and
-  ;; senseful manner!
-  (if (and (boundp 'clone-indirect-buffer-hook)
-           (member 'semantic-clear-toplevel-cache
-                   clone-indirect-buffer-hook))
-      (ecb--semantic-tag-buffer tag)
-    (ecb-semantic-tag-buffer-indirect-buffer-check tag))
-  )
-
+  (ecb--semantic-tag-buffer tag))
 
 (defun ecb-semantic-tag-start (tag)
   ;; if ecb-debug-mode is not nil then the TAG is valid if we pass the
@@ -2972,11 +2958,7 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
              (equal (selected-frame) ecb-frame)
              ;; the methods-buffer must be visible
              (get-buffer-window ecb-methods-buffer-name)
-             ;; current buffer must have a filename. TODO: Klaus Berndl
-             ;; <klaus.berndl@sdm.de>: maybe this restriction has to be
-             ;; reconsidered for the sake being able also displaying
-             ;; buffer-contents not related to a physical file.
-             ;; XXXX (changed for indirect-buffers)
+             ;; current buffer must have a filename.
              (ecb-buffer-file-name (current-buffer))
              ;; the parsed buffer must be displayed in a window within the
              ;; ECB-frame: This prevents the methods-buffer being confused by
@@ -3678,7 +3660,7 @@ types which are parsed by imenu or etags \(see
             spec)))
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: modify this so it can be used by
-;; ecb-find-external-tag-functions 
+;; ecb-find-external-tag-functions - currently not used
 (defun ecb-semantic-tag-external-class-default (tag)
   "Return a list of real tags that faux TAG might represent.
 See `semantic-tag-external-class' for details."
@@ -4650,26 +4632,24 @@ moved over it."
                                        source-buffer
                                        (+ 2 indent)))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: what to do with this - check if
-;; semantic uses something like that...
-(defun semantic--format-tag-arguments (args formatter color)
-  "Format the argument list ARGS with FORMATTER.
-FORMATTER is a function used to format a tag.
-COLOR specifies if color should be used."
-  (let ((out nil))
-    (while args
-      (push (if (semantic-tag-p (car args))
-                (unless (equal (semantic-tag-type (car args)) "void")
-                  (semantic-format-tag-prototype (car args) nil color))
-              (semantic-format-tag-name-from-anything (car args) nil color
-                                                      'variable))
-            out)
-      (setq args (cdr args)))
-    (mapconcat 'identity (nreverse out) semantic-function-argument-separator)
-    ))
-
 (defecb-advice-set ecb-methods-browser-advices
   "Adviced functions needed by the methods-browser of ECB.")
+
+(defecb-advice make-indirect-buffer after ecb-methods-browser-advices
+  "Clears the semantic topleven-cache for the newly created indirect-buffer.
+
+This is only done when the argument CLONE is not nil. But in this case it must
+be ensured that the new clone gets its own tags and do not share it with its
+base-buffer. This is achieved by clearing the toplevel cache of semantic.
+
+Returns always the newly created indirect buffer."
+  (when (and (not ecb-running-xemacs) ;; clone not available with XEmacs
+             ;; clone-flag is not nil
+             (ad-get-arg 2))
+    (with-current-buffer ad-return-value
+      (message "ECB: semantic cache for indirect buffer %s cleared!" (current-buffer))
+      (ecb--semantic-clear-toplevel-cache)))
+  ad-return-value)
 
 (defecb-advice custom-save-all around ecb-methods-browser-advices
   "Save the customized options completely in the background, i.e. the

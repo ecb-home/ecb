@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.440 2009/04/26 16:04:38 berndl Exp $
+;; $Id: ecb.el,v 1.441 2009/05/03 13:16:10 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -373,8 +373,7 @@ perform the check and reset manually with `ecb-upgrade-options'."
 
 (defcustom ecb-version-check t
   "*Checks at start-time if the requirements are fulfilled.
-It checks if the required versions of the libraries semantic, eieio and
-speedbar are installed and loaded into Emacs.
+It checks if the required versio of CEDET is installed and loaded into Emacs.
 
 It is strongly recommended to set this option to not nil!"
   :group 'ecb-general
