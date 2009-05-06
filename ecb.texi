@@ -1540,6 +1540,133 @@ c}) or create a new ecb-layout via the command
 @code{ecb-create-new-layout} and add a buffer of type ``methods'' into
 this new layout (@pxref{Creating a new ECB-layout}).
 
+@subsubsection Synchronizing the Methods-window with current source-buffer
+
+First a preliminary remark: Do not confuse this chapter with that
+synchronizing described in @ref{ECB-window synchronizing}. The latter one
+describes the mechanism for synchronizing the ECB-windows when the
+current-buffer in the edit-area has been changed. This chapter describes how
+to synchronize the ECB-methods-window with the contents of the current-buffer
+if the buffer has been modified!
+
+Now lets start:
+
+Generally ECB calls semantic to get the list of tags for current source-file
+of current edit-window. Per default ECB does never automatically force a
+reparse of the source-file after this has been changed - this is only done on
+demand by calling the command @code{ecb-rebuild-methods-buffer}. So per
+default the idle-scheduler of semantic is responsible for reparsing the
+source-file when this is necessary (see `semantic-idle-scheduler-mode' for
+further details). So this scheduler is also repsonsible in turn for
+updating/sychronizing the methods-window with current buffer-contents. This is
+the most user-resonsible and therefore the recommended approach.
+
+So it's strongly recommended to enable @code{semantic-idle-scheduler-mode} or
+@code{global-semantic-idle-scheduler-mode} (@pxref{Setting up CEDET/semantic})
+because then reparsing is always done during idle-time of Emacs and - maybe
+even more important - it is also interruptable.
+
+But if this idle-scheduler is switched off then ECB offers now two
+possibilities (via @code{ecb-force-reparse-when-semantic-idle-scheduler-off}):
+
+@itemize @bullet
+
+@item
+
+Not forcing itself a reparse when tags are needed by ECB: then a user declines
+knowingly Emacs/semantic-driven parsing of code when he/she switches off the
+idle-mode of semantic. This is the default behavior of ECB and the default
+value of this option. But this has also the consequence that the
+methods-buffer is only filed on demand via @code{ecb-rebuild-methods-buffer}
+(bound to @key{C-c . r})!
+
+This means also in consequence that the methods-buffer is not
+automatically filled when a source-file is opened but first on demand
+after calling the command @code{ecb-rebuild-methods-buffer}!
+
+@item
+
+Forcing a reparse when tags are needed: Then ECB forces semantic to parse
+the source-file when ECB needs tags to display. For this behavior this
+option has to be set to not nil.
+@end itemize
+
+The term ``forcing a reparse by semantic'' is a simplification: ECB uses then
+the function @code{semantic-fetch-tags} which can decide that the cached tags
+are up-to-date so no real reparsing is necessary - but it can also run a full
+reparse and this reparse is not being done when Emacs is idle but immediatelly
+and not interruptable (as with the idle-scheduler of semantic), which can be
+quite annoying with big source-files.
+
+To make a long story short: It is strongly recommended to enable the
+@code{semantic-idle-scheduler-mode} or
+@code{global-semantic-idle-scheduler-mode}! See @ref{Setting up
+CEDET/semantic}. This will give you in all cases the behavior you would expect
+of en IDE like ECB/semantic.
+
+@subsubsection Synchronizing with indirect buffers
+
+ECB works out of the box with indirect buffers, especially with indirect
+buffer clones created with the command @code{clone-indirect-buffer} (only
+available with GNU Emacs >= 21). They will be handled as all other buffers and
+you can work with them with no difference to ``normal'' buffers. With one
+exception:
+
+@strong{Please note}: Cause of a bug in Emacs 22 (and maybe also in Emacs 23)
+the propagation of parsing informations from one buffer to all others which are
+in an indirect-buffer relation to the same base-buffer does currently not
+work.
+
+What does this mean: If you modify a buffer then Emacs propagates this change
+to all buffers with the same base-buffer. ECB/semantic recognize this change
+and do all necessary to automatically reparse the changed buffer (at least if
+you have customized semantic/ECB to do this). So far so good, but: If you
+switch to another buffer with the same base-buffer then you will notice that
+the methods-window of ECB still displays the contents before the change, ie.
+the need for a reparse has not been propagated to these other buffers. This is
+a bug in Emacs.
+
+What can you do: As long as this bug is not fixed there is no chance that all
+other affected ``indirect-related'' buffers will be reparsed automatically
+after modifying one of them. So you have to do this reparse ``by hand'' after
+switching to such an indirect-related buffer, but this is very simple: Just
+call the command @code{ecb-rebuild-methods-buffer} with prefix arg or hit
+@key{C-u C-c . r} (key this command is bound to).
+
+Lets make an example:
+
+@enumerate
+
+@item
+
+Suppose we have a sourcefile test.java loaded as a buffer into Emacs and
+suppose further we have created two indirect-buffer clones test-clone1.java and
+test-clone2.java - all of these buffers point to the same file: test.java.
+
+@item
+
+Now lets be the buffer test-clone1.java the current buffer and let us modify
+it (e.g. adding a new method). If you have enabled the idle-reparse mechanism
+of semantic (@pxref{Setting up CEDET/semantic}) then this buffer will be
+reparsed automatically and ECBs methods-window will be updated in turn too.
+
+@item
+
+So far so good. But if you now switch to one of the two other buffers, lets
+say to test.java, then you will notice that the change done in
+test-clone1.java is also visible in the buffer test.java but the
+ECB-methods-window for test.java will display the contents before the change.
+This is cause of the Emacs-bug described above.
+
+@item
+
+To update the methods-window for test.java to the new contents you have to call
+@code{ecb-rebuild-methods-buffer} with prefix argument (ie. clear-cache is
+true) or hitting @key{C-u C-c . r}. Note: Calling this command without prefix
+argument is not enough!
+
+@end enumerate
+
 @subsubsection Jumping to the definition of external types
 
 There are two common types of ``external'' tags displayed in the
@@ -11997,19 +12124,19 @@ ECB currently supports the following managers:
 @item winring.el:
 Written by Barry A. Warsaw @email{bwarsaw@@python.org}, available at
 @ifhtml
-@uref{http://www.python.org/emacs/}
+@uref{http://www.python.org/emacs/winring}
 @end ifhtml
 @ifnothtml
-@url{http://www.python.org/emacs/}
+@url{http://www.python.org/emacs/winring}
 @end ifnothtml
 
 @item escreen.el:
 Written by Noah Friedman @email{friedman@@splode.com}, available at
 @ifhtml
-@uref{http://www.splode.com/~friedman/software/emacs-lisp/}
+@uref{http://www.splode.com/~friedman/software/emacs-lisp/#ui}
 @end ifhtml
 @ifnothtml
-@url{http://www.splode.com/~friedman/software/emacs-lisp/}
+@url{http://www.splode.com/~friedman/software/emacs-lisp/#ui}
 @end ifnothtml
 @end itemize
 
@@ -13429,7 +13556,7 @@ for running code with disabled some ecb-advices:
 
 @itemize @minus
 @item @code{ecb-with-original-basic-functions}
-@item @code{ecb-with-original-permanent-functions}
+@item @code{ecb-with-original-permanent-layout-functions}
 @end itemize
 
 The advice set @code{ecb-basic-adviced-functions} contains most of the
@@ -13442,7 +13569,7 @@ elisp-code with disabled basic-advices.
 @code{ecb-basic-adviced-functions}-set.
 
 Same for @code{ecb-with-original-permanent-functions} which is a
-shortcut for the advice-set @code{ecb-permanent-adviced-functions}.
+shortcut for the advice-set @code{ecb-permanent-adviced-layout-functions}.
 
 Last but not least ECB contains an advice-set
 @code{ecb-always-disabled-advices}. These advices are always disabled.

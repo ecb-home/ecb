@@ -3327,6 +3327,7 @@ by `ecb--semantic-current-tag' but there are exceptions:
         (setq curr-tag next-tag))
     curr-tag))
 
+
 (defun ecb-try-highlight-tag (highlight-tag curr-tag table)
   "First we try to expand only the absolute needed parts of the tree-buffer to
 highlight the tag HIGHLIGHT-TAG - this means we recursively go upstairs the
@@ -3435,87 +3436,85 @@ current buffer."
 
 (defecb-autocontrol/sync-function ecb-tag-sync ecb-methods-buffer-name nil nil
   "Synchronizing tag-display of the methods-buffer with current point."
-  (when (and ecb-minor-mode
-             (not (ecb-point-in-dedicated-special-buffer))
-             (not (ecb-point-in-compile-window)))
-    (if nil ;; ecb-tag-sync-do-nothing
-        ;; user has selected a tag via the Methods-window so there is nothing
-        ;; to sync - we must prevent from syncing here because in some modes
-        ;; the point stays after a click outside of the selected tag (see
-        ;; `ecb-tag-visit-post-actions') and if we would sync then in the
-        ;; methods-buffer the selected tag will be unhighlighted and the
-        ;; surrounding one will be highlighted (e.g. java the class of the
-        ;; tag). But we must reset this flag so the resync-mechanism runs
-        ;; next time...
-        ;; Klaus Berndl <klaus.berndl@sdm.de>: Now all functions of
-        ;; ecb-tag-visit-post-actions are forbidden to put the point outside
-        ;; of the tag-boundaries. Therefore we can now remove this mechanism
-        ;; so now synching can take place also after a click. But i let the
-        ;; code in because im not at 100% sure if there are other needs in ECB
-        ;; which need this mechanism - but for now we can disable it.... ;-)
-        (setq ecb-tag-sync-do-nothing nil)
-      (when ecb-highlight-tag-with-point
-        (let ((curr-tag (ecb-get-real-curr-tag)))
-          (when (or force (not (equal ecb-selected-tag curr-tag)))
-            (setq ecb-selected-tag curr-tag)
-            (if (null curr-tag)
+  (if nil ;; ecb-tag-sync-do-nothing
+      ;; user has selected a tag via the Methods-window so there is nothing
+      ;; to sync - we must prevent from syncing here because in some modes
+      ;; the point stays after a click outside of the selected tag (see
+      ;; `ecb-tag-visit-post-actions') and if we would sync then in the
+      ;; methods-buffer the selected tag will be unhighlighted and the
+      ;; surrounding one will be highlighted (e.g. java the class of the
+      ;; tag). But we must reset this flag so the resync-mechanism runs
+      ;; next time...
+      ;; Klaus Berndl <klaus.berndl@sdm.de>: Now all functions of
+      ;; ecb-tag-visit-post-actions are forbidden to put the point outside
+      ;; of the tag-boundaries. Therefore we can now remove this mechanism
+      ;; so now synching can take place also after a click. But i let the
+      ;; code in because im not at 100% sure if there are other needs in ECB
+      ;; which need this mechanism - but for now we can disable it.... ;-)
+      (setq ecb-tag-sync-do-nothing nil)
+    (when ecb-highlight-tag-with-point
+      (let ((curr-tag (ecb-get-real-curr-tag)))
+        (when (or force (not (equal ecb-selected-tag curr-tag)))
+          (setq ecb-selected-tag curr-tag)
+          (if (null curr-tag)
+              (ecb-exec-in-window ecb-methods-buffer-name
+                ;; If there is no tag to highlight then we remove the
+                ;; highlighting
+                (tree-buffer-highlight-node-by-data/name nil)
+                (if (equal ecb-auto-expand-tag-tree-collapse-other 'always)
+                    ;; If this option is t (means always) we collapse also
+                    ;; when point is not on a tag!
+                    (ecb-expand-methods-node-internal
+                     (tree-buffer-get-root)
+                     -1
+                     (equal ecb-auto-expand-tag-tree 'all)
+                     nil t))
+                )
+            ;; Maybe we must first collapse all so only the needed parts are
+            ;; expanded afterwards. Klaus Berndl <klaus.berndl@sdm.de>: Is it
+            ;; necessary to update the tree-buffer after collapsing? IMO yes,
+            ;; because otherwise we set the expansion-state of the tree-buffer
+            ;; to all collapsed and if we find really nothing to highlight and
+            ;; do also no node-expanding (which would update the tree-buffer)
+            ;; then we have an inconsistent state - would be probably very
+            ;; seldom but could be - so let us be somehow paranoid ;-)
+            (if ecb-auto-expand-tag-tree-collapse-other
                 (ecb-exec-in-window ecb-methods-buffer-name
-                  ;; If there is no tag to highlight then we remove the
-                  ;; highlighting
-                  (tree-buffer-highlight-node-by-data/name nil)
-                  (if (equal ecb-auto-expand-tag-tree-collapse-other 'always)
-                      ;; If this option is t (means always) we collapse also
-                      ;; when point is not on a tag!
-                      (ecb-expand-methods-node-internal
-                       (tree-buffer-get-root)
-                       -1
-                       (equal ecb-auto-expand-tag-tree 'all)
-                       nil t)))
-              ;; Maybe we must first collapse all so only the needed parts are
-              ;; expanded afterwards. Klaus Berndl <klaus.berndl@sdm.de>: Is it
-              ;; necessary to update the tree-buffer after collapsing? IMO yes,
-              ;; because otherwise we set the expansion-state of the tree-buffer
-              ;; to all collapsed and if we find really nothing to highlight and
-              ;; do also no node-expanding (which would update the tree-buffer)
-              ;; then we have an inconsistent state - would be probably very
-              ;; seldom but could be - so let us be somehow paranoid ;-)
-              (if ecb-auto-expand-tag-tree-collapse-other
-                  (ecb-exec-in-window ecb-methods-buffer-name
-                    (when (and curr-tag
-                               (or (equal ecb-auto-expand-tag-tree 'all)
-                                   (member (ecb--semantic-tag-class curr-tag)
-                                           (ecb-normalize-expand-spec
-                                            ecb-methods-nodes-expand-spec))))
-                      (ecb-expand-methods-node-internal
-                       (tree-buffer-get-root)
-                       -1
-                       (equal ecb-auto-expand-tag-tree 'all)
-                       nil t))))
-              ;; First we try to expand only the absolute needed parts - this
-              ;; means we go upstairs the ladder of types the current tag
-              ;; belongs to. If there is no containing type then we try to
-              ;; expand only the containing toplevel bucket. If this has no
-              ;; success then we expand the full tree-buffer and try it again.
-              (if (not (ecb-try-highlight-tag curr-tag curr-tag
+                  (when (and curr-tag
+                             (or (equal ecb-auto-expand-tag-tree 'all)
+                                 (member (ecb--semantic-tag-class curr-tag)
+                                         (ecb-normalize-expand-spec
+                                          ecb-methods-nodes-expand-spec))))
+                    (ecb-expand-methods-node-internal
+                     (tree-buffer-get-root)
+                     -1
+                     (equal ecb-auto-expand-tag-tree 'all)
+                     nil t))))
+            ;; First we try to expand only the absolute needed parts - this
+            ;; means we go upstairs the ladder of types the current tag
+            ;; belongs to. If there is no containing type then we try to
+            ;; expand only the containing toplevel bucket. If this has no
+            ;; success then we expand the full tree-buffer and try it again.
+            (when (not (ecb-try-highlight-tag curr-tag curr-tag
                                               (ecb-get-current-tag-table)))
-                  ;; The node representing CURR-TAG could not be highlighted by
-                  ;; `tree-buffer-highlight-node-by-data/name' - probably it is still
-                  ;; invisible. Let's try to make visible all nodes and then
-                  ;; highlighting again.
-                  (ecb-exec-in-window ecb-methods-buffer-name
-                    (when (and curr-tag
-                               (or (equal ecb-auto-expand-tag-tree 'all)
-                                   (member (ecb--semantic-tag-class curr-tag)
-                                           (ecb-normalize-expand-spec
-                                            ecb-methods-nodes-expand-spec))))
-                      (ecb-expand-methods-node-internal
-                       (tree-buffer-get-root)
-                       100 ;; this should be enough levels ;-)
-                       (equal ecb-auto-expand-tag-tree 'all)
-                       nil t)
-                      (tree-buffer-highlight-node-by-data/name
-                       curr-tag nil nil (equal ecb-highlight-tag-with-point 'highlight)))
-                    )))))))))  
+              ;; The node representing CURR-TAG could not be highlighted by
+              ;; `tree-buffer-highlight-node-by-data/name' - probably it is still
+              ;; invisible. Let's try to make visible all nodes and then
+              ;; highlighting again.
+              (ecb-exec-in-window ecb-methods-buffer-name
+                (when (and curr-tag
+                           (or (equal ecb-auto-expand-tag-tree 'all)
+                               (member (ecb--semantic-tag-class curr-tag)
+                                       (ecb-normalize-expand-spec
+                                        ecb-methods-nodes-expand-spec))))
+                  (ecb-expand-methods-node-internal
+                   (tree-buffer-get-root)
+                   100 ;; this should be enough levels ;-)
+                   (equal ecb-auto-expand-tag-tree 'all)
+                   nil t)
+                  (tree-buffer-highlight-node-by-data/name
+                   curr-tag nil nil (equal ecb-highlight-tag-with-point 'highlight)))
+                ))))))))
 
 
 (defun ecb-string-make-singular (string)
@@ -4695,7 +4694,7 @@ by semantic and also killed afterwards."
           (kill-buffer (find-file-noselect (ecb-custom-file)))))
     ad-do-it))
 
-(ecb-disable-advices 'ecb-methods-browser-advices)
+(ecb-disable-advices 'ecb-methods-browser-advices t)
 
 (silentcomp-provide 'ecb-method-browser)
 

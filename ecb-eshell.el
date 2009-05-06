@@ -265,7 +265,7 @@ ECB and if either this function is called interactively or
 `ecb-eshell-buffer-sync' is not nil."
   (when (and (equal (selected-frame) ecb-frame)
              (ecb-compile-window-live-p)
-             (not (ecb-point-in-compile-window)))
+             (ecb-point-in-edit-window-number))
     (let* ((my-eshell-buffer
             ;; nil or a living eshell-buffer in the ecb-compile-window
             (car (member (window-buffer ecb-compile-window)

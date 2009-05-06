@@ -1141,6 +1141,7 @@ options with their old \(before the upgrade/reset) and new values."
 ;; all needs for the requirements check
 ;; ----------------------------------------------------------------------
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we should set this to pre6
 (defconst ecb-required-cedet-version-min '(1 0 2 6))
 (defconst ecb-required-cedet-version-max '(1 0 4 9))
 

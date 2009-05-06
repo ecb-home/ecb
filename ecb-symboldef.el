@@ -427,8 +427,7 @@ symbol. Displays the found text in the buffer of
                                      modeline-display current-symbol)
                              nil t)
           ))))
-  (run-hooks 'ecb-symboldef-buffer-sync-hook)
-  )
+  (run-hooks 'ecb-symboldef-buffer-sync-hook))
 
 
 (defecb-window-dedicator ecb-set-symboldef-buffer

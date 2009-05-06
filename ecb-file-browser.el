@@ -2915,7 +2915,7 @@ directory. This function is only for use by `ecb-stealthy-updates'!"
                      (save-excursion
                        (while (<= state lines-of-buffer)
                          (ecb-throw-on-input 'lines-of-buffer-loop)
-                         (goto-line state)
+                         (ecb-goto-line state)
                          (setq curr-node (tree-buffer-get-node-at-point))
                          (when (and ;;(not (= ecb-directories-nodetype-sourcefile
                                       ;;      (tree-node->type curr-node)))
@@ -2974,7 +2974,7 @@ when called. Return the new state-value."
         (save-excursion
           (while (<= state lines-of-buffer)
             (ecb-throw-on-input 'lines-of-buffer-loop)
-            (goto-line state)
+            (ecb-goto-line state)
             (setq curr-node (tree-buffer-get-node-at-point))
             (when (and (member (tree-node->type curr-node) node-types-to-check)
                        (ecb-sources-read-only-check-p
@@ -3487,7 +3487,7 @@ state-value."
           (save-excursion
             (while (<= state lines-of-buffer)
               (ecb-throw-on-input 'lines-of-buffer-loop)
-              (goto-line state)
+              (ecb-goto-line state)
               (setq curr-node (tree-buffer-get-node-at-point))
               (when (member (tree-node->type curr-node) node-types-to-check)
                 (setq curr-dir (ecb-file-name-directory
@@ -3541,7 +3541,7 @@ stealthy-function has when called. Return the new state-value."
             (save-excursion
               (while (<= state lines-of-buffer)
                 (ecb-throw-on-input 'lines-of-buffer-loop)
-                (goto-line state)
+                (ecb-goto-line state)
                 (setq curr-node (tree-buffer-get-node-at-point))
                 (if (ecb-file-exists-p (tree-node->data curr-node))
                     (progn

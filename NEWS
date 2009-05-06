@@ -141,7 +141,7 @@
     compile-window is used and never. This makes ECB fully compatible with the
     option `pop-up-frames'.
       
-** Better compatibility with Emacs 22
+** Full compatibility with Emacs 22
 
 *** `balance-windows' now works with Emacs 22 too
     Cause of the completely new implemantation based on `window-tree' ECB
@@ -171,6 +171,16 @@
     adopts this behavior also for its adviced version so the command works
     in a smart manner optimized for ECB.
 
+** Better compatibility with Emacs 23
+
+*** Removed an annoying behavior which sets the mark hundred of times even
+    when the user just moves the cursor.
+    
+    This comes from a change within Emacs 23 and the function `goto-line'
+    which sets the mark in Emacs 23. This is not necessary when not used as
+    command but as internal utility. Now ECB uses its own goto-line-function
+    which does not set the mark --> No unnecessary mark settings with Emacs 23.
+    
 ** Better compatibility with CEDET 1.0preX and semantic 2.0preX
 
 *** The ECB-analyse-window now works very well with current semantic analyzer

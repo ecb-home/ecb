@@ -217,17 +217,16 @@ if `scroll-all-mode' is nil return the number of visible windows."
        ad-do-it)))
  )
 
-  
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: we need to add compatibilty to
+;; view.el - especially view-mode-exit needs to be adviced: When vioew-buffer
+;; in compile-window then view-mode-exit just should select
+;; ecb-last-edit-window-with-point and call ecb-toggle-compile-window-height
+;; with -1 (so it is shrinked down). This should fix already a lot of problems
+;; - but we hav to test with Emacs 23 too...
 
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: we must support
-;; `grep-window-height' in Emacs 22 (XEmacs?)
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: (while-no-input should be used in
-;; the stealthy stuff!! But first test, if it works also on windows - see
-;; mailings in the emacs-devel-list... hmm, we have already ecb-throw-on-input
-;; etc... 
-
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Then we have to test, we
+;; displaying completions in Emacs 23 with a compile-window does not longer
+;; work!!!
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
 ;; *** The new package gdb-ui.el provides an enhanced graphical interface to
@@ -244,7 +243,7 @@ if `scroll-all-mode' is nil return the number of visible windows."
 
 
 ;; we disable the advices at load-time
-(ecb-disable-advices 'ecb-compatibility-advices)
+(ecb-disable-advices 'ecb-compatibility-advices t)
 
 (silentcomp-provide 'ecb-compatibility)
 
