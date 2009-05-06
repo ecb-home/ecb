@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.22 2009/05/03 13:16:11 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.23 2009/05/06 07:10:06 berndl Exp $
 
 
 ;;; Commentary:
@@ -296,53 +296,50 @@ This means in fact display the current analysis for current point."
   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: make interruptable. Necessary
   ;; e.g. when typing: "(e" then scanning all elisp stuff beginning with e is
   ;; really annoying....
-  (when (and ecb-minor-mode
-             (not ecb-windows-hidden)
-             (ecb-point-in-edit-window-number))
-    (let ((analysis nil)
-          (scope nil)
-          (completions nil)
-          (cnt nil)
-          (mode-local-active-mode nil)
-          )
-      ;; Try and get some sort of analysis
-      (condition-case nil
-          (progn
-            (setq mode-local-active-mode major-mode)
-            (save-excursion
-              ;; Get the current scope
-              (setq scope (semantic-calculate-scope (point)))
-              ;; Get the analysis
-              (setq analysis (ecb--semantic-analyze-current-context (point)))
-              (setq cnt (ecb--semantic-find-tag-by-overlay))
-              (when analysis
-                (setq completions (ecb--semantic-analyze-possible-completions analysis)))))
-        (error nil))
-      (ecb-exec-in-window ecb-analyse-buffer-name
-        ;; we must remove the old nodes
-        (tree-buffer-set-root (tree-node-new-root))
-        (when cnt
-          (ecb-analyse-add-nodes "Context" "Context"
-                                 cnt ecb-analyse-nodetype-context))
-        ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we should adopt this
-        ;; for ecb-analyse..
-        ;;     (when analysis
-        ;;       ;; If this analyzer happens to point at a complete symbol, then
-        ;;       ;; see if we can dig up some documentation for it.
-        ;;       (semantic-ia-sb-show-doc analysis))
+  (let ((analysis nil)
+        (scope nil)
+        (completions nil)
+        (cnt nil)
+        (mode-local-active-mode nil)
+        )
+    ;; Try and get some sort of analysis
+    (condition-case nil
+        (progn
+          (setq mode-local-active-mode major-mode)
+          (save-excursion
+            ;; Get the current scope
+            (setq scope (semantic-calculate-scope (point)))
+            ;; Get the analysis
+            (setq analysis (ecb--semantic-analyze-current-context (point)))
+            (setq cnt (ecb--semantic-find-tag-by-overlay))
+            (when analysis
+              (setq completions (ecb--semantic-analyze-possible-completions analysis)))))
+      (error nil))
+    (ecb-exec-in-window ecb-analyse-buffer-name
+      ;; we must remove the old nodes
+      (tree-buffer-set-root (tree-node-new-root))
+      (when cnt
+        (ecb-analyse-add-nodes "Context" "Context"
+                               cnt ecb-analyse-nodetype-context))
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we should adopt this
+      ;; for ecb-analyse..
+      ;;     (when analysis
+      ;;       ;; If this analyzer happens to point at a complete symbol, then
+      ;;       ;; see if we can dig up some documentation for it.
+      ;;       (semantic-ia-sb-show-doc analysis))
 
-        ;; Show local variables
-        (when scope
-          (ecb-analyse-show-scope scope))
+      ;; Show local variables
+      (when scope
+        (ecb-analyse-show-scope scope))
 
-        (when analysis
-          ;; Let different classes draw more buttons.
-          (ecb-analyse-more-nodes analysis)
-          (when completions
-            (ecb-analyse-add-nodes "Completions" "Completions" completions
-                                   ecb-analyse-nodetype-completions)))
-        (tree-buffer-update)))
-    (run-hooks 'ecb-analyse-buffer-sync-hook)))
+      (when analysis
+        ;; Let different classes draw more buttons.
+        (ecb-analyse-more-nodes analysis)
+        (when completions
+          (ecb-analyse-add-nodes "Completions" "Completions" completions
+                                 ecb-analyse-nodetype-completions)))
+      (tree-buffer-update)))
+  (run-hooks 'ecb-analyse-buffer-sync-hook))
         
 (defun ecb-analyse-show-scope (scope)
   "Show SCOPE information."

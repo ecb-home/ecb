@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.441 2009/05/03 13:16:10 berndl Exp $
+;; $Id: ecb.el,v 1.442 2009/05/06 07:10:05 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1375,7 +1375,7 @@ If ECB detects a problem it is reported and then an error is thrown."
               ;; deactivated after first activation of ECB unless
               ;; `ecb-split-edit-window-after-start' is not 'before-activation
               ;; (see `ecb-deactivate-internal')
-              (ecb-enable-advices 'ecb-permanent-adviced-functions)
+              (ecb-enable-advices 'ecb-permanent-adviced-layout-functions)
 
               ;; enable advices for not supported window-managers
               (ecb-enable-advices 'ecb-winman-not-supported-function-advices)
@@ -1677,9 +1677,8 @@ does all necessary after finishing ediff."
       
       ;; deactivating the adviced functions
       (dolist (adviced-set-elem ecb-adviced-function-sets)
-        ;; we disable the permanent advices later
-        (unless (equal (car adviced-set-elem) 'ecb-permanent-adviced-functions)
-          (ecb-disable-advices (car adviced-set-elem))))
+        ;; Note: as permanent defined advices-sets are not disabled here!
+        (ecb-disable-advices (car adviced-set-elem)))
 
       (ecb-enable-own-temp-buffer-show-function nil)      
 
@@ -1756,7 +1755,7 @@ does all necessary after finishing ediff."
 
               ;; deletion of all windows. (All other advices are already
               ;; disabled!) 
-              (ecb-with-original-permanent-functions
+              (ecb-with-original-permanent-layout-functions
                (delete-other-windows))
               
               ;; some paranoia....
@@ -1766,7 +1765,7 @@ does all necessary after finishing ediff."
               ;; (All other advices are already disabled!)
               (if (= (length edit-win-data-before-redraw)
                      (ecb-edit-area-creators-number-of-edit-windows))
-                  (ecb-with-original-permanent-functions
+                  (ecb-with-original-permanent-layout-functions
                    (ecb-restore-edit-area))
                 (ecb-edit-area-creators-init))
               
@@ -1809,10 +1808,10 @@ does all necessary after finishing ediff."
       (ecb-initialize-layout)
 
       ;; we do NOT disable the permanent-advices of
-      ;; `ecb-permanent-adviced-functions' unless the user don't want
+      ;; `ecb-permanent-adviced-layout-functions' unless the user don't want
       ;; preserving the split-state after reactivating ECB.
       (when (not (equal ecb-split-edit-window-after-start 'before-activation))
-        (ecb-disable-advices 'ecb-permanent-adviced-functions)
+        (ecb-disable-advices 'ecb-permanent-adviced-layout-functions t)
         (ecb-edit-area-creators-init))
 
       ;; we can safely do the kills because killing non existing buffers
@@ -2024,12 +2023,14 @@ exist."
                                    "ecb-exec-in-window"
                                    "ecb-do-with-unfixed-ecb-buffers"
                                    "ecb-do-with-fixed-ecb-buffers"
-                                   "ecb-with-original-permanent-functions"
+                                   "ecb-with-original-adviced-function-set"
+                                   "ecb-with-original-permanent-layout-functions"
                                    "ecb-with-dedicated-window"
                                    "ecb-with-original-basic-functions"
                                    "ecb-with-ecb-advice"
                                    "ecb-with-readonly-buffer"
                                    "ecb-do-if-buffer-visible-in-ecb-frame"
+                                   "ecb-when-point-in-edit-window-ecb-windows-visible"
                                    "ecb-layout-define"
                                    "when-ecb-running-xemacs"
                                    "when-ecb-running-emacs"
@@ -2097,7 +2098,7 @@ exist."
 ;; AFTER the FIRST usage of our advices!!
 
 (dolist (adviced-set-elem ecb-adviced-function-sets)
-  (ecb-disable-advices (car adviced-set-elem)))
+  (ecb-disable-advices (car adviced-set-elem) t))
 
 ;; init the method- and file-browser at load-time
 (ecb-file-browser-initialize)

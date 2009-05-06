@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-eshell.el,v 1.83 2009/04/26 16:04:38 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.84 2009/05/06 07:10:06 berndl Exp $
 
 ;;; Commentary:
 
@@ -265,7 +265,7 @@ ECB and if either this function is called interactively or
 `ecb-eshell-buffer-sync' is not nil."
   (when (and (equal (selected-frame) ecb-frame)
              (ecb-compile-window-live-p)
-             (not (ecb-point-in-compile-window)))
+             (ecb-point-in-edit-window-number))
     (let* ((my-eshell-buffer
             ;; nil or a living eshell-buffer in the ecb-compile-window
             (car (member (window-buffer ecb-compile-window)

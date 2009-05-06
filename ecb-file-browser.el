@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.72 2009/05/03 13:16:11 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.73 2009/05/06 07:10:06 berndl Exp $
 
 ;;; Commentary:
 
@@ -2915,7 +2915,7 @@ directory. This function is only for use by `ecb-stealthy-updates'!"
                      (save-excursion
                        (while (<= state lines-of-buffer)
                          (ecb-throw-on-input 'lines-of-buffer-loop)
-                         (goto-line state)
+                         (ecb-goto-line state)
                          (setq curr-node (tree-buffer-get-node-at-point))
                          (when (and ;;(not (= ecb-directories-nodetype-sourcefile
                                       ;;      (tree-node->type curr-node)))
@@ -2974,7 +2974,7 @@ when called. Return the new state-value."
         (save-excursion
           (while (<= state lines-of-buffer)
             (ecb-throw-on-input 'lines-of-buffer-loop)
-            (goto-line state)
+            (ecb-goto-line state)
             (setq curr-node (tree-buffer-get-node-at-point))
             (when (and (member (tree-node->type curr-node) node-types-to-check)
                        (ecb-sources-read-only-check-p
@@ -3487,7 +3487,7 @@ state-value."
           (save-excursion
             (while (<= state lines-of-buffer)
               (ecb-throw-on-input 'lines-of-buffer-loop)
-              (goto-line state)
+              (ecb-goto-line state)
               (setq curr-node (tree-buffer-get-node-at-point))
               (when (member (tree-node->type curr-node) node-types-to-check)
                 (setq curr-dir (ecb-file-name-directory
@@ -3541,7 +3541,7 @@ stealthy-function has when called. Return the new state-value."
             (save-excursion
               (while (<= state lines-of-buffer)
                 (ecb-throw-on-input 'lines-of-buffer-loop)
-                (goto-line state)
+                (ecb-goto-line state)
                 (setq curr-node (tree-buffer-get-node-at-point))
                 (if (ecb-file-exists-p (tree-node->data curr-node))
                     (progn

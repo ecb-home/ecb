@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.33 2009/05/03 13:16:11 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.34 2009/05/06 07:10:06 berndl Exp $
 
 
 ;;; History
@@ -1199,13 +1199,21 @@ Such a function is used either for automatic self-controlling certain aspects
 of ECB or for synchronizing a special window/buffer of ECB with contents of
 the active buffer in the edit-area.
 
-FCN is the name of the defined function and BUFFER-NAME-SYMBOL is either nil
-or the name of a variable containing the buffer-name of a special
-ECB-window/buffer for which the defined function is used for synchronizing it
-with the edit-area. In the latter case BODY is encapsulated with the macro
-`ecb-do-if-buffer-visible-in-ecb-frame' so BODY runs only if the buffer of
-BUFFER-NAME-SYMBOL is displayed in a window of the ECB-frame \(for details see
-the documentation of this macro).
+FCN is the name of the defined function and BUFFER-NAME-SYMBOL is
+either nil or a variable-symbol containing the buffer-name
+of a special ECB-window/buffer for which the defined function is
+used for synchronizing it with the edit-area. In the latter case
+BODY is encapsulated with the macros a)
+`ecb-when-point-in-edit-window-ecb-windows-visible' and b)
+`ecb-do-if-buffer-visible-in-ecb-frame' so BODY runs only if a)
+point stays in an edit-window \(ie. the currently selected window
+is an edit-window) and the ecb-windows of current layout are
+not hidden and b) the buffer of BUFFER-NAME-SYMBOL is displayed in a
+window of the ECB-frame \(for details see the documentation of
+this macro).
+
+Please note: If BUFFER-NAME-SYMBOL is nil then BODY is not
+encapsulated with these two macros mentioned above!
 
 The defined function has an optional argument FORCE which can be used within
 BODY.
@@ -1276,14 +1284,15 @@ hold in the variable `ecb-a-special-buffer-name'.
                               (not (member major-mode ,buffer-sync-option-symbol))))
                   t)
            ,(if (and buffer-name-symbol (symbolp buffer-name-symbol))
-                `(ecb-do-if-buffer-visible-in-ecb-frame (quote ,buffer-name-symbol)
-                   (ecb-bodytrace-autocontrol/sync-fcn-error (quote ,fcn)
-                                                             "After conditions: Cur-buf: %s" (current-buffer))
-                   ,@body
-                   (ecb-autotrace-autocontrol/sync-fcn-error (quote ,fcn)
-                                                             "End:   Cur-buf: %s" (current-buffer))
-                   nil ;; we always return nil
-                   )
+                `(ecb-when-point-in-edit-window-ecb-windows-visible
+                  (ecb-do-if-buffer-visible-in-ecb-frame (quote ,buffer-name-symbol)
+                    (ecb-bodytrace-autocontrol/sync-fcn-error (quote ,fcn)
+                                                              "After conditions: Cur-buf: %s" (current-buffer))
+                    ,@body
+                    (ecb-autotrace-autocontrol/sync-fcn-error (quote ,fcn)
+                                                              "End:   Cur-buf: %s" (current-buffer))
+                    nil ;; we always return nil
+                    ))
               `(progn
                  (ecb-bodytrace-autocontrol/sync-fcn-error (quote ,fcn)
                                                            "After conditions: Cur-buf: %s" (current-buffer))

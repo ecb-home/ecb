@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.112 2009/05/03 13:16:11 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.113 2009/05/06 07:10:06 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1141,6 +1141,7 @@ options with their old \(before the upgrade/reset) and new values."
 ;; all needs for the requirements check
 ;; ----------------------------------------------------------------------
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we should set this to pre6
 (defconst ecb-required-cedet-version-min '(1 0 2 6))
 (defconst ecb-required-cedet-version-max '(1 0 4 9))
 

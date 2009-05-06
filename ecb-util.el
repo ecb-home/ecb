@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.146 2009/05/03 13:16:11 berndl Exp $
+;; $Id: ecb-util.el,v 1.147 2009/05/06 07:10:06 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -104,6 +104,10 @@
 (defconst ecb-running-version-22 (and (not ecb-running-unsupported-emacs)
                                       (>= emacs-major-version 22))
   "True if running \(X)Emacs >= version 22")
+
+(defconst ecb-running-version-23 (and (not ecb-running-unsupported-emacs)
+                                      (>= emacs-major-version 23))
+  "True if running \(X)Emacs >= version 23")
 
 (defconst ecb-temp-dir
   (file-name-as-directory
@@ -311,6 +315,13 @@ outmost caller.
 
 DO NOT CHANGE THIS!")
 
+(defvar ecb-adviced-permanent-function-sets nil
+  "A list of symbols, each of them an advice-set which should be permanent.
+Permanent means this advice set will not be disabled during deactivation of
+ECB. This variable is only set by `defecb-advice-set'.
+
+DO NOT CHANGE THIS!")
+
 (defvar ecb-adviced-functions nil
   "A list of all advices defined with `defecb-advice'.
 This list is the set union of the values of all function-sets of
@@ -318,7 +329,7 @@ This list is the set union of the values of all function-sets of
 
 DO NOT CHANGE THIS!")
 
-(defmacro defecb-advice-set (advice-set docstring)
+(defmacro defecb-advice-set (advice-set docstring &optional permanent)
   "Defines an advice-set for ECB.
 This defines a variable which will contain adviced functions defined by
 `defecb-advice-set'. This is a set of advices which can be enabled or disabled
@@ -335,12 +346,25 @@ All advice-sets of ECB will be automatically\(!) disabled at load-time of the
 ecb-library and at deactivation-time of ECB. But: Enabling of a certain
 advice-set must be done appropriately.
 
+If optional argument PERMANENT is t then this advice-set will NOT be disabled
+at deactivation-time of ECB! Calling `ecb-disable-advices' for an advice set
+defined with permanent is t will take no effect unless the optional argument
+FORCE-PERMANENT of this function is set to not nil.
+PERMANENT can also be a function which will be called by `ecb-disable-advices'
+for this advice set \(the function gets one argument: the symbol of the
+advice-set) and have to return not nil if the advice-set should not be disable
+by `ecb-disable-advices' unless the FORCE-PERMANENT of this function is set to
+not nil. 
+
 Example:
 
 \(defecb-advice-set ecb-always-disabled-advices
   \"These advices are always disabled.\")"
   `(eval-and-compile
      (add-to-list 'ecb-adviced-function-sets (cons (quote ,advice-set), nil))
+     ,(if permanent
+          `(add-to-list 'ecb-adviced-permanent-function-sets
+                        (cons (quote ,advice-set) ,permanent)))
      (defvar ,advice-set nil ,docstring)))
 
 (put 'defecb-advice-set 'lisp-indent-function 1)
@@ -390,7 +414,7 @@ FUNCTION-SYMBOL. Otherwise disable the adviced version. The advice must be
 defined with class ADVICE-CLASS by `defecb-advice'.
 
 IMPORTANT: Do not use the function directly. Always use `ecb-enable-advices',
-ecb-disable-advices or `ecb-with-original-adviced-function-set'!."
+`ecb-disable-advices' or `ecb-with-original-adviced-function-set'!."
   (if (< arg 0)
       (progn
         (ad-disable-advice function-symbol advice-class 'ecb)
@@ -409,14 +433,34 @@ ecb-disable-advices or `ecb-with-original-adviced-function-set'!."
   (dolist (elem (symbol-value adviced-function-set-var))
     (ecb-enable-ecb-advice (car elem) (cdr elem) 1)))
   
-(defun ecb-disable-advices (adviced-function-set-var)
+(defun ecb-disable-advices (adviced-function-set-var &optional force-permanent)
   "Disable all advices of ADVICED-FUNCTION-SET-VAR, which must be defined by
-`defecb-advice-set'"
+`defecb-advice-set'
+
+This function tests if ADVICED-FUNCTION-SET-VAR has been defined as permanent
+by `defecb-advice-set'.
+
+Calling `ecb-disable-advices' for an advice set defined with
+permanent t will take no effect unless the optional argument
+FORCE-PERMANENT is set to not nil. If the advice set is defined as permanent
+with a permanent-disable-function then this function is called with
+ADVICED-FUNCTION-SET-VAR as argument; if this function returns not nil then
+the adviced will be treated as permanent and will not being disabled.
+
+If optional FORCE-PERMANENT is not nil then ADVICED-FUNCTION-SET-VAR will
+be disabled regardless if permanent or not."
   (if (not (assq adviced-function-set-var ecb-adviced-function-sets))
       (error "The adviced function set %s is not defined by defecb-advice-set!"
              (symbol-name adviced-function-set-var)))
-  (dolist (elem (symbol-value adviced-function-set-var))
-    (ecb-enable-ecb-advice (car elem) (cdr elem) -1)))
+  (let ((permanent (if force-permanent
+                       nil
+                     (cdr (assq adviced-function-set-var
+                                ecb-adviced-permanent-function-sets)))))
+    (unless (or (eq permanent t)
+                (and (functionp permanent)
+                     (funcall permanent adviced-function-set-var)))
+      (dolist (elem (symbol-value adviced-function-set-var))
+        (ecb-enable-ecb-advice (car elem) (cdr elem) -1)))))
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Generally we have here the same
 ;; problem as we had for `ecb-with-original-adviced-function-set' concerning
@@ -477,7 +521,8 @@ Example:
        (unwind-protect
            (progn
              (when ,outmost-caller-p
-               (ecb-disable-advices ,adviced-function-set-var))
+               ;; we must force disabling permanent advice-sets too
+               (ecb-disable-advices ,adviced-function-set-var t))
              ,@body)
          (when ,outmost-caller-p
            ;; Only if we are the outmost caller we are allowed to re-enable the
@@ -490,7 +535,7 @@ Example:
 
 (defecb-advice-set ecb-always-disabled-advices
   "These advices are always disabled.
-This advice-set can notbe enabled by `ecb-enable-advices' but such an
+This advice-set can not be enabled by `ecb-enable-advices' but such an
 advice has to be activated 'on demand' by the caller. Such an advice must be
 used with the macro `ecb-with-ecb-advice'.")
 
@@ -1745,6 +1790,18 @@ It returns the exit-status of the called PROGRAM."
 (defsubst ecb-current-line ()
   "Return the current line-number - the first line in a buffer has number 1."
   (+ (count-lines 1 (point)) (if (= (current-column) 0) 1 0)))
+
+(defun ecb-goto-line (line)
+  "Goto LINE, counting from line 1 at beginning of buffer.
+
+This function doesn't set the mark."
+  ;; Move to the specified line number in that buffer.
+  (save-restriction
+    (widen)
+    (goto-char 1)
+    (if (eq selective-display t)
+        (re-search-forward "[\n\C-m]" nil 'end (1- line))
+      (forward-line (1- line)))))
 
 (defmacro ecb-with-readonly-buffer (buffer &rest body)
   "Make buffer BUFFER current but do not display it. Evaluate BODY in buffer

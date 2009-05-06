@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-examples.el,v 1.23 2009/04/15 14:22:35 berndl Exp $
+;; $Id: ecb-examples.el,v 1.24 2009/05/06 07:10:06 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -167,9 +167,7 @@ performance of Emacs could slow down dramatically!"
 
 
 (defconst ecb-examples-bufferinfo-buffer-name " *ECB buffer info*")
-(defvar ecb-examples-bufferinfo-last-file nil)
-
-
+(defvar ecb-examples-bufferinfo-last-file-buffer nil)
 
 ;; Two helper functions for displaying infos in a special buffer
 
@@ -233,32 +231,40 @@ it will be called autom. by the internal synchronizing mechanism of ECB."
   ;; For details please read the documentation of
   ;; `defecb-autocontrol/sync-function'!
 
-  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: currently not working for
-  ;; indirect buffers...
-    (let ((filename (buffer-file-name (current-buffer))))
-     
-      (if (and filename (file-readable-p filename))
+  ;; synchronize only when point stays in one of the edit-window.
+  (when (ecb-point-in-edit-window-number)
 
-          ;; synchronizing for real filesource-buffers
+    ;; we need the file-name of indirect-buffers too (if the base-buffer is a
+    ;; file-buffer), therefore we use `ecb-buffer-file-name' (see the docstring
+    ;; of this function)
+    (let ((filename (ecb-buffer-file-name (current-buffer))))
+    
+      (if (and filename (ecb-buffer-or-file-readable-p filename))
+
+          ;; synchronizing for real filesource-buffers or indirect buffers of
+          ;; real file buffers
             
           ;; Let us be smart: We synchronize only if sourcebuffer has changed
           ;; or if the argument FORCE is not nil
+          (message "Klausi: examples: file: %s, vis-buf: %s, last-file-buf: %s, cur-buf: %s"
+                   filename visible-buffer ecb-examples-bufferinfo-last-file-buffer
+                   (current-buffer))
           (when (or force
-                    (not (ecb-string= (ecb-fix-filename filename)
-                                      (ecb-fix-filename
-                                       ecb-examples-bufferinfo-last-file))))
-            ;; set new last-file-name so we can check next time if changed
-            (setq ecb-examples-bufferinfo-last-file filename)
-            ;; we display the file-infos for current source-file
+                    (not (equal (current-buffer)
+                                ecb-examples-bufferinfo-last-file-buffer)))
+            (message "Klausi: example-sync perfome.")
+            ;; set new last-file-buffer so we can check next time if changed
+            (setq ecb-examples-bufferinfo-last-file-buffer (current-buffer))
+            ;; we display the file-infos for current source-buffer
             (ecb-examples-print-file-attributes visible-buffer filename))
         
         ;; what should we do for non file buffers like help-buffers etc...
-        (setq ecb-examples-bufferinfo-last-file nil)
+        (setq ecb-examples-bufferinfo-last-file-buffer nil)
         (ecb-examples-print-non-filebuffer visible-buffer
                                            (buffer-name (current-buffer)))))
 
     ;; Now lets run the hooks in `ecb-examples-bufferinfo-buffer-sync-hook'
-    (run-hooks 'ecb-examples-bufferinfo-buffer-sync-hook))
+    (run-hooks 'ecb-examples-bufferinfo-buffer-sync-hook)))
 
 
 ;; Two conveniance-commands for the user

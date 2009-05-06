@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.263 2009/04/21 15:23:22 berndl Exp $
+;; $Id: ecb-layout.el,v 1.264 2009/05/06 07:10:06 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2221,16 +2221,17 @@ of exactly the functions in `ecb-layout-basic-adviced-functions'!"
   `(ecb-with-original-adviced-function-set 'ecb-layout-basic-adviced-functions
      ,@body))
 
-(defecb-advice-set ecb-permanent-adviced-functions
-  "Permanent adviced function.
-This means these function will remain adviced after deactivating ecb!")
+(defecb-advice-set ecb-permanent-adviced-layout-functions
+  "Permanent adviced layout functions.
+This means these function will remain adviced after deactivating ecb!"
+  t)
 
-(defmacro ecb-with-original-permanent-functions (&rest body)
+(defmacro ecb-with-original-permanent-layout-functions (&rest body)
   "Evaluates BODY with all adviced permanent-functions of ECB deactivated
 \(means with their original definition). Restores always the previous state of
 the ECB adviced permanent-functions, means after evaluating BODY it activates
-the advices of exactly the functions in `ecb-permanent-adviced-functions'!"
-  `(ecb-with-original-adviced-function-set 'ecb-permanent-adviced-functions
+the advices of exactly the functions in `ecb-permanent-adviced-layout-functions'!"
+  `(ecb-with-original-adviced-function-set 'ecb-permanent-adviced-layout-functions
                                            ,@body))
 
 (defun ecb-where-is-point (&optional win-list)
@@ -2307,6 +2308,14 @@ edit-window-list is computed via `ecb-canonical-edit-windows-list'."
   (when (equal (selected-frame) ecb-frame)
     (ignore-errors (ecb-window-in-window-list-number
                     (or edit-windows-list (ecb-canonical-edit-windows-list))))))
+
+(defmacro ecb-when-point-in-edit-window-ecb-windows-visible (&rest body)
+  "Evaluate BODY if an edit-window is selected and ecb-windows are visible."
+  `(when (and ecb-minor-mode
+              (not ecb-windows-hidden)
+              (ecb-point-in-edit-window-number))
+     ,@body))
+
 
 (defun ecb-get-edit-window-by-number (edit-win-nr &optional edit-win-list)
   "Return that edit-window with number EDIT-WIN-NR. If EDIT-WIN-LIST is set
@@ -3244,7 +3253,7 @@ allowed to be deleted."
        dels)))
                               
 
-(defecb-advice delete-window before ecb-permanent-adviced-functions
+(defecb-advice delete-window before ecb-permanent-adviced-layout-functions
   "Does nothing special but only storing the fact that the edit-window has
 been deleted. This is done even when ECB is deactivated so ECB can later
 restore the window-layout as if before activation. Normally there can not
@@ -3334,7 +3343,7 @@ compile-window then it will be hidden and otherwise the behavior depends on
                       (if (not (member (selected-window) edit-win-list-after))
                           (select-window (car edit-win-list-after)))))))))))))
 
-(defecb-advice delete-other-windows before ecb-permanent-adviced-functions
+(defecb-advice delete-other-windows before ecb-permanent-adviced-layout-functions
   "Does nothing special but only storing the fact that the other edit-windows
 have been deleted. This is done even when ECB is deactivated so ECB can later
 restore the window-layout as if before activation. Normally there can not
@@ -3456,7 +3465,7 @@ if this `split-window-vertically' is not contained in the option
       (ecb-select-edit-window))
     ad-do-it))
 
-(defecb-advice split-window before ecb-permanent-adviced-functions
+(defecb-advice split-window before ecb-permanent-adviced-layout-functions
   "Does nothing special but only storing the fact that the window is splitted.
 This is done even when ECB is deactivated so ECB can later restore the
 window-layout as if before activation. Normally there can not occur an error
@@ -4746,7 +4755,7 @@ emergency-redraw."
       ;; The following code runs with deactivated adviced functions, so the
       ;; layout-functions can use the original function-definitions.
       (ecb-with-original-basic-functions
-       (ecb-with-original-permanent-functions
+       (ecb-with-original-permanent-layout-functions
         ;; first we go to the edit-window/buffer
         (ecb-select-edit-window)
 
@@ -4864,14 +4873,14 @@ emergency-redraw."
         ;; most layout-function will be generated with `ecb-layout-define' this
         ;; is not really an exception).
         (select-window ecb-edit-window))) ;; end of ecb-with-original-basic-functions,
-                                          ;; ecb-with-original-permanent-functions
+                                          ;; ecb-with-original-permanent-layout-functions
 
       ;; now we restore the edit-windows as before the redraw
       (if (and (not emergency)
                (= (length edit-win-data-before-redraw)
                   (ecb-edit-area-creators-number-of-edit-windows)))
           (ecb-with-original-basic-functions
-           (ecb-with-original-permanent-functions
+           (ecb-with-original-permanent-layout-functions
             (ecb-restore-edit-area)))
         (ecb-edit-area-creators-init))
       
@@ -5150,10 +5159,10 @@ floating-point-numbers. Default referencial width rsp. height are
        (ecb-layout-debug-error "ecb-set-ecb-window-sizes: window-sizes: %s, sizes: %s, windows: %s, length-s: %d, length-w: %d"
                                window-sizes sizes windows
                                (length sizes) (length windows))
-       (mapcar (lambda (win)
-                 (ecb-layout-debug-error "ecb-set-ecb-window-sizes: win %s, ded: %s"
-                                         win (window-dedicated-p win)))
-               windows)
+       (mapc (lambda (win)
+               (ecb-layout-debug-error "ecb-set-ecb-window-sizes: win %s, ded: %s"
+                                       win (window-dedicated-p win)))
+             windows)
        (when sizes
          (if (= (length windows) (length sizes))
              (dolist (size sizes)
@@ -5459,7 +5468,7 @@ you have to quit with `C-g')."
         (when (ecb-compile-window-live-p)
           (let ((point-location (ecb-where-is-point)))
             (ecb-with-original-basic-functions
-             (ecb-with-original-permanent-functions
+             (ecb-with-original-permanent-layout-functions
               (delete-window ecb-compile-window)))
             (ecb-restore-window-sizes)
             ;; If point was in the compile-window we move it back to the first

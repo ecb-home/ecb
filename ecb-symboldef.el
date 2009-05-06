@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-symboldef.el,v 1.5 2009/04/21 15:23:22 berndl Exp $
+;; $Id: ecb-symboldef.el,v 1.6 2009/05/06 07:10:06 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -427,8 +427,7 @@ symbol. Displays the found text in the buffer of
                                      modeline-display current-symbol)
                              nil t)
           ))))
-  (run-hooks 'ecb-symboldef-buffer-sync-hook)
-  )
+  (run-hooks 'ecb-symboldef-buffer-sync-hook))
 
 
 (defecb-window-dedicator ecb-set-symboldef-buffer

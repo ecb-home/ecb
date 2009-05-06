@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.176 2009/04/26 16:03:26 berndl Exp $
+;; $Id: tree-buffer.el,v 1.177 2009/05/06 07:10:05 berndl Exp $
 
 ;;; Commentary:
 
@@ -82,8 +82,7 @@
 (silentcomp-defun delete-itimer)
 (silentcomp-defun start-itimer)
 
-(defconst tree-buffer-running-xemacs
-  (string-match "XEmacs\\|Lucid" emacs-version))
+(defconst tree-buffer-running-xemacs (featurep 'xemacs))
 
 ;; miscellaneous differences
 
@@ -296,6 +295,18 @@ changed because this is desctructive function. SEQ is returned."
 (defsubst tree-buffer-current-line ()
   "Return the current line-number - the first line in a buffer has number 1."
   (+ (count-lines 1 (point)) (if (= (current-column) 0) 1 0)))
+
+(defun tree-buffer-goto-line (line)
+  "Goto LINE, counting from line 1 at beginning of buffer.
+
+This function doesn't set the mark."
+  ;; Move to the specified line number in that buffer.
+  (save-restriction
+    (widen)
+    (goto-char 1)
+    (if (eq selective-display t)
+        (re-search-forward "[\n\C-m]" nil 'end (1- line))
+      (forward-line (1- line)))))
 
 ;; debugging
 
@@ -1158,7 +1169,9 @@ image-object for TREE-IMAGE-NAME."
                              (current-buffer) linenr)
     (when linenr
       (save-excursion
-        (goto-line linenr)
+        ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: !!!! sets mark in Emacs
+        ;; 23 - not in Emacs 22!!!!!!!!!!!!!
+        (tree-buffer-goto-line linenr)
         (beginning-of-line)
         (+ (point) (tree-buffer-get-node-name-start-column node))))))
 
@@ -1356,7 +1369,7 @@ If NODE is expanded then recenter the WINDOW so as much as possible subnodes
 of NODE will be visible. If NODE is not expandable then WINDOW is always
 displayed without empty-lines at the end, means WINDOW is always best filled."
   (let* ((node-points (save-excursion
-                        (goto-line (tree-buffer-displayed-node-linenr node))
+                        (tree-buffer-goto-line (tree-buffer-displayed-node-linenr node))
                         (cons (tree-buffer-line-beginning-pos)
                               (tree-buffer-line-end-pos))))
          (node-point (car node-points))
@@ -1439,8 +1452,8 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
                                     (goto-char (window-start window))
                                     (forward-line (- full-lines-in-window w-height))
                                     (tree-buffer-line-beginning-pos)))))))
-    (if (not tree-buffer-running-xemacs)
-        (ignore-errors (tree-buffer-hscroll -1000)))
+    (unless tree-buffer-running-xemacs
+      (ignore-errors (tree-buffer-hscroll -1000)))
     ;; KB: testcode
 ;;     (if (and (not tree-buffer-running-xemacs)
 ;;              (not (tree-buffer-pos-hor-visible-p (cdr node-points) window)))
@@ -1807,7 +1820,7 @@ is called after updating all needed nodes."
     (tree-node-update my-node name type data expandable shrink-name)
     (when node-line ;; we want a redisplay
       (save-excursion
-        (goto-line node-line)
+        (tree-buffer-goto-line node-line)
         (beginning-of-line)
         (delete-region (tree-buffer-line-beginning-pos)
                        (tree-buffer-line-end-pos))
@@ -1865,7 +1878,7 @@ parent is recursively removed too."
                                  (tree-buffer-current-line)))))
               (when node-line
                 (save-excursion
-                  (goto-line node-line)
+                  (tree-buffer-goto-line node-line)
                   (beginning-of-line)
                   (delete-region (tree-buffer-line-beginning-pos)
                                  (1+ (tree-buffer-line-end-pos))))
@@ -2617,7 +2630,7 @@ Returns the line-number of the sticky node."
                        parent-node)))
     ;; we must go the node itself so we can get the whole
     ;; line - otherwise we would not get the right icons etc...
-    (goto-line (tree-buffer-displayed-node-linenr node-to-go)))
+    (tree-buffer-goto-line (tree-buffer-displayed-node-linenr node-to-go)))
   (tree-buffer-current-line))
 
 
