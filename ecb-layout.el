@@ -163,7 +163,7 @@
 (silentcomp-defun fit-window-to-buffer)
 (silentcomp-defvar temp-buffer-resize-mode)
 (silentcomp-defun temp-buffer-resize-mode)
-
+(silentcomp-defun modify-frame-parameters)
 ;; Emacs 21
 (silentcomp-defvar grep-window-height)
 
@@ -1762,13 +1762,21 @@ for current layout."
                                             ecb-compile-window-height-lines))
                                     ecb-compile-window-height-lines
                                   window-min-height)))
+         (ecb-layout-debug-error "resize-temp-buffer-window: within let - window: %s"
+                                 (selected-window))
+         (ecb-layout-debug-error "resize-temp-buffer-window: check unless %s, %s, %s"
+                                 (one-window-p 'nomini)
+                                 (and (not (equal (selected-window) ecb-compile-window))
+                                      (not (ecb-edit-window-splitted)))
+                                 (not (pos-visible-in-window-p (point-min))))
          (unless (or (one-window-p 'nomini)
                      ;; Klaus Berndl <klaus.berndl@sdm.de>: we do nothing if an unsplitted
                      ;; edit-window should be resized because this would fail (e.g. if
                      ;; `pop-up-windows' is nil)
                      (and (not (equal (selected-window) ecb-compile-window))
                           (not (ecb-edit-window-splitted)))
-                     (not (pos-visible-in-window-p (point-min))))
+                     (not (pos-visible-in-window-p (point-min)))
+                     )
            (ecb-layout-debug-error "resize-temp-buffer-window: resize buffer: %s"
                                    (current-buffer))
            (fit-window-to-buffer
@@ -2749,6 +2757,25 @@ BUFFER-OR-NAME is contained or matches `special-display-buffer-names' or
                              buffer-or-name result)
      result))
 
+(if ecb-running-xemacs
+    (defmacro ecb-with-unsplittable-ecb-frame (&rest body)
+      "Runs BODY with `ecb-frame' temporally unsplittable."
+      `(unwind-protect
+           (progn
+             (set-frame-property ecb-frame 'unsplittable t)
+             ,@body)
+         (set-frame-property ecb-frame 'unsplittable nil)))
+    
+  (defmacro ecb-with-unsplittable-ecb-frame (&rest body)
+    "Runs BODY with `ecb-frame' temporally unsplittable."
+    `(unwind-protect
+         (progn
+           (modify-frame-parameters ecb-frame '((unsplittable . t)))
+           ,@body)
+       (modify-frame-parameters ecb-frame '((unsplittable . nil)))))
+  )
+     
+
 
 (defvar ecb-layout-temporary-dedicated-windows nil
   "List of windows temporary made dedicated by ECB.
@@ -2834,6 +2861,8 @@ If called for other frames it works like the original version."
                          (pop-up-frames (if (ecb-ignore-pop-up-frames)
                                             nil
                                           pop-up-frames)))
+                     (ecb-layout-debug-error "display-buffer: buffer %s has to be displayed in the alive compile-window: %s"
+                                             (ad-get-arg 0) ecb-compile-window)
                      (unwind-protect
                          (progn
                            (mapc (function (lambda (w)
@@ -2844,46 +2873,38 @@ If called for other frames it works like the original version."
                            ;; now we perform the original `display-buffer' but
                            ;; now the only not dedicated window is the compile
                            ;; window so `display-buffer' MUST use this.
-                           (if (equal (selected-window) ecb-compile-window)
-                               ;; `display-buffer' tries to split the
-                               ;; compile-window if it is called from the
-                               ;; compile-window (e.g. calling help from the
-                               ;; compile-window). To avoid this we must
-                               ;; temporally set `pop-up-windows' to nil so
-                               ;; `display-buffer' tries no splitting. But this
-                               ;; works only for GNU Emacs. XEmacs does not
-                               ;; shrink to fit if `pop-up-windows' is nil so we
-                               ;; must set it here to t and make the frame
-                               ;; unsplittable.
-                               (let ((pop-up-windows (if ecb-running-xemacs t nil)))
-                                 (ecb-layout-debug-error
-                                  "display-buffer from comp-win for comp-buf: %s"
-                                  (ad-get-arg 0))
-                                 (if ecb-running-xemacs
-                                     (unwind-protect
-                                         (progn
-                                           (set-frame-property ecb-frame
-                                                               'unsplittable t)
-                                           (setq ad-return-value
-                                                 (ecb-display-buffer-xemacs (ad-get-arg 0)
-                                                                            (ad-get-arg 1)
-                                                                            (ad-get-arg 2)
-                                                                            (ad-get-arg 3))))
-                                       (set-frame-property ecb-frame
-                                                           'unsplittable nil))
-                                   ad-do-it))
-                             (if ecb-running-xemacs
-                                 (setq ad-return-value
-                                       (ecb-display-buffer-xemacs (ad-get-arg 0)
-                                                                  (ad-get-arg 1)
-                                                                  (ad-get-arg 2)
-                                                                  (ad-get-arg 3)))
-                               ad-do-it)))
+
+                           ;; `display-buffer' sometimes tries to split the
+                           ;; compile-window (e.g. if it is called from the
+                           ;; compile-window - e.g. calling help from the
+                           ;; compile-window - or with Emacs 23 also when
+                           ;; using a frame-width compile-window and do
+                           ;; completions). To avoid this we must temporally
+                           ;; make the ecb-frame unsplittable - but here we
+                           ;; can do this savely because here we have a live
+                           ;; compile-window and a buffer which should be
+                           ;; displayed there ==> display-buffer MUST
+                           ;; (because all other windows are temporally
+                           ;; dedicated) use exactly this window and there
+                           ;; is no need to split it
+                           (ecb-with-unsplittable-ecb-frame
+                            (if ecb-running-xemacs
+                                ;; XEmacs does not shrink to fit if
+                                ;; `pop-up-windows' is nil so we must set it
+                                ;; here temporally to t
+                                (let ((pop-up-windows t))
+                                  (setq ad-return-value
+                                        (ecb-display-buffer-xemacs (ad-get-arg 0)
+                                                                   (ad-get-arg 1)
+                                                                   (ad-get-arg 2)
+                                                                   (ad-get-arg 3))))
+                              ad-do-it)))
                        ;; making the edit-window(s) not dedicated
                        (mapc (function (lambda (w)
                                          (set-window-dedicated-p w nil)))
                              edit-window-list)
-                       (setq ecb-layout-temporary-dedicated-windows nil))
+                       ;;(modify-frame-parameters ecb-frame '((unsplittable . nil)))
+                       (setq ecb-layout-temporary-dedicated-windows nil)) ;; end unwind-protect
 
                      ;; if called interactively we run now our
                      ;; `ecb-toggle-compile-window-height' to set the height of

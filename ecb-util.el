@@ -491,6 +491,7 @@ Example where this macro is used for `walk-windows' within another advice:
 
 (put 'ecb-with-ecb-advice 'lisp-indent-function 2)
 
+
 (defmacro ecb-with-original-adviced-function-set (adviced-function-set-var &rest body)
   "Evaluates BODY with all adviced functions of ADVICED-FUNCTION-SET-VAR
 being disabled \(means with their original definition). Restores always \(even

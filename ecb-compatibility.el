@@ -217,6 +217,67 @@ if `scroll-all-mode' is nil return the number of visible windows."
        ad-do-it)))
  )
 
+;; view-stuff
+
+;; The code of the view-package of GNU Emacs has to be advices when the
+;; view-buffer is displayed in the compile-window of ECB.
+;; The much simpler view-mechanism of XEmacs (view-less.el) should work out of
+;; the box.
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: for Emacs 22 we need also a
+;; workaround when no compile-window is active because the return-to-alist
+;; stuff in Emacs 22 is not really smart and does not work with layout like
+;; ECB - with Emacs 23 it works perfectly without a compile-window.
+;; In Emacs 22 the return-to-alist contains in case of a window-layout with
+;; more than two windows quit-window which switches the buffer after quiting
+;; (which is not what we want); with deactivated ECB and more than 2 windows
+;; the same dump behavior - but unfortunatelly ECB contains always more than
+;; two windows (at least in by far most cases), so current view-mode-exit
+;; stuff wil not work with Emacs 22 and ECB ==> we simplify the logic in the
+;; following case:
+;; - Emacs 22 is running and
+;; - there is no compile-window:
+;; - current buffer is in view-mode
+;; then we just delete the current-window (for which view-mode-exit is called)
+;; and select ecb-last-edit-window-with-point (hmm, is this possible - this
+;; one will be the deleted one...how to go back to that window we have to go
+;; back??
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: we must test what happens, when
+;; we use a compile-window not full-frame-width - In Emasc 22 and 23!!
+(when-ecb-running-emacs
+ (defecb-advice view-mode-exit around ecb-compatibility-advices
+   "Makes view-mode compatible with ECB.
+
+If there is no compile-window \(i.e. the buffer with view-mode is not
+displayed in the special compile-window of ECB) then nothing special is done
+but the original `view-mode-exit' is performed.
+
+If the view-buffer is displayed in the compile-window \(i.e. this function is
+called from within the compile-window) then the whole window-management stuff
+of view-mode is disabled only `view-no-disable-on-exit' is taken into acount.
+
+The compile-window will be shrinked down with
+`ecb-toggle-compile-window-height' and the last edit-window with point will be
+selected afterwards."
+   (if (and (boundp 'ecb-minor-mode)
+            ecb-minor-mode
+            (eq (selected-frame) ecb-frame)
+            (eq (selected-window) ecb-compile-window))
+       (when view-mode
+         (or view-no-disable-on-exit
+             (view-mode-disable))
+;;          (when (ad-get-arg 1) ;; = exit-action
+;;            (setq view-exit-action nil)
+;;            (funcall (ad-get-arg 1) (current-buffer)))
+         (force-mode-line-update)
+         (ecb-toggle-compile-window-height -1)
+         (select-window ecb-last-edit-window-with-point))
+     ad-do-it))
+)
+
+
+
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: we need to add compatibilty to
 ;; view.el - especially view-mode-exit needs to be adviced: When vioew-buffer
 ;; in compile-window then view-mode-exit just should select
