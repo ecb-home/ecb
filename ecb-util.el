@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.147 2009/05/06 07:10:06 berndl Exp $
+;; $Id: ecb-util.el,v 1.148 2009/05/06 16:16:23 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -490,6 +490,7 @@ Example where this macro is used for `walk-windows' within another advice:
        (ecb-enable-ecb-advice ,function-symbol ,advice-class -1))))
 
 (put 'ecb-with-ecb-advice 'lisp-indent-function 2)
+
 
 (defmacro ecb-with-original-adviced-function-set (adviced-function-set-var &rest body)
   "Evaluates BODY with all adviced functions of ADVICED-FUNCTION-SET-VAR

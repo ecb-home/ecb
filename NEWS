@@ -149,6 +149,9 @@
     active ECB, so only the edit-windows are balanced but all ecb-windows
     remain on their sizes.
 
+*** view-mode works also when a permanent compile-window is active
+    This is especially important for displaying help and completions.
+
 *** `master-mode' now works with Emacs 22
 
 *** Grepping from ECB now uses per default `lgrep' rsp. `rgrep'.
@@ -179,7 +182,10 @@
     This comes from a change within Emacs 23 and the function `goto-line'
     which sets the mark in Emacs 23. This is not necessary when not used as
     command but as internal utility. Now ECB uses its own goto-line-function
-    which does not set the mark --> No unnecessary mark settings with Emacs 23.
+    which does not set the mark --> No unnecessary mark settings with Emacs
+    23.
+
+*** The adviced `display-buffer' is now fully compatible with Emacs 23
     
 ** Better compatibility with CEDET 1.0preX and semantic 2.0preX
 
