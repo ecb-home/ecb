@@ -13531,12 +13531,13 @@ powerful advice-backbone which allows defining sets of adviced
 functions whereas a set means, that all advices of a certain set are
 always enabled or disabled together.
 
-For this ECB contains three macros:
+For this ECB contains four macros:
 
 @itemize @minus
 @item @code{defecb-advice-set}
 @item @code{defecb-advice}
 @item @code{ecb-with-original-adviced-function-set}
+@item @code{ecb-with-ecb-advice} (for this one see below)
 @end itemize
 
 For a detailed explanation of each macro read the documentation with
@@ -13551,7 +13552,7 @@ automatically disables all advices of all advice-sets at load-time of
 ECB and also at deactivation time of ECB. So you can be sure that
 after deactivating ECB all ecb-advices are deactivated/disabled too.
 
-In addition to the three macros above ECB offers two further macros
+In addition to the four macros above ECB offers two further macros
 for running code with disabled some ecb-advices:
 
 @itemize @minus
@@ -13576,7 +13577,7 @@ Last but not least ECB contains an advice-set
 This advice-set can not be enabled by @code{ecb-enable-advices} but
 such an advice has to be activated 'on demand' by the caller. Such an
 advice must be used with the macro @code{ecb-with-ecb-advice} (see the
-docstring).
+docstring) and is also enabled within the BODY of the macro-call.
 
 ECB contains some more advice-sets but don't bother about it.
 
@@ -14607,38 +14608,45 @@ first *AFTER* ECB is activated. This can be done with the hook
 @subsubsection Package desktop.el
 
 @cindex desktop
-ECB works perfectly with the desktop-saver desktop.el. But to ensure
-this the option @code{desktop-minor-mode-table} @strong{MUST} contain
-the following entry:
+ECB works perfectly with the desktop-saver desktop.el. Normally there should
+be nothing to do for you.
+
+But if you encounter problems (e.g. that desktop tries to activate ECB for
+each buffer it loads) then you should add the following entry to the option
+@code{desktop-minor-mode-table}:
 
 @example
 (ecb-minor-mode nil)
 @end example
 
-Without this entry desktop.el tries for each buffer it loads after
-Emacs-start to enable @code{ecb-minor-mode} and therefore to start
-ECB. This conflicts with ECB! Therefore you must add the entry above
-to @code{desktop-minor-mode-table}!
-
-Further it is strongly recommended to add entries for all the
-minor-mode of the semantic-package to @code{desktop-minor-mode-table},
-so for example add also:
+If you still encounter problems then you should add entries for all the
+minor-mode of the semantic-package to @code{desktop-minor-mode-table}, so for
+example add also:
 
 @example
 @group
-(semantic-show-unmatched-syntax-mode nil)
-(semantic-stickyfunc-mode nil)
-(senator-minor-mode nil)
+(semantic-decoration-mode nil)
+(semantic-idle-completions-mode nil)
+(semantic-idle-tag-highlight-mode nil)
+(semantic-idle-summary-mode nil)
 (semantic-idle-scheduler-mode nil)
+(senator-isearch-semantic-mode nil)
+(senator-minor-mode nil)
+(semantic-highlight-func-mode nil)
+(semantic-stickyfunc-mode nil)
+(semantic-show-parser-state-mode nil)
+(semantic-show-unmatched-syntax-mode nil
+(semantic-highlight-edits-mode nil
 @end group
 @end example
 
-Which modes you have to add depends on which modes of semantic you
-use. But to get sure you should add all minor-modes of the
-semantic-package because these modes are normally activated by the
-related ``global'' command (e.g.
-@code{global-semantic-show-unmatched-syntax-mode}) or by adding the
-minor-mode to the related major-mode-hook.
+Normally this should not be necessary, because semantic is already prepared to
+work perfectly with desktop.el. But if there are problems it's worth a try.
+Which modes you have to add depends on which modes of semantic you use. But to
+get sure you should add all minor-modes of the semantic-package because these
+modes are normally activated by the related ``global'' command (e.g.
+@code{global-semantic-show-unmatched-syntax-mode}) or by adding the minor-mode
+to the related major-mode-hook.
 
 It has also been reported that just disabling the Tip-Of-The-Day
 (option: @code{ecb-tip-of-the-day}) fixes the compatibility-problems
@@ -14802,7 +14810,7 @@ If this is true then you you can add the following code to your
 
 @example
 @group
-(defadvice XXX (before ecb activate)
+(defecb-advice XXX before ecb-compatibility-advices
   "Ensures `XXX' works well when called from another window
 as an edit-window. Does nothing if called in another frame
 as the `ecb-frame'."
@@ -14816,6 +14824,13 @@ This before-advice runs before the command XXX and ensures that the
 XXX is called from within an edit-window if the current selected
 window is not an edit-window. It does nothing if called for another
 frame as the ecb-frame.
+
+@strong{Please note}: You have to define such compatibility advices exactly as
+demonstrated in the example above, i.e. you must use the macro
+@code{defecb-advice} and you have to use the advice-set
+@code{ecb-compatibility-advices} (see the documentation of this macro)! The
+advice-class is not necessary @code{before}, it can be @code{after} or
+@code{around} too. Never use @code{defadvice} for ECB-advices!
 
 If such an advice solves the problem then please send a note with the
 solution to the ECB-mailing-list or direct to the ECB-maintainer so
@@ -14832,39 +14847,6 @@ command of which package fails under which circumstances!
 
 This section describes all currently known bugs of ECB. The
 maintainers of ECB try to fix these bugs as soon as possible.
-
-@subsection Following the source-file link in a help-buffer
-
-The following bug occurs only in ECB-versions < 1.96 and is fixed
-since ECB 1.96!!
-
-This bug only occurs if a compile-window is used and visible!
-
-If you call functions like @code{describe-function} which displays a
-help-buffer in the compile-window, then you will often get an output
-like this in the compile-window:
-
-@example
-ecb-activate is an interactive compiled Lisp function in `ecb'.
-(ecb-activate)
-
-Activates the ECB...
-@end example
-
-The link to `ecb' is normally a click-able link, means if you click
-with the middle-mouse button onto it the file is opened (in our
-example @file{ecb.el} would be opened.
-
-If you click onto it when the help-buffer is already the current
-buffer (i.e. the compile-window is already selected before the click!)
-then all is working fine (i.e. the file is opened in the edit-window),
-but if you click onto the link without selecting the compile-window
-before (i.e. the edit-window is the current selected window) then the
-file is opened in the compile-window which is probably not what you
-want. Not a big problem but annoying.
-
-The only available workaround is, first selecting the compile-window
-and then clicking onto the link!
 
 @subsection Extra history-entries for JDEE source-buffers
 

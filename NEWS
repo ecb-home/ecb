@@ -15,6 +15,48 @@
    semantic-versions and ECB uses this power, especially the power of the
    semantic-analyzer.
 
+** Better compatibility with CEDET 1.0preX and semantic 2.0preX
+
+*** The ECB-analyse-window now works very well with current semantic analyzer
+    There is an own synchronize-option-set for the analyse-window:
+    `ecb-analyse-buffer-sync', `ecb-analyse-buffer-sync-delay' and
+    `ecb-analyse-buffer-sync-hook'. See the docstrings. The advantage is, that
+    now the synchronizing of the analyse-window can be customized separately
+    from the other ECB-windows. THis is important because for the
+    analyse-window a higher delay (or even disabled auto.synchronizing)
+    increases usability a lot. See the info-manual.
+    
+*** Fix compatibility about some changes of semantic concerning adopting
+    external member-functions (as in C++ or eieio).
+
+*** ECB now works very well with semantic-idle-scheduler-mode (s.a.)
+
+** Completely reworked synchronizing mechanism of the ECB-windows
+
+   Now there are separate options for synchronizing:
+
+   - The basic ECB-windows (directories, sources, methods, history):
+     `ecb-basic-buffer-sync', `ecb-basic-buffer-sync-delay' and
+     `ecb-basic-buffer-sync-hook'.
+   - The analyser-window (s.a.): `ecb-analyse-buffer-sync',
+     `ecb-analyse-buffer-sync-delay' and `ecb-analyse-buffer-sync-hook'
+   - The symboldef-window: `ecb-symboldef-buffer-sync',
+     `ecb-symboldef-buffer-sync-delay' and `ecb-symboldef-buffer-sync-hook'
+   - The integrated speedbar (if used): `ecb-speedbar-buffer-sync',
+     `ecb-speedbar-buffer-sync-delay' and `ecb-speedbar-buffer-sync-hook'
+   - The integrated eshell-support (if used): `ecb-eshell-buffer-sync',
+     `ecb-eshell-buffer-sync-delay' and `ecb-eshell-buffer-sync-hook'
+
+   But all options for synchronizing not the basic ECB-windows offer an
+   additional choice 'basic: Then ECB uses the setting of the related option
+   for the basic ECB-windows! Example: If you set `ecb-eshell-buffer-sync' to
+   'basic then the value of `ecb-basic-buffer-sync' is used. If you set
+   `ecb-eshell-buffer-sync-delay' to 'basic then the value of
+   `ecb-basic-buffer-sync-delay' is used.
+
+   The enhancement allows much more control for the synchronizing of certain
+   windows.
+     
 ** More user-responsible buffer-parsing based on the idle-mechanism of semantic
 
    Force a reparse of the semantic-source if the idle-scheduler is off.
@@ -176,7 +218,7 @@
 
 ** Better compatibility with Emacs 23
 
-*** Removed an annoying behavior which sets the mark hundred of times even
+*** Removed an annoying behavior which has set the mark hundred of times even
     when the user just moves the cursor.
     
     This comes from a change within Emacs 23 and the function `goto-line'
@@ -186,16 +228,8 @@
     23.
 
 *** The adviced `display-buffer' is now fully compatible with Emacs 23
+    This means simply that you can work with ECB and Emacs 23 as you expect.
     
-** Better compatibility with CEDET 1.0preX and semantic 2.0preX
-
-*** The ECB-analyse-window now works very well with current semantic analyzer
-
-*** Fix compatibility about some changes of semantic concerning adopting
-    external member-functions (as in C++ or eieio).
-
-*** ECB now works very well with semantic-idle-scheduler-mode (s.a.)
-
 ** The commands `ecb-download-ecb' and `ecb-download-semantic' are deactivated
    These features are not supported anymore. It costs two much effort to keep
    the needed links and mechanism to the sourceforge-download-area up to date.

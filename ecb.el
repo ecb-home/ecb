@@ -487,7 +487,9 @@ See also `ecb-before-activate-hook'."
       ;; 3. removing the file-buffer from `ecb-tag-tree-cache'. Must be done
       ;;    after 2. because otherwise a new element in the cache would be
       ;;    created again by `ecb-rebuild-methods-buffer-with-tagcache'.
-      (ecb-clear-tag-tree-cache (buffer-name curr-buf)))))
+      (ecb-clear-tag-tree-cache (buffer-name curr-buf)))
+    (when (member curr-buf (ecb-get-current-visible-ecb-buffers))
+      (ecb-error "Killing an special ECB-buffer is not possible!"))))
 
 
 (defun ecb-window-sync (&optional only-basic-windows)
@@ -1019,24 +1021,14 @@ That is remove the unsupported :help stuff."
 (defun ecb-add-to-minor-modes ()
   "Does all necessary to add ECB as a minor mode with current values of
 `ecb-mode-map' and `ecb-minor-mode-text'."
-  (if (fboundp 'add-minor-mode)
-      ;; Emacs 21 & XEmacs
-      ;; These Emacs-versions do all necessary itself
-      (add-minor-mode 'ecb-minor-mode
-                      'ecb-minor-mode-text ecb-mode-map)
-    ;; Emacs 20.X
-    (let (el)
-      (if (setq el (assq 'ecb-minor-mode minor-mode-alist))
-          ;; `minor-mode-alist' contains lists, not conses!!
-          (setcar (cdr el) 'ecb-minor-mode-text)
-        (setq minor-mode-alist
-              (cons (list 'ecb-minor-mode 'ecb-minor-mode-text)
-                    minor-mode-alist)))
-      (if (setq el (assq 'ecb-minor-mode minor-mode-map-alist))
-          (setcdr el ecb-mode-map)
-        (setq minor-mode-map-alist
-              (cons (cons 'ecb-minor-mode ecb-mode-map)
-                    minor-mode-map-alist))))))
+  ;; ECB minor mode doesn't work w/ Desktop restore.
+  ;; This line will disable this minor mode from being restored
+  ;; by Desktop.
+  (when (boundp 'desktop-minor-mode-handlers)
+    (add-to-list 'desktop-minor-mode-handlers
+		 (cons 'ecb-minor-mode 'ignore)))
+  (add-minor-mode 'ecb-minor-mode
+                  'ecb-minor-mode-text ecb-mode-map))
 
 (defvar ecb-mode-map nil
   "Internal key-map for ECB minor mode.")
