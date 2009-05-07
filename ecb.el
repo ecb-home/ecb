@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.443 2009/05/07 06:59:43 berndl Exp $
+;; $Id: ecb.el,v 1.444 2009/05/07 17:05:12 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1885,8 +1885,9 @@ exist."
                                     t)))
     (save-excursion
       (dolist (file files)
-	(if (and (string-match "\\(silentcomp\\|tree-buffer\\|ecb.*\\)\\.el$" file)
-                 (not (string-match "ecb-autoloads" file)))
+	(if (save-match-data
+              (and (string-match "\\(silentcomp\\|tree-buffer\\|ecb.*\\)\\.el$" file)
+                   (not (string-match "ecb-autoloads" file))))
             (ecb-compile-file-if-necessary file force-all))))))
 
 (defun ecb-auto-activate-hook()

@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-create-layout.el,v 1.34 2009/04/21 15:23:22 berndl Exp $
+;; $Id: ecb-create-layout.el,v 1.35 2009/05/07 17:05:12 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -272,9 +272,10 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
   (ad-disable-advice 'delete-frame 'before 'ecb-create-layout)
   (ad-activate 'delete-frame)
   ;; killing all white-space-filled layout-buffers
-  (dolist (b (buffer-list ecb-create-layout-frame))
-    (if (string-match "^ \\*ECB-LC-" (buffer-name b))
-        (kill-buffer b)))
+  (save-match-data
+    (dolist (b (buffer-list ecb-create-layout-frame))
+      (if (string-match "^ \\*ECB-LC-" (buffer-name b))
+          (kill-buffer b))))
   ;; restore the global-map
   (if (keymapp ecb-create-layout-old-global-map)
       (use-global-map ecb-create-layout-old-global-map))

@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.114 2009/04/15 14:22:35 berndl Exp $
+;; $Id: ecb-help.el,v 1.115 2009/05/07 17:05:12 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -190,21 +190,23 @@ HTML-online-documentation is not included."
                                            '("html" "info"))))
              ecb-show-help-format))
         (info-path-abs (expand-file-name
-                        (if (or (string-match "^\\." ecb-help-info-path)
-                                (string-match (concat "^"
-                                                      (regexp-quote
-                                                       ecb-help-info-start-file))
-                                              ecb-help-info-path))
-                            (concat ecb-ecb-dir ecb-help-info-path)
-                          ecb-help-info-path)))
+                        (save-match-data
+                          (if (or (string-match "^\\." ecb-help-info-path)
+                                  (string-match (concat "^"
+                                                        (regexp-quote
+                                                         ecb-help-info-start-file))
+                                                ecb-help-info-path))
+                              (concat ecb-ecb-dir ecb-help-info-path)
+                            ecb-help-info-path))))
         (html-path-abs (expand-file-name
-                        (if (or (string-match "^\\." ecb-help-html-path)
-                                (string-match (concat "^"
-                                                      (regexp-quote
-                                                       ecb-help-html-start-file))
-                                              ecb-help-html-path))
-                            (concat ecb-ecb-dir ecb-help-html-path)
-                          ecb-help-html-path))))
+                        (save-match-data
+                          (if (or (string-match "^\\." ecb-help-html-path)
+                                  (string-match (concat "^"
+                                                        (regexp-quote
+                                                         ecb-help-html-start-file))
+                                                ecb-help-html-path))
+                              (concat ecb-ecb-dir ecb-help-html-path)
+                            ecb-help-html-path)))))
     (if (equal f 'info)
         (ecb-info info-path-abs)
       (message "Opening ECB online-help in a web-browser...")
@@ -288,8 +290,9 @@ a backtrace-buffer and inserts the contents of that."
     ;; ecb-faces
     (let ((ecb-face-list (delq nil (mapcar (function
                                             (lambda (f)
-                                              (if (string-match "^ecb-"
-                                                                (symbol-name f))
+                                              (if (save-match-data
+                                                    (string-match "^ecb-"
+                                                                  (symbol-name f)))
                                                   f
                                                 nil)))
                                            (face-list)))))

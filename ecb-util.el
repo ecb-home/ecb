@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.148 2009/05/06 16:16:23 berndl Exp $
+;; $Id: ecb-util.el,v 1.149 2009/05/07 17:05:12 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -188,6 +188,13 @@ Unless optional argument INPLACE is non-nil, return a new string."
         (if (eq (aref newstr i) fromchar)
             (aset newstr i tochar)))
       newstr))
+  (defun ecb-substring-no-properties (string &optional start end)
+    (let* ((start (or start 0))
+           (end (or end (length string)))
+           (string (substring string start end)))
+      (set-text-properties start end nil string)
+      string))
+    
   (defun ecb-derived-mode-p (&rest modes)
     "Non-nil if the current major mode is derived from one of MODES.
 Uses the `derived-mode-parent' property of the symbol to trace backwards."
@@ -227,6 +234,7 @@ Uses the `derived-mode-parent' property of the symbol to trace backwards."
     "Return non-nil if running non-interactively, i.e. in batch mode."
     noninteractive)
   (defalias 'ecb-subst-char-in-string 'subst-char-in-string)
+  (defalias 'ecb-substring-no-properties 'substring-no-properties)
   (defalias 'ecb-derived-mode-p 'derived-mode-p)
   (defalias 'ecb-frame-parameter 'frame-parameter)
   (defalias 'ecb-line-beginning-pos 'line-beginning-position)
@@ -1527,7 +1535,9 @@ of TEXT which are not set by FACE are preserved."
                              ;; current-face to get the right merge!
                              (if (member face cf)
                                  cf
-                               (append nf cf)))
+                               (append nf cf)
+                               )
+                             )
                            text)
       (alter-text-property 0 (length text) 'face
                            (lambda (current-face)
@@ -2223,18 +2233,18 @@ cons-cell \('test-inner-loop . \"test\")"
                  )
 	       'exit))))
 
-(defun ecb-test-throw-on-input-new ()
-  "Test that while-no-input will work even better."
-  (interactive)
-  (message "Exit Code: %s"
-	   (while-no-input
-	     (let ((inhibit-quit nil)
-		   (message-log-max nil))
-	       (while t
-		 (message "Looping ...")
-                 (while t nil)
-		 "test")
-	       'exit))))
+;; (defun ecb-test-throw-on-input-new ()
+;;   "Test that while-no-input will work even better."
+;;   (interactive)
+;;   (message "Exit Code: %s"
+;; 	   (while-no-input
+;; 	     (let ((inhibit-quit nil)
+;; 		   (message-log-max nil))
+;; 	       (while t
+;; 		 (message "Looping ...")
+;;                  (while t nil)
+;; 		 "test")
+;; 	       'exit))))
 
 
 ;;; ----- Provide ------------------------------------------

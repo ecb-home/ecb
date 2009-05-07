@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.34 2009/05/06 07:10:06 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.35 2009/05/07 17:05:12 berndl Exp $
 
 
 ;;; History
@@ -1273,7 +1273,11 @@ hold in the variable `ecb-a-special-buffer-name'.
                                                     'basic)
                                                    ecb-basic-buffer-sync
                                                  ,buffer-sync-option-symbol))
-                `(,(make-symbol "abc123xyz456efg789") nil))
+                ;; we need anything to bound in the else-fork, so we just bind
+                ;; major-mode to major-mode - we could use any variable, takes
+                ;; no effect
+                `(major-mode major-mode))
+;;                 `(,(make-symbol "abc123xyz456efg789") nil))
              )
          (when ,(if (and buffer-sync-option-symbol (symbolp buffer-sync-option-symbol))
                     `(or force

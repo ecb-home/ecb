@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.90 2009/05/06 07:10:06 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.91 2009/05/07 17:05:12 berndl Exp $
 
 ;;; Commentary:
 
@@ -478,7 +478,8 @@ as specified in `ecb-type-tag-expansion'"
                       ;; not-UML-semantic functions because for UML we must
                       ;; preserve some semantic facing added by semantic (e.g.
                       ;; italic for abstract classes)!
-                      (text (funcall (if (string-match "-uml-" (symbol-name (quote ,(car elem))))
+                      (text (funcall (if (save-match-data
+                                           (string-match "-uml-" (symbol-name (quote ,(car elem)))))
                                          'ecb--semantic-format-tag-uml-abbreviate
                                        'ecb--semantic-format-tag-name)
                                      tag parent-tag colorize))
@@ -494,37 +495,39 @@ as specified in `ecb-type-tag-expansion'"
                    ;; correct protection display for function-tags with
                    ;; parent-tag.
                    (when (ecb--semantic-tag-faux-p tag)
-                     (if (string-match (concat "^\\(.+"
-                                               (ecb--semantic-uml-colon-string)
-                                               "\\)\\("
-                                               (if (ecb--semantic-tag-faux-p tag)
-                                                   (ecb--semantic-orphaned-member-metaparent-type)
-                                                 "struct")
-                                               "\\)") text)
-                         (let ((type-spec-text "group"))
-                           (put-text-property 0 (length type-spec-text)
-                                              'face
-                                              (get-text-property
-                                               0 'face
-                                               (match-string 2 text))
-                                              type-spec-text)
-                           (setq text (concat (match-string 1 text)
-                                              type-spec-text)))))
+                     (save-match-data 
+                       (if (string-match (concat "^\\(.+"
+                                                 (ecb--semantic-uml-colon-string)
+                                                 "\\)\\("
+                                                 (if (ecb--semantic-tag-faux-p tag)
+                                                     (ecb--semantic-orphaned-member-metaparent-type)
+                                                   "struct")
+                                                 "\\)") text)
+                           (let ((type-spec-text "group"))
+                             (put-text-property 0 (length type-spec-text)
+                                                'face
+                                                (get-text-property
+                                                 0 'face
+                                                 (match-string 2 text))
+                                                type-spec-text)
+                             (setq text (concat (match-string 1 text)
+                                                type-spec-text))))))
                    ;; Now we must maybe add a template-spec in c++-mode and
                    ;; maybe remove the type-specifier string.
                    (let (col-type-name col-type-spec template-text)
-                     (if (string-match (concat "^\\(.+\\)\\("
-                                               (ecb--semantic-uml-colon-string)
-                                               type-specifier "\\)")
-                                       text)
-                         (setq col-type-name (match-string 1 text)
-                               col-type-spec (if (not remove-flag)
-                                                 (match-string 2 text)))
-                       ;; necessary for anonymous types like unnamed enums etc...
-                       (setq col-type-spec (if (= (length text) 0)
-                                               type-specifier
-                                             nil))
-                       (setq col-type-name text))
+                     (save-match-data 
+                       (if (string-match (concat "^\\(.+\\)\\("
+                                                 (ecb--semantic-uml-colon-string)
+                                                 type-specifier "\\)")
+                                         text)
+                           (setq col-type-name (match-string 1 text)
+                                 col-type-spec (if (not remove-flag)
+                                                   (match-string 2 text)))
+                         ;; necessary for anonymous types like unnamed enums etc...
+                         (setq col-type-spec (if (= (length text) 0)
+                                                 type-specifier
+                                               nil))
+                         (setq col-type-name text)))
                      (when (and (equal major-mode 'c++-mode)
                                 (fboundp 'semantic-c-template-string))
                        (setq template-text (semantic-c-template-string
@@ -532,10 +535,11 @@ as specified in `ecb-type-tag-expansion'"
                        ;; Removing {...} from within the template-text.
                        ;; Normally the semantic-formatters should not add this
                        ;; ugly stuff.
-                       (if (string-match "^\\(.+\\){.*}\\(.+\\)$" template-text)
-                           (setq template-text
-                                 (concat (match-string 1 template-text)
-                                         (match-string 2 template-text))))
+                       (save-match-data 
+                         (if (string-match "^\\(.+\\){.*}\\(.+\\)$" template-text)
+                             (setq template-text
+                                   (concat (match-string 1 template-text)
+                                           (match-string 2 template-text))))^)
                        (put-text-property 0 (length template-text)
                                           'face
                                           (get-text-property
@@ -2748,20 +2752,7 @@ current-buffer is saved."
                     (window-buffer ecb-last-edit-window-with-point)))
     (ecb-select-source)
     (if (ecb--semantic-active-p)
-        (let ((threshold (or (and (boundp 'semantic-idle-scheduler-max-buffer-size)
-                                  (symbol-value 'semantic-idle-scheduler-max-buffer-size))
-                             (and (boundp 'semantic-auto-parse-max-buffer-size)
-                                  (symbol-value 'semantic-auto-parse-max-buffer-size))
-                             0)))
-          (ecb-update-methods-buffer--internal
-           nil nil
-           (or (= threshold 0)
-               (<= (buffer-size)
-                   ;; we must check both idle-vars (semantic 2.0 and 1.4.X)
-                   ;; to avoid compiler complainings we use this ugly code
-                   ;; We throw away this when cedet 1.0 is released (and also
-                   ;; available as XEmacs package??)
-                   threshold))))
+        (ecb-update-methods-buffer--internal nil nil t)
       (ecb-rebuild-methods-buffer-for-non-semantic))))
 
 (defun ecb-fetch-semantic-tags (&optional full)
@@ -3212,14 +3203,14 @@ reparsing."
 
 (defun ecb-rebuild-methods-buffer (&optional clear-cache)
   "Updates the methods buffer with the current source-buffer.
-This means ECB asks the parsing-engine for tags for the current source-buffer
-and rebuilds its methods-buffer with the tag-set returned by the
-parsing-engine \(semantic for semantic-sources and imenu rsp. etags for
-non-semantic-sources). For semantic-sources this command ignores the
+This means ECB asks the parsing-engine for tags for the current
+source-buffer and rebuilds its methods-buffer with the tag-set
+returned by the parsing-engine \(semantic for semantic-sources
+and imenu rsp. etags for non-semantic-sources). For
+semantic-sources this command ignores the
 `semantic-idle-scheduler-mode' and therefore also all settings in
-`semantic-idle-scheduler-max-buffer-size' \(rsp.
-`semantic-auto-parse-max-buffer-size' for semantic 1.4.X) so be aware that
-this command will also parse huge files!
+`semantic-idle-scheduler-max-buffer-size' so be aware that this
+command will also parse huge files!
 
 If called with a prefix-arg \(ie. if optional arg CLEAR-CACHE is not nil) the
 complete previous parser-information is deleted before, means no
@@ -3268,8 +3259,7 @@ semantic-cache is used! This argument takes only effect for semantic-sources.
 Point must stay in an edit-window otherwise nothing is done."
   (when (ecb-point-in-edit-window-number)
     (if (ecb--semantic-active-p)
-        (let ((semantic-idle-scheduler-max-buffer-size 0)
-              (semantic-auto-parse-max-buffer-size 0))
+        (let ((semantic-idle-scheduler-max-buffer-size 0))
           (ecb-rebuild-methods-buffer-for-semantic clear-cache))
       (ecb-rebuild-methods-buffer-for-non-semantic))))
 

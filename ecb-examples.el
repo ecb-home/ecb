@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-examples.el,v 1.24 2009/05/06 07:10:06 berndl Exp $
+;; $Id: ecb-examples.el,v 1.25 2009/05/07 17:05:12 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -364,13 +364,14 @@ Otherwise nothing will be done."
   (interactive "e")
   (mouse-set-point e)
   (let ((line (ecb-buffer-substring (ecb-line-beginning-pos) (ecb-line-end-pos))))
-    (cond ((string-match "prior" line)
-           (ecb-select-edit-window)
-           (call-interactively 'scroll-down))
-          ((string-match "next" line)
-           (ecb-select-edit-window)
-           (call-interactively 'scroll-up))
-          (t nil))))
+    (save-match-data
+      (cond ((string-match "prior" line)
+             (ecb-select-edit-window)
+             (call-interactively 'scroll-down))
+            ((string-match "next" line)
+             (ecb-select-edit-window)
+             (call-interactively 'scroll-up))
+            (t nil)))))
 
 
 ;; Two conveniance-commands for the user

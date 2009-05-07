@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.113 2009/05/06 07:10:06 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.114 2009/05/07 17:05:12 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -787,7 +787,7 @@ This option is evaluated by `ecb-upgrade-not-compatible-options' and
   (or ecb-all-options
       (mapatoms
        (lambda (symbol)
-         (when (and (string-match "ecb-" (symbol-name symbol))
+         (when (and (save-match-data (string-match "ecb-" (symbol-name symbol)))
                     (get symbol 'custom-type))
            (setq ecb-all-options (cons symbol ecb-all-options)))))))
 
@@ -1198,21 +1198,22 @@ the following elements of the version-list:
 Return nil if ver-str has not the required syntax:
 <major>.<minor>\[.|pre|beta|alpha]\[<sub-stable/pre/beta/alpha-version>]"
   (let ((str ver-str))
-    (if (string-match "^\\([0-9]+\\)\\.\\([0-9]+\\)\\(pre\\|beta\\|alpha\\|\\.\\)?\\([0-9]+\\)?$" str)
-        (list (string-to-number (match-string 1 str))
-              (string-to-number (match-string 2 str))
-              (if (ecb-string= (match-string 3 str) "alpha")
-                  0
-                (if (ecb-string= (match-string 3 str) "beta")
-                    1
-                  (if (ecb-string= (match-string 3 str) "pre")
-                      2
-                    (if (ecb-string= (match-string 3 str) ".")
-                        4
-                    3))))
-              (if (match-string 4 str)
-                  (string-to-number (match-string 4 str))
-                0)))))
+    (save-match-data 
+      (if (string-match "^\\([0-9]+\\)\\.\\([0-9]+\\)\\(pre\\|beta\\|alpha\\|\\.\\)?\\([0-9]+\\)?$" str)
+          (list (string-to-number (match-string 1 str))
+                (string-to-number (match-string 2 str))
+                (if (ecb-string= (match-string 3 str) "alpha")
+                    0
+                  (if (ecb-string= (match-string 3 str) "beta")
+                      1
+                    (if (ecb-string= (match-string 3 str) "pre")
+                        2
+                      (if (ecb-string= (match-string 3 str) ".")
+                          4
+                        3))))
+                (if (match-string 4 str)
+                    (string-to-number (match-string 4 str))
+                  0))))))
 
 ;; (ecb-package-version-str2list "1.0")
 ;; (ecb-package-version-str2list "1.0alpha")

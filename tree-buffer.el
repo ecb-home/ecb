@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.177 2009/05/06 07:10:05 berndl Exp $
+;; $Id: tree-buffer.el,v 1.178 2009/05/07 17:05:12 berndl Exp $
 
 ;;; Commentary:
 
@@ -63,6 +63,7 @@
 (silentcomp-defun valid-image-instantiator-format-p)
 (silentcomp-defvar modeline-map)
 ;; Emacs
+(silentcomp-defvar header-line-format)
 (silentcomp-defvar message-log-max)
 (silentcomp-defvar message-truncate-lines)
 (silentcomp-defun posn-window)
@@ -2077,17 +2078,18 @@ ONLY-PREFIX is not nil then only common prefix is returned."
         res alist)
     (setq res
           (mapcar (function (lambda (word)
-                              (if (string-match change-word-sub word)
-                                  (substring word
-                                             (match-beginning
-                                              (if (and only-prefix
-                                                       (cdr (tree-buffer-spec->incr-search-additional-pattern
-                                                             tree-buffer-spec)))
-                                                  (1+ (cdr (tree-buffer-spec->incr-search-additional-pattern
-                                                            tree-buffer-spec)))
-                                                1)))
-                                ;; else no match
-                                nil)))
+                              (save-match-data
+                                (if (string-match change-word-sub word)
+                                    (substring word
+                                               (match-beginning
+                                                (if (and only-prefix
+                                                         (cdr (tree-buffer-spec->incr-search-additional-pattern
+                                                               tree-buffer-spec)))
+                                                    (1+ (cdr (tree-buffer-spec->incr-search-additional-pattern
+                                                              tree-buffer-spec)))
+                                                  1)))
+                                  ;; else no match
+                                  nil))))
                   lis))
     (setq res (delq nil res)) ;; remove any nil elements (shouldn't happen)
     (setq alist (mapcar (function (lambda (r)
@@ -2645,17 +2647,19 @@ Returns the line-number of the sticky node."
              (buffer-substring (tree-buffer-line-beginning-pos) (tree-buffer-line-end-pos)))))
 	(start 0))
     ;; we must handle the special sign % of head-line-format!
-    (while (string-match "%" str start)
-      (setq str (replace-match "%%" t t str 0)
-	    start (1+ (match-end 0)))
-      )
+    (save-match-data
+      (while (string-match "%" str start)
+        (setq str (replace-match "%%" t t str 0)
+              start (1+ (match-end 0)))
+        ))
     ;; In 21.4 (or 22.1) the heder doesn't expand tabs.  Hmmmm.
     ;; We should replace them here.
     ;;
     ;; This hack assumes that tabs are kept smartly at tab boundaries
     ;; instead of in a tab boundary where it might only represent 4 spaces.
-    (while (string-match "\t" str start)
-      (setq str (replace-match "        " t t str 0)))
+    (save-match-data
+      (while (string-match "\t" str start)
+        (setq str (replace-match "        " t t str 0))))
     str))
 
 
