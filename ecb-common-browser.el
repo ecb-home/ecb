@@ -1273,7 +1273,11 @@ hold in the variable `ecb-a-special-buffer-name'.
                                                     'basic)
                                                    ecb-basic-buffer-sync
                                                  ,buffer-sync-option-symbol))
-                `(,(make-symbol "abc123xyz456efg789") nil))
+                ;; we need anything to bound in the else-fork, so we just bind
+                ;; major-mode to major-mode - we could use any variable, takes
+                ;; no effect
+                `(major-mode major-mode))
+;;                 `(,(make-symbol "abc123xyz456efg789") nil))
              )
          (when ,(if (and buffer-sync-option-symbol (symbolp buffer-sync-option-symbol))
                     `(or force

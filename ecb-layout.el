@@ -1971,11 +1971,12 @@ Returns the window displaying BUFFER."
                (let ((tem same-window-regexps))
                  (while tem
                    (let ((car (car tem)))
-                     (if (or
-                          (and (stringp car)
-                               (string-match car (buffer-name buffer)))
-                          (and (consp car) (stringp (car car))
-                               (string-match (car car) (buffer-name buffer))))
+                     (if (save-match-data
+                           (or
+                            (and (stringp car)
+                                 (string-match car (buffer-name buffer)))
+                            (and (consp car) (stringp (car car))
+                                 (string-match (car car) (buffer-name buffer)))))
                          (progn
                            (switch-to-buffer buffer)
                            (throw 'done (display-buffer-1
@@ -2020,13 +2021,14 @@ Returns the window displaying BUFFER."
                      (while tem
                        (let ((car (car tem)))
                          (if (and (stringp car)
-                                  (string-match car (buffer-name buffer)))
+                                  (save-match-data (string-match car (buffer-name buffer))))
                              (throw 'done
                                     (funcall special-display-function buffer)))
                          (if (and (consp car)
                                   (stringp (car car))
-                                  (string-match (car car)
-                                                (buffer-name buffer)))
+                                  (save-match-data
+                                    (string-match (car car)
+                                                  (buffer-name buffer))))
                              (throw 'done (funcall
                                            special-display-function buffer
                                            (cdr car)))))
@@ -2722,11 +2724,11 @@ BUFFER-OR-NAME is contained or matches `special-display-buffer-names' or
                    (while tem
                      (let ((car (car tem)))
                        (if (and (stringp car)
-                                (string-match car buf-name))
+                                (save-match-data (string-match car buf-name)))
                            (throw 'done t))
                        (if (and (consp car)
                                 (stringp (car car))
-                                (string-match (car car) buf-name))
+                                (save-match-data (string-match (car car) buf-name)))
                            (throw 'done t)))
                      (setq tem (cdr tem))))))))))
     (ecb-layout-debug-error "ecb-check-for-special-buffer for %s: %s"
@@ -2748,9 +2750,9 @@ BUFFER-OR-NAME is contained or matches `special-display-buffer-names' or
                     (let ((car (car tem)))
                       (if (or
                            (and (stringp car)
-                                (string-match car buf-name))
+                                (save-match-data (string-match car buf-name)))
                            (and (consp car) (stringp (car car))
-                                (string-match (car car) buf-name)))
+                                (save-match-data (string-match (car car) buf-name))))
                           (throw 'done t)))
                     (setq tem (cdr tem)))))))))
      (ecb-layout-debug-error "ecb-check-for-same-window-buffer for %s: %s"
@@ -5314,8 +5316,8 @@ if no compile-window is visible."
              (should-shrink (if (null arg)
                                (> height-before ecb-compile-window-height-lines)
                              (<= (prefix-numeric-value arg) 0)))
-            (compile-window-selected-p (equal (selected-window)
-                                              ecb-compile-window))
+;;             (compile-window-selected-p (equal (selected-window)
+;;                                               ecb-compile-window))
             (max-height nil)
             (number-of-lines nil))
         ;; we must use save-excursion because otherwise this command behaves

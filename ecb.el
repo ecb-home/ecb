@@ -1885,8 +1885,9 @@ exist."
                                     t)))
     (save-excursion
       (dolist (file files)
-	(if (and (string-match "\\(silentcomp\\|tree-buffer\\|ecb.*\\)\\.el$" file)
-                 (not (string-match "ecb-autoloads" file)))
+	(if (save-match-data
+              (and (string-match "\\(silentcomp\\|tree-buffer\\|ecb.*\\)\\.el$" file)
+                   (not (string-match "ecb-autoloads" file))))
             (ecb-compile-file-if-necessary file force-all))))))
 
 (defun ecb-auto-activate-hook()

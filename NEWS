@@ -165,11 +165,15 @@
    Introducing three new macros `defecb-advice-set', `defecb-advice' and
    `ecb-with-original-adviced-function-set'.
 
-** New support for Git and Monotone as version-control systems
+** Changes in the version control support of ECB
 
-   If Git rsp. Monotone are supported by VC (means vc-git.el rsp. vc-mtn.el
-   are distributed with Emacs) then ECB supports now both of them out of the
-   box.
+*** New support for Git and Monotone as version-control systems
+    If Git rsp. Monotone are supported by VC (means vc-git.el rsp. vc-mtn.el
+    are distributed with Emacs) then ECB supports now both of them out of the
+    box.
+
+*** Makes CVS-support fully compatible with Emacs 22 and 23, especially
+    with respect to `vc-cvs-stay-local'
    
 ** New features rsp. commands
 
@@ -237,6 +241,10 @@
    described in the shipped README rsp. INSTALL-files.
 
 ** Fixed Bugs
+
+*** Fixed a bug in the ping-functionality
+    Now `ecb-ping-options' has a new default value which should operate well
+    on most os.
 
 *** Fixed a bug which prevented `ecb-rebuild-methods-buffer' from working
     correctly

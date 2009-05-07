@@ -364,13 +364,14 @@ Otherwise nothing will be done."
   (interactive "e")
   (mouse-set-point e)
   (let ((line (ecb-buffer-substring (ecb-line-beginning-pos) (ecb-line-end-pos))))
-    (cond ((string-match "prior" line)
-           (ecb-select-edit-window)
-           (call-interactively 'scroll-down))
-          ((string-match "next" line)
-           (ecb-select-edit-window)
-           (call-interactively 'scroll-up))
-          (t nil))))
+    (save-match-data
+      (cond ((string-match "prior" line)
+             (ecb-select-edit-window)
+             (call-interactively 'scroll-down))
+            ((string-match "next" line)
+             (ecb-select-edit-window)
+             (call-interactively 'scroll-up))
+            (t nil)))))
 
 
 ;; Two conveniance-commands for the user

@@ -50,6 +50,12 @@
 
 (silentcomp-defun ecb-speedbar-update-contents)
 (silentcomp-defvar vc-cvs-stay-local)
+;; (silentcomp-defvar vc-svn-admin-directory)
+(silentcomp-defun substring-no-properties)
+(silentcomp-defun vc-git-root)
+(silentcomp-defun vc-mtn-root)
+(silentcomp-defun vc-file-clearprops)
+(silentcomp-defun vc-state)
 (silentcomp-defvar dired-directory)
 
 ;;====================================================
@@ -343,7 +349,12 @@ also `ecb-ping-options'."
   :group 'ecb-directories
   :type  'string)
 
-(defcustom ecb-ping-options (list "HOST")
+(defcustom ecb-ping-options
+  (append (cond ((memq system-type (list 'linux 'gnu/linux 'irix))
+                 (list "-c" "2"))
+                ((eq system-type 'windows-nt)
+                 (list "-n" "2")))
+          (list "HOST"))
   "List of options for the ping program.
 These options have to ensure that the program set in `ecb-ping-program' only
 emits as few as possible ICMP packets, ideally exactly 1. These options must
@@ -352,7 +363,7 @@ ensure the ping-program doesn't emit an endless sequence of packets!
 These sequence of options must fit the required argument- and options-list of
 the specified ping-program \(see `ecb-ping-program'). Therefore at least on of
 these options must be the string HOST \(uppercase) which will be replaced
-internally by ECB with that host-name everytime the accessibility of this host
+internally by ECB with that host-name the accessibility of this host
 has to be tested. So ensure that this 'HOST'-option is in the right place of
 the options-sequence - check the manual of your ping-program!
 
@@ -2095,10 +2106,11 @@ nil. Returns 'window-not-visible if the ECB-sources-buffer is not visible."
                 (old-children (tree-node->children (tree-buffer-get-root)))
                 (all-files (car (ecb-get-files-and-subdirs ecb-path-selected-directory)))
                 (filtered-files nil))
-            (dolist (file all-files)
-              (if (string-match filter-regexp file)
-                  (setq filtered-files
-                        (cons file filtered-files))))
+            (save-match-data
+              (dolist (file all-files)
+                (if (string-match filter-regexp file)
+                    (setq filtered-files
+                          (cons file filtered-files)))))
             (if (null filtered-files)
                 (progn
                   (ecb-apply-filter-to-sources-buffer nil)
@@ -2474,9 +2486,11 @@ Returns t if the current history filter has been applied otherwise nil."
                                 ;; an elem is a cons (<buffername> . <filename>)
                                 (cons (case ecb-history-make-buckets
                                         (never never-bucket-string)
-                                        (directory (substring-no-properties
+                                        (directory (ecb-substring-no-properties
                                                     (ecb-fix-filename
-                                                     (file-name-directory (cdr elem)))))
+                                                     (file-name-directory
+                                                      (cdr elem)))
+                                                    (if ecb-running-xemacs 0)))
                                         (mode (symbol-name
                                                (if (get-buffer (car elem))
                                                    (save-excursion
@@ -2808,7 +2822,7 @@ doesn't match any regexp of `ecb-host-accessible-check-valid-time' then return
       (otherwise value))))
 
 
-;; (ecb-host-accessible-p "ecb.sourceforge.net")
+;; (ecb-host-accessible-p "ecb.cvs.sourceforge.net")
 
 (silentcomp-defun ange-ftp-ftp-name)
 (silentcomp-defun efs-ftp-path)
@@ -3192,11 +3206,12 @@ the SOURCES-cache."
 
 (defun ecb-vc-cvs-root-remote-p (root)
   "Return not nil if ROOT is a remote CVS-repository."
-  (if (string-match "^:local:" root)
-      nil
-    (and (string-match "^\\(:ext:\\|:server:\\)?\\([^@]+@\\)?\\([^:]+\\):"
-                       root)
-         (match-string 3 root))))
+  (save-match-data
+    (if (string-match "^:local:" root)
+        nil
+      (and (string-match "^\\(:ext:\\|:server:\\)?\\([^@]+@\\)?\\([^:]+\\):"
+                         root)
+           (match-string 3 root)))))
 
 ;; some tests:
 ;; The following must all return cvs.sourceforge.net!
@@ -3214,6 +3229,7 @@ the SOURCES-cache."
 ;; The following is allowed to return "C" because CVS forbids to use
 ;; windows-path as root without keyword :local:!
 ;; (ecb-vc-cvs-root-remote-p "C:/local/root")
+
 
 (defun ecb-vc-dir-managed-by-CVS (directory)
   "Return 'CVS if DIRECTORY is managed by CVS. nil if not.
@@ -3242,7 +3258,9 @@ if ECB treats such a directory as managed by CVS or not!"
                             (require 'vc-cvs)))
            t)
        (if (or (not (boundp 'vc-cvs-stay-local)) ;; XEmacs doesn't have this
-               (not (eq vc-cvs-stay-local t)))
+               (null vc-cvs-stay-local)
+               (stringp vc-cvs-stay-local)
+               (listp vc-cvs-stay-local))
            ;; XEmacs has a quite outdated VC-package which has no option
            ;; `vc-cvs-stay-local' so the user can not work with remote
            ;; directories if working offline for example. so we use a
@@ -3258,12 +3276,29 @@ if ECB treats such a directory as managed by CVS or not!"
                       (not (boundp 'vc-cvs-stay-local)))
                  nil
                (when (or (null host) ;; local repository
-                         ;; vc-cvs-stay-local says VC should stay local for this
-                         ;; host
+                         ;; maybe vc-cvs-stay-local says VC should stay local for this
+                         ;; host - let's check it
                          (and (boundp 'vc-cvs-stay-local)
-                              (stringp vc-cvs-stay-local)
-                              (string-match vc-cvs-stay-local host))
-                         ;; the host is at least accessible
+                              vc-cvs-stay-local
+                              ;; here vc-cvs-stay-local is either a string or
+                              ;; a list
+                              (let* ((stay-local-list (if (stringp vc-cvs-stay-local)
+                                                          (list vc-cvs-stay-local)
+                                                        vc-cvs-stay-local))
+                                     (conv-fcn (if (equal 'except (car stay-local-list))
+                                                   'not
+                                                 'identity))
+                                     (stay-local-list-1 (if (equal 'except (car stay-local-list))
+                                                            (cdr stay-local-list)
+                                                          stay-local-list)))
+                                (funcall conv-fcn
+                                         (catch 'found
+                                           (dolist (host-regexp stay-local-list-1)
+                                             (if (save-match-data (string-match host-regexp host))
+                                                 (throw 'found t)))
+                                           nil))))
+                         ;; well, we should not stay local, so we check if the
+                         ;; host is at least accessible
                          (ecb-host-accessible-p host))
                  'CVS)))
          ;; VC always will stay local so we are satisfied ;-)
@@ -4058,7 +4093,7 @@ the help-text should be printed here."
          (filename (ecb-file-name-nondirectory
                     (read-file-name "Source name: " (concat dir "/")))))
     (ecb-select-edit-window)
-    (if (string-match "\\.java$" filename)
+    (if (save-match-data (string-match "\\.java$" filename))
         (ecb-jde-gen-class-buffer dir filename)
       (find-file (concat dir "/" filename)))
     (when (= (point-min) (point-max))

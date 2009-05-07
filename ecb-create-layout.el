@@ -272,9 +272,10 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
   (ad-disable-advice 'delete-frame 'before 'ecb-create-layout)
   (ad-activate 'delete-frame)
   ;; killing all white-space-filled layout-buffers
-  (dolist (b (buffer-list ecb-create-layout-frame))
-    (if (string-match "^ \\*ECB-LC-" (buffer-name b))
-        (kill-buffer b)))
+  (save-match-data
+    (dolist (b (buffer-list ecb-create-layout-frame))
+      (if (string-match "^ \\*ECB-LC-" (buffer-name b))
+          (kill-buffer b))))
   ;; restore the global-map
   (if (keymapp ecb-create-layout-old-global-map)
       (use-global-map ecb-create-layout-old-global-map))

@@ -787,7 +787,7 @@ This option is evaluated by `ecb-upgrade-not-compatible-options' and
   (or ecb-all-options
       (mapatoms
        (lambda (symbol)
-         (when (and (string-match "ecb-" (symbol-name symbol))
+         (when (and (save-match-data (string-match "ecb-" (symbol-name symbol)))
                     (get symbol 'custom-type))
            (setq ecb-all-options (cons symbol ecb-all-options)))))))
 
@@ -1198,21 +1198,22 @@ the following elements of the version-list:
 Return nil if ver-str has not the required syntax:
 <major>.<minor>\[.|pre|beta|alpha]\[<sub-stable/pre/beta/alpha-version>]"
   (let ((str ver-str))
-    (if (string-match "^\\([0-9]+\\)\\.\\([0-9]+\\)\\(pre\\|beta\\|alpha\\|\\.\\)?\\([0-9]+\\)?$" str)
-        (list (string-to-number (match-string 1 str))
-              (string-to-number (match-string 2 str))
-              (if (ecb-string= (match-string 3 str) "alpha")
-                  0
-                (if (ecb-string= (match-string 3 str) "beta")
-                    1
-                  (if (ecb-string= (match-string 3 str) "pre")
-                      2
-                    (if (ecb-string= (match-string 3 str) ".")
-                        4
-                    3))))
-              (if (match-string 4 str)
-                  (string-to-number (match-string 4 str))
-                0)))))
+    (save-match-data 
+      (if (string-match "^\\([0-9]+\\)\\.\\([0-9]+\\)\\(pre\\|beta\\|alpha\\|\\.\\)?\\([0-9]+\\)?$" str)
+          (list (string-to-number (match-string 1 str))
+                (string-to-number (match-string 2 str))
+                (if (ecb-string= (match-string 3 str) "alpha")
+                    0
+                  (if (ecb-string= (match-string 3 str) "beta")
+                      1
+                    (if (ecb-string= (match-string 3 str) "pre")
+                        2
+                      (if (ecb-string= (match-string 3 str) ".")
+                          4
+                        3))))
+                (if (match-string 4 str)
+                    (string-to-number (match-string 4 str))
+                  0))))))
 
 ;; (ecb-package-version-str2list "1.0")
 ;; (ecb-package-version-str2list "1.0alpha")
