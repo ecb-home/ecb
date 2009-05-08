@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.178 2009/05/07 17:05:12 berndl Exp $
+;; $Id: tree-buffer.el,v 1.179 2009/05/08 14:05:55 berndl Exp $
 
 ;;; Commentary:
 
@@ -921,12 +921,22 @@ get the data.")
   "Alist with car is one of the names in
 `tree-buffer-tree-image-names' and cdr is an associated image-object.")
 
-(defconst tree-buffer-images-can-be-used
-  (and (or (fboundp 'defimage)
-           (fboundp 'make-image-specifier))
-       (if (fboundp 'display-images-p)
-           (display-images-p)
-         window-system)))
+(defvar tree-buffer-images-can-be-used nil
+  "INTERNAL - DO NOT USE AND CHANGE!")
+(defvar tree-buffer-images-can-be-used-init-p nil
+  "INTERNAL - DO NOT USE AND CHANGE!")
+
+(defsubst tree-buffer-images-can-be-used ()
+  "Not nil if images can be used with current Emacs setup."
+  (if tree-buffer-images-can-be-used-init-p
+      tree-buffer-images-can-be-used
+    (setq tree-buffer-images-can-be-used-init-p t)
+    (setq tree-buffer-images-can-be-used
+          (and (or (fboundp 'defimage)
+                   (fboundp 'make-image-specifier))
+               (if (fboundp 'display-images-p)
+                   (display-images-p)
+                 window-system)))))
 
 (defvar tree-buffer-image-properties-emacs
   '(:ascent center :mask (heuristic t))
@@ -977,7 +987,7 @@ related to the names.")
       (defsubst tree-buffer-image-type-available-p (type)
         "Return non-nil if image type TYPE is available.
 Image types are symbols like `xbm' or `jpeg'."
-      (valid-image-instantiator-format-p type)))
+        (valid-image-instantiator-format-p type)))
   (defsubst tree-buffer-create-image (file type)
     (apply 'create-image
            `(,file ,type nil
@@ -995,7 +1005,7 @@ If the optional arg STYLE is not nil then this is used instead of the slot
 STYLE of `tree-buffer-spec'. Allowed values of STYLE are nil, 'image,
 'ascii-guides, ascii-no-guides."
   (let ((my-style (or style (tree-buffer-spec->style tree-buffer-spec))))
-    (if tree-buffer-images-can-be-used
+    (if (tree-buffer-images-can-be-used)
         my-style
       (if (equal my-style 'image)
           'ascii-guides
@@ -1170,8 +1180,6 @@ image-object for TREE-IMAGE-NAME."
                              (current-buffer) linenr)
     (when linenr
       (save-excursion
-        ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: !!!! sets mark in Emacs
-        ;; 23 - not in Emacs 22!!!!!!!!!!!!!
         (tree-buffer-goto-line linenr)
         (beginning-of-line)
         (+ (point) (tree-buffer-get-node-name-start-column node))))))
@@ -1549,7 +1557,11 @@ of TEXT which are not set by FACE are preserved."
                                      (otherwise nil))))
                              ;; we must add the new-face in front of
                              ;; current-face to get the right merge!
-                             (append nf cf))
+                              (if (member face cf)
+                                  cf
+                                (append nf cf)
+                                )
+                              )
                            text)
       (alter-text-property start end 'face
                            (lambda (current-face)
@@ -1565,11 +1577,11 @@ of TEXT which are not set by FACE are preserved."
                                       (otherwise nil))))
                                ;; we must add the new-face in front of
                                ;; current-face to get the right merge!
-                               (append nf cf)))
+                               (if (member face cf)
+                                   cf
+                                 (append nf cf))))
                            text))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: try to insert first and then add
-;; text-properties... 
 (defun tree-buffer-insert-text (text &optional facer help-echo mouse-highlight)
   "Insert TEXT at point and faces it with FACER. FACER can be a face then the
 text gets this face or it can be a function-symbol which is called to face the
@@ -3243,19 +3255,20 @@ See Info node `(ecb)tree-buffer' for all details of using tree-buffers."
 		  (interactive "e")
                   (tree-buffer-mouse-set-point e)
                   (tree-buffer-show-node-menu e))))
-    (define-key tree-buffer-key-map
-      (tree-buffer-create-mouse-key 3 'button-press nil 'header-line)
-      (function (lambda(e)
-		  (interactive "e")
-                  (tree-buffer-mouse-set-point e)
-                  (let ((click-col (tree-buffer-get-event-column e)))
-                    ;; go to the sticky node
-                    (tree-buffer-goto-sticky-node)
-                    ;; go to beginning of current line
-                    (forward-line 0)
-                    ;; move right
-                    (forward-char click-col))
-                  (tree-buffer-show-node-menu e))))
+    (when (and (not tree-buffer-running-xemacs) sticky-parent-p)
+      (define-key tree-buffer-key-map
+        (tree-buffer-create-mouse-key 3 'button-press nil 'header-line)
+        (function (lambda(e)
+                    (interactive "e")
+                    (tree-buffer-mouse-set-point e)
+                    (let ((click-col (tree-buffer-get-event-column e)))
+                      ;; go to the sticky node
+                      (tree-buffer-goto-sticky-node)
+                      ;; go to beginning of current line
+                      (forward-line 0)
+                      ;; move right
+                      (forward-char click-col))
+                    (tree-buffer-show-node-menu e)))))
 
     (define-key tree-buffer-key-map
       (tree-buffer-create-mouse-key 3 'button-press 'shift) nop)

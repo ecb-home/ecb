@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.72 2009/04/21 15:23:22 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.73 2009/05/08 14:05:55 berndl Exp $
 
 ;;; Commentary:
 
@@ -134,7 +134,7 @@ If the special value 'basic is set then ECB uses the setting of the option
                    (set symbol value)
                    (if (and (boundp 'ecb-minor-mode)
                             ecb-minor-mode)
-                       (ecb-activate-ecb-autocontrol-functions
+                       (ecb-activate-ecb-autocontrol-function
                         value 'ecb-analyse-buffer-sync))))
   :initialize 'custom-initialize-default)
   
@@ -355,7 +355,7 @@ future this could break."
       (setq ecb-speedbar-update-flag-old speedbar-update-flag))
   (setq speedbar-update-flag nil)
 
-  (ecb-activate-ecb-autocontrol-functions ecb-speedbar-buffer-sync-delay 
+  (ecb-activate-ecb-autocontrol-function ecb-speedbar-buffer-sync-delay 
                                           'ecb-speedbar-buffer-sync)
 
   ;;reset the selection variable

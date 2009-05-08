@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-symboldef.el,v 1.6 2009/05/06 07:10:06 berndl Exp $
+;; $Id: ecb-symboldef.el,v 1.7 2009/05/08 14:05:55 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -165,7 +165,7 @@ If the special value 'basic is set then ECB uses the setting of the option
                    (set symbol value)
                    (if (and (boundp 'ecb-minor-mode)
                             ecb-minor-mode)
-                       (ecb-activate-ecb-autocontrol-functions
+                       (ecb-activate-ecb-autocontrol-function
                         value 'ecb-analyse-buffer-sync))))
   :initialize 'custom-initialize-default)
   
@@ -435,8 +435,8 @@ symbol. Displays the found text in the buffer of
   "Set the buffer in the current window to the tag-definition-buffer and make
 this window dedicated for this buffer."
   (switch-to-buffer (get-buffer-create ecb-symboldef-buffer-name))
-  (ecb-activate-ecb-autocontrol-functions ecb-symboldef-buffer-sync-delay
-                                          'ecb-symboldef-buffer-sync))
+  (ecb-activate-ecb-autocontrol-function ecb-symboldef-buffer-sync-delay
+                                         'ecb-symboldef-buffer-sync))
 
 (defun ecb-maximize-window-symboldef ()
   "Maximize the ECB-symbol-defnition window.

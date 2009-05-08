@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.24 2009/05/08 08:05:45 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.25 2009/05/08 14:05:55 berndl Exp $
 
 
 ;;; Commentary:
@@ -245,7 +245,7 @@ If the special value 'basic is set then ECB uses the setting of the option
                    (set symbol value)
                    (if (and (boundp 'ecb-minor-mode)
                             ecb-minor-mode)
-                       (ecb-activate-ecb-autocontrol-functions
+                       (ecb-activate-ecb-autocontrol-function
                         value 'ecb-analyse-buffer-sync))))
   :initialize 'custom-initialize-default)
 
@@ -512,8 +512,8 @@ used as window."
 
 (defecb-window-dedicator ecb-set-analyse-buffer ecb-analyse-buffer-name
   "Display the analyse buffer in current window and make window dedicated."
-  (ecb-activate-ecb-autocontrol-functions ecb-analyse-buffer-sync-delay
-                                          'ecb-analyse-buffer-sync)
+  (ecb-activate-ecb-autocontrol-function ecb-analyse-buffer-sync-delay
+                                         'ecb-analyse-buffer-sync)
   (switch-to-buffer ecb-analyse-buffer-name))
 
 (defun ecb-maximize-window-analyse ()

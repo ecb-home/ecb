@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.37 2009/05/08 11:43:19 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.38 2009/05/08 14:05:55 berndl Exp $
 
 
 ;;; History
@@ -599,7 +599,7 @@ almost the same effect as if you set no delay."
   :set (function (lambda (symbol value)
                    (set symbol value)
                    (if ecb-minor-mode
-                       (ecb-activate-ecb-autocontrol-functions
+                       (ecb-activate-ecb-autocontrol-function
                         value 'ecb-basic-buffer-sync))))
   :initialize 'custom-initialize-default)
 
@@ -1163,7 +1163,7 @@ buffer-name of a special ECB-buffer or nil.")
     (setq ecb-pre-command-hooks (delq fcn-symbol ecb-pre-command-hooks))))
   
 
-(defun ecb-activate-ecb-autocontrol-functions (value func)
+(defun ecb-activate-ecb-autocontrol-function (value func)
   "Adds function FUNC to `ecb-idle-timer-alist' and activates an idle-timer
 with idle-time VALUE if VALUE is a number. If nil or 'post the
 FUNC is added to `post-command-hook' and `ecb-post-command-hooks'
@@ -1177,7 +1177,7 @@ has been contained)."
   ;; `ecb-basic-buffer-sync-delay' can never have the value 'basic so this
   ;; recursion is save
   (if (equal 'basic value)
-      (ecb-activate-ecb-autocontrol-functions ecb-basic-buffer-sync-delay func)
+      (ecb-activate-ecb-autocontrol-function ecb-basic-buffer-sync-delay func)
     (ecb-stop-autocontrol/sync-function func)
     (case value
       ((nil post)

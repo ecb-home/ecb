@@ -2,12 +2,9 @@
 
 ;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
 ;;                           Klaus Berndl,
-;;                           Kevin A. Burton,
 ;;                           Free Software Foundation, Inc.
 
-;; Author: Jesper Nordenberg <mayhem@home.se>
-;;         Klaus Berndl <klaus.berndl@sdm.de>
-;;         Kevin A. Burton <burton@openprivacy.org>
+;; Author: Klaus Berndl <klaus.berndl@sdm.de>
 ;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
 ;; Keywords: browser, code, programming, tools
 ;; Created: 2002
@@ -25,7 +22,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-examples.el,v 1.25 2009/05/07 17:05:12 berndl Exp $
+;; $Id: ecb-examples.el,v 1.26 2009/05/08 14:05:55 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -86,7 +83,7 @@
 
 ;; The :type of the first two options is essential and MUST NOT be defined
 ;; different, because the macro `defecb-autocontrol/sync-function' and the
-;; function `ecb-activate-ecb-autocontrol-functions' expects exactly this
+;; function `ecb-activate-ecb-autocontrol-function' expects exactly this
 ;; option-type!
 
 ;; An own hook running after synchronizing is not essential but mostly useful
@@ -130,7 +127,7 @@ If the special value 'basic is set then ECB uses the setting of the option
                    (if (and (boundp 'ecb-minor-mode)
                             (featurep 'ecb-examples)
                             ecb-minor-mode)
-                       (ecb-activate-ecb-autocontrol-functions
+                       (ecb-activate-ecb-autocontrol-function
                         value 'ecb-examples-bufferinfo-buffer-sync))))
   :initialize 'custom-initialize-default)
 
@@ -243,20 +240,16 @@ it will be called autom. by the internal synchronizing mechanism of ECB."
 
           ;; synchronizing for real filesource-buffers or indirect buffers of
           ;; real file buffers
-            
-          ;; Let us be smart: We synchronize only if sourcebuffer has changed
-          ;; or if the argument FORCE is not nil
-          (message "Klausi: examples: file: %s, vis-buf: %s, last-file-buf: %s, cur-buf: %s"
-                   filename visible-buffer ecb-examples-bufferinfo-last-file-buffer
-                   (current-buffer))
-          (when (or force
-                    (not (equal (current-buffer)
-                                ecb-examples-bufferinfo-last-file-buffer)))
-            (message "Klausi: example-sync perfome.")
-            ;; set new last-file-buffer so we can check next time if changed
-            (setq ecb-examples-bufferinfo-last-file-buffer (current-buffer))
-            ;; we display the file-infos for current source-buffer
-            (ecb-examples-print-file-attributes visible-buffer filename))
+
+            ;; Let us be smart: We synchronize only if sourcebuffer has changed
+            ;; or if the argument FORCE is not nil
+            (when (or force
+                      (not (equal (current-buffer)
+                                  ecb-examples-bufferinfo-last-file-buffer)))
+              ;; set new last-file-buffer so we can check next time if changed
+              (setq ecb-examples-bufferinfo-last-file-buffer (current-buffer))
+              ;; we display the file-infos for current source-buffer
+              (ecb-examples-print-file-attributes visible-buffer filename))
         
         ;; what should we do for non file buffers like help-buffers etc...
         (setq ecb-examples-bufferinfo-last-file-buffer nil)
@@ -289,7 +282,17 @@ also if the ECB-analyse-window is not visible in current layout."
 (defecb-window-dedicator ecb-examples-set-bufferinfo-buffer
     ecb-examples-bufferinfo-buffer-name
   "Set the buffer in the current window to the bufferinfo-buffer and make this
-window dedicated for this buffer."
+window dedicated for this buffer. Makes the buffer read-only."
+  ;; activating the synchronization of the bufferinfo-window:
+  ;; `ecb-activate-ecb-autocontrol-function' takes care of the possible
+  ;; settings in `ecb-examples-bufferinfo-buffer-sync-delay'. Therefore we do
+  ;; it here because then changes in ecb-examples-bufferinfo-buffer-sync-delay
+  ;; are taken into account each time the bufferinfo buffer is set in the
+  ;; layout (after each hiding/showing the ecb-window, each redrawing the
+  ;; layout deactivating/activating ECB)
+  (ecb-activate-ecb-autocontrol-function ecb-examples-bufferinfo-buffer-sync-delay
+                                         'ecb-examples-bufferinfo-buffer-sync)
+  
   (switch-to-buffer (get-buffer-create ecb-examples-bufferinfo-buffer-name))
   (setq buffer-read-only t))
 
@@ -495,8 +498,7 @@ window/buffer of a layout."
 
 (defun ecb-examples-activate ()
   "Activate the new layout \"example-layout1\".
-Acivates the function `ecb-examples-bufferinfo-buffer-sync', set
-`ecb-compile-window-height' to 5 and `ecb-windows-height' to 6. The
+Set `ecb-compile-window-height' to 5 and `ecb-windows-height' to 6. The
 preactivation-state is saved and will be restored by
 `ecb-examples-deactivate'."
   (interactive)
@@ -510,12 +512,6 @@ preactivation-state is saved and will be restored by
   (assert (not (ecb-string= ecb-layout-name "example-layout1")) nil
           "The examples-layout1 is already active!")
   
-  ;; activating the synchronization of the bufferinfo-window
-  ;; `ecb-activate-ecb-autocontrol-functions' takes care of the possible
-  ;; settings in `ecb-examples-bufferinfo-buffer-sync-delay'
-  (ecb-activate-ecb-autocontrol-functions ecb-examples-bufferinfo-buffer-sync-delay
-                                          'ecb-examples-bufferinfo-buffer-sync)
-  
   ;; saving the state
   (ecb-examples-preactivation-state 'save)
 
@@ -523,8 +519,12 @@ preactivation-state is saved and will be restored by
   (setq ecb-windows-height 6)
   (setq ecb-compile-window-height 8)
   (let ((ecb-change-layout-preserves-compwin-state nil))
+    ;; activating the synchronization of the bufferinfo-window is done in the
+    ;; dedicator-function (see `ecb-examples-set-bufferinfo-buffer' for the
+    ;; reason). So the synchronizing will be activated implicitly with the
+    ;; layout-switch because this redraws the layout and this calls all
+    ;; dedicator-functions.
     (ecb-layout-switch "example-layout1")))
-
 
 
 ;; Deactivation of the example

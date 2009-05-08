@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-eshell.el,v 1.84 2009/05/06 07:10:06 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.85 2009/05/08 14:05:55 berndl Exp $
 
 ;;; Commentary:
 
@@ -156,7 +156,7 @@ If the special value 'basic is set then ECB uses the setting of the option
                    (set symbol value)
                    (if (and (boundp 'ecb-minor-mode)
                             ecb-minor-mode)
-                       (ecb-activate-ecb-autocontrol-functions
+                       (ecb-activate-ecb-autocontrol-function
                         value 'ecb-analyse-buffer-sync))))
   :initialize 'custom-initialize-default)
   
@@ -213,8 +213,8 @@ active.")
     (ecb-layout-debug-error "eshell around-advice: comp-win will be toggled.")
     (ecb-toggle-compile-window 1))
 
-  (ecb-activate-ecb-autocontrol-functions ecb-eshell-buffer-sync-delay
-                                          'ecb-eshell-buffer-sync)
+  (ecb-activate-ecb-autocontrol-function ecb-eshell-buffer-sync-delay
+                                         'ecb-eshell-buffer-sync)
   ;; some hooks
   (add-hook 'eshell-post-command-hook 'ecb-eshell-recenter)
   (add-hook 'eshell-post-command-hook 'ecb-eshell-fit-window-to-output)

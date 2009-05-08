@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.93 2009/05/08 11:43:19 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.94 2009/05/08 14:05:55 berndl Exp $
 
 ;;; Commentary:
 
@@ -1051,7 +1051,7 @@ by semantic!"
   :set (function (lambda (symbol value)
                    (set symbol value)
                    (if (and (boundp 'ecb-minor-mode) ecb-minor-mode)
-                       (ecb-activate-ecb-autocontrol-functions value
+                       (ecb-activate-ecb-autocontrol-function value
                                                                'ecb-tag-sync))))
   :initialize 'custom-initialize-default)
 
