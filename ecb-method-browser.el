@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.91 2009/05/07 17:05:12 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.92 2009/05/08 08:05:45 berndl Exp $
 
 ;;; Commentary:
 
@@ -181,8 +181,8 @@ node immediately visible and destroys the explicitly set expand-level."
 
 (defcustom ecb-font-lock-tags t
   "*Adds font-locking \(means highlighting) to the ECB-method buffer.
-This options takes only effect for semantic-sources - means sources supported
-by semantic!"
+This options takes only effect for semantic-sources \(ie. sources supported
+by semantic!) and if the font-lock-feature is loaded."
   :group 'ecb-methods
   :set (function (lambda (symbol value)
 		   (set symbol value)
@@ -190,6 +190,10 @@ by semantic!"
   :type 'boolean
   :initialize 'custom-initialize-default)
 
+(defsubst ecb-font-lock-tags ()
+  "Returns not nil if `ecb-font-lock-tags' is not nil and font-lock loaded."
+  (and ecb-font-lock-tags
+       (featurep 'font-lock)))
 
 (defcustom ecb-tag-jump-sets-mark t
   "*Set the mark after jumping to a tag from the ECB-method buffer.
@@ -223,7 +227,7 @@ cons-cells:
 Every function is called with 3 arguments:
 1. The tag
 2. The parent-tag of tag \(can be nil)
-3. The value of `ecb-font-lock-tags'.
+3. The value of the function `ecb-font-lock-tags'.
 Every function must return the display of the tag as string, colorized if
 the third argument is not nil.
 
@@ -1525,7 +1529,7 @@ ECB-methods-window is not visible in current layout."
     (let* ((parent (car parents))
 	   (name (cond
 		  ((ecb--semantic-tag-p parent)
-		   (ecb--semantic-format-tag-name parent nil ecb-font-lock-tags))
+		   (ecb--semantic-format-tag-name parent nil (ecb-font-lock-tags)))
 		  ((stringp parent)
 		   (ecb--semantic--format-colorize-text parent 'type)))))
       (if name
@@ -1550,9 +1554,9 @@ there is no distinction between superclasses and interfaces."
 `ecb-tag-display-function'."
   (condition-case nil
       (funcall (ecb-get-tag-display-function)
-               tag parent-tag ecb-font-lock-tags)
+               tag parent-tag (ecb-font-lock-tags))
     (error (ecb--semantic-format-tag-prototype tag parent-tag
-                                               ecb-font-lock-tags))))
+                                               (ecb-font-lock-tags)))))
 
 
 (defun ecb-find-add-tag-bucket (node type display sort-method buckets
@@ -2668,7 +2672,7 @@ The PARENT-TAG is propagated to the functions `ecb-add-tag-bucket' and
 		  (dolist (parent (if sort-method
 				      (sort parents 'ecb-string<) parents))
                     (let* ((plain-parent-name
-                            (if ecb-font-lock-tags
+                            (if (ecb-font-lock-tags)
                                 (ecb--semantic--format-colorize-text parent 'type)
                               parent))
                            ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: When

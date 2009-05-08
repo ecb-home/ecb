@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.266 2009/05/07 17:05:12 berndl Exp $
+;; $Id: ecb-layout.el,v 1.267 2009/05/08 08:05:45 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -4466,11 +4466,6 @@ WINDOW-CONFIG must be got from the adviced version of
                     ecb-compile-window-width
                     ecb-windows-width ecb-windows-height))))
 
-;; (defecb-advice make-indirect-buffer after ecb-layout-basic-adviced-functions
-;;   "a testerli"
-;;   (if (ad-get-arg 2) ;; third argument clone is not nil
-;;       t ;; clear the toplevel cache
-;;       ))
 
 (defecb-advice current-window-configuration after ecb-layout-basic-adviced-functions
   "Stores some additional informations about the window-configurations needed
