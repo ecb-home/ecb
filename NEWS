@@ -240,7 +240,15 @@
    Please download the needed release-archives and extract and install as
    described in the shipped README rsp. INSTALL-files.
 
+** Better compatibility with XEmacs 21.5
+
+   Thanks to Henry S. Thompson who provided some patches which make ECB
+   compatible with current XEmacs 21.5.
+
 ** Fixed Bugs
+
+*** Fixed a bug which displayed empty tag-names in the methods-buffer when font-lock
+    is not loaded.
 
 *** Fixed a bug in the ping-functionality
     Now `ecb-ping-options' has a new default value which should operate well

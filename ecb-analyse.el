@@ -143,12 +143,14 @@ bucket. So most needed buckets are better visible in the analyse-buffer."
 
 (defcustom ecb-analyse-fontified-buckets '("Context" "Function")
   "*Buckets whose elements should be fontified as in the methods-buffer.
-If the name of a category/bucket is contained in this option then all elements
-of this bucket will be displayed as in the methods-buffer - at least if an
-element is a semantic-tag. This means if `ecb-font-lock-tags' is not nil these
-elements will be fontified and also displayed with an appropriate icon if
-possible. The default value does this only for the Context-bucket because for
-most of the other buckets this makes not really much sense.
+If the name of a category/bucket is contained in this option then
+all elements of this bucket will be displayed as in the
+methods-buffer - at least if an element is a semantic-tag. This
+means if `ecb-font-lock-tags' is not nil and the font-lock
+feature is loaded into Emacs these elements will be fontified and
+also displayed with an appropriate icon if possible. The default
+value does this only for the Context-bucket because for most of
+the other buckets this makes not really much sense.
 
 For available buckets see `ecb-analyse-collapsed-buckets'.
 

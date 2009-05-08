@@ -1835,19 +1835,22 @@ If an image is added then two text-properties are added to the FIRST-CHARS of
 the returned string: 'tree-buffer-image-start which holds 0 as value and
 'tree-buffer-image-length which holds the absolute value of FIRST-CHARS
 value."
-  (let ((image nil))
+  (let ((image nil)
+        (ret nil))
     (save-excursion
       (set-buffer name-of-buffer)
       (setq image (and icon-name (tree-buffer-find-image icon-name)))
-      (if image
-          (if (> first-chars 0)
-              (tree-buffer-add-image-icon-maybe
-               0 first-chars text-name image)
-            (concat (tree-buffer-add-image-icon-maybe
-                     0 (- first-chars)
-                     (make-string (- first-chars) ? ) image)
-                    text-name))
-        text-name))))
+      (setq ret
+            (if image
+                (if (> first-chars 0)
+                    (tree-buffer-add-image-icon-maybe
+                     0 first-chars text-name image)
+                  (concat (tree-buffer-add-image-icon-maybe
+                           0 (- first-chars)
+                           (make-string (- first-chars) ? ) image)
+                          text-name))
+              text-name)))
+    ret))
 
 
 (silentcomp-provide 'ecb-common-browser)

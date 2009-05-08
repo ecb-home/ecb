@@ -4466,11 +4466,6 @@ WINDOW-CONFIG must be got from the adviced version of
                     ecb-compile-window-width
                     ecb-windows-width ecb-windows-height))))
 
-;; (defecb-advice make-indirect-buffer after ecb-layout-basic-adviced-functions
-;;   "a testerli"
-;;   (if (ad-get-arg 2) ;; third argument clone is not nil
-;;       t ;; clear the toplevel cache
-;;       ))
 
 (defecb-advice current-window-configuration after ecb-layout-basic-adviced-functions
   "Stores some additional informations about the window-configurations needed
