@@ -320,7 +320,7 @@ a backtrace-buffer and inserts the contents of that."
             (insert "The contents of the *ecb-tag-dump* buffer were\n\n")
 	    (insert-buffer-substring tag-dump-buffer)
             ;; we must force the mark
-	    (goto-char (mark t))
+	    ;;(goto-char (mark t))
             (insert "\nEnd Insert *ecb-tag-dump* buffer" ))
         (insert "There was no *ecb-tag-dump* buffer" ))
       (insert "\n-----------------------------------------------------\n\n")
@@ -344,7 +344,7 @@ a backtrace-buffer and inserts the contents of that."
             (insert "The contents of the *Backtrace* buffer were\n\n")
 	    (insert-buffer-substring backtrace-buffer)
             ;; we must force the mark
-	    (goto-char (mark t))
+	    ;;(goto-char (mark t))
             (insert "\nEnd Insert *Backtrace* buffer" ))
         (insert "There was no *Backtrace* buffer" ))
       (insert "\n-----------------------------------------------------\n\n")
@@ -355,7 +355,7 @@ a backtrace-buffer and inserts the contents of that."
           (progn
             (insert "The contents of the *Messages* buffer were\n\n")
 	    (insert-buffer-substring messages-buffer)
-	    (goto-char (mark t))
+	    ;;(goto-char (mark t))
             (insert "\nEnd Insert *Messages* buffer" ))
         (insert "There was no *Messages* buffer" ))
       (insert  "\n-----------------------------------------------------\n\n"))))
@@ -399,9 +399,7 @@ could be interesting for support."
         (semantic-vars (sort (delete nil
                                      `(semantic-after-toplevel-cache-change-hook
                                        semantic-after-partial-cache-change-hook
-                                       ,(if (boundp 'semantic-format-face-alist)
-                                            'semantic-format-face-alist
-                                          'semantic-face-alist)
+                                       semantic-format-face-alist
                                        semantic-uml-colon-string
                                        semantic-orphaned-member-metaparent-type))
                              (function (lambda (l r)
