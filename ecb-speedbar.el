@@ -134,7 +134,7 @@ If the special value 'basic is set then ECB uses the setting of the option
                    (set symbol value)
                    (if (and (boundp 'ecb-minor-mode)
                             ecb-minor-mode)
-                       (ecb-activate-ecb-autocontrol-functions
+                       (ecb-activate-ecb-autocontrol-function
                         value 'ecb-analyse-buffer-sync))))
   :initialize 'custom-initialize-default)
   
@@ -355,7 +355,7 @@ future this could break."
       (setq ecb-speedbar-update-flag-old speedbar-update-flag))
   (setq speedbar-update-flag nil)
 
-  (ecb-activate-ecb-autocontrol-functions ecb-speedbar-buffer-sync-delay 
+  (ecb-activate-ecb-autocontrol-function ecb-speedbar-buffer-sync-delay 
                                           'ecb-speedbar-buffer-sync)
 
   ;;reset the selection variable

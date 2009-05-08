@@ -342,7 +342,7 @@ also be changed during running ECB."
   :initialize 'custom-initialize-default
   :set (function (lambda (sym val)
                    (set sym val)
-                   (ecb-activate-ecb-autocontrol-functions
+                   (ecb-activate-ecb-autocontrol-function
                     val 'ecb-stealthy-updates))))
                     
 
@@ -1410,20 +1410,20 @@ If ECB detects a problem it is reported and then an error is thrown."
                         'ecb-rebuild-methods-buffer-with-tagcache t)
 ;;               (add-hook (ecb--semantic--before-fetch-tags-hook)
 ;;                         'ecb-prevent-from-parsing-if-exceeding-threshold)              
-              (ecb-activate-ecb-autocontrol-functions ecb-highlight-tag-with-point-delay
-                                                      'ecb-tag-sync)
-              (ecb-activate-ecb-autocontrol-functions ecb-basic-buffer-sync-delay
-                                                      'ecb-basic-buffer-sync)
-              (ecb-activate-ecb-autocontrol-functions ecb-compilation-update-idle-time
-                                                      'ecb-compilation-buffer-list-changed-p)
-              (ecb-activate-ecb-autocontrol-functions 'post
-                                                      'ecb-layout-post-command-hook)
-              (ecb-activate-ecb-autocontrol-functions 'pre
-                                                      'ecb-layout-pre-command-hook)
-              (ecb-activate-ecb-autocontrol-functions 0.5
-                                                      'ecb-repair-only-ecb-window-layout)
-              (ecb-activate-ecb-autocontrol-functions 'post
-                                                      'ecb-handle-major-mode-visibilty)
+              (ecb-activate-ecb-autocontrol-function ecb-highlight-tag-with-point-delay
+                                                     'ecb-tag-sync)
+              (ecb-activate-ecb-autocontrol-function ecb-basic-buffer-sync-delay
+                                                     'ecb-basic-buffer-sync)
+              (ecb-activate-ecb-autocontrol-function ecb-compilation-update-idle-time
+                                                     'ecb-compilation-buffer-list-changed-p)
+              (ecb-activate-ecb-autocontrol-function 'post
+                                                     'ecb-layout-post-command-hook)
+              (ecb-activate-ecb-autocontrol-function 'pre
+                                                     'ecb-layout-pre-command-hook)
+              (ecb-activate-ecb-autocontrol-function 0.5
+                                                     'ecb-repair-only-ecb-window-layout)
+              (ecb-activate-ecb-autocontrol-function 'post
+                                                     'ecb-handle-major-mode-visibilty)
               (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
               (add-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
 
@@ -1431,11 +1431,11 @@ If ECB detects a problem it is reported and then an error is thrown."
 
               ;; after adding all idle-timers and post- and pre-command-hooks we
               ;; activate the monitoring
-              (ecb-activate-ecb-autocontrol-functions 1 'ecb-monitor-autocontrol-functions)
+              (ecb-activate-ecb-autocontrol-function 1 'ecb-monitor-autocontrol-functions)
 
               ;; We activate the stealthy update mechanism
               (ecb-stealthy-function-state-init)
-              (ecb-activate-ecb-autocontrol-functions ecb-stealthy-tasks-delay
+              (ecb-activate-ecb-autocontrol-function ecb-stealthy-tasks-delay
                                                       'ecb-stealthy-updates)
             
               ;; running the compilation-buffer update first time

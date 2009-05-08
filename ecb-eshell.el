@@ -156,7 +156,7 @@ If the special value 'basic is set then ECB uses the setting of the option
                    (set symbol value)
                    (if (and (boundp 'ecb-minor-mode)
                             ecb-minor-mode)
-                       (ecb-activate-ecb-autocontrol-functions
+                       (ecb-activate-ecb-autocontrol-function
                         value 'ecb-analyse-buffer-sync))))
   :initialize 'custom-initialize-default)
   
@@ -213,8 +213,8 @@ active.")
     (ecb-layout-debug-error "eshell around-advice: comp-win will be toggled.")
     (ecb-toggle-compile-window 1))
 
-  (ecb-activate-ecb-autocontrol-functions ecb-eshell-buffer-sync-delay
-                                          'ecb-eshell-buffer-sync)
+  (ecb-activate-ecb-autocontrol-function ecb-eshell-buffer-sync-delay
+                                         'ecb-eshell-buffer-sync)
   ;; some hooks
   (add-hook 'eshell-post-command-hook 'ecb-eshell-recenter)
   (add-hook 'eshell-post-command-hook 'ecb-eshell-fit-window-to-output)

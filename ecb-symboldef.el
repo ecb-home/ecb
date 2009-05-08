@@ -165,7 +165,7 @@ If the special value 'basic is set then ECB uses the setting of the option
                    (set symbol value)
                    (if (and (boundp 'ecb-minor-mode)
                             ecb-minor-mode)
-                       (ecb-activate-ecb-autocontrol-functions
+                       (ecb-activate-ecb-autocontrol-function
                         value 'ecb-analyse-buffer-sync))))
   :initialize 'custom-initialize-default)
   
@@ -435,8 +435,8 @@ symbol. Displays the found text in the buffer of
   "Set the buffer in the current window to the tag-definition-buffer and make
 this window dedicated for this buffer."
   (switch-to-buffer (get-buffer-create ecb-symboldef-buffer-name))
-  (ecb-activate-ecb-autocontrol-functions ecb-symboldef-buffer-sync-delay
-                                          'ecb-symboldef-buffer-sync))
+  (ecb-activate-ecb-autocontrol-function ecb-symboldef-buffer-sync-delay
+                                         'ecb-symboldef-buffer-sync))
 
 (defun ecb-maximize-window-symboldef ()
   "Maximize the ECB-symbol-defnition window.

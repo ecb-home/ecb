@@ -1051,7 +1051,7 @@ by semantic!"
   :set (function (lambda (symbol value)
                    (set symbol value)
                    (if (and (boundp 'ecb-minor-mode) ecb-minor-mode)
-                       (ecb-activate-ecb-autocontrol-functions value
+                       (ecb-activate-ecb-autocontrol-function value
                                                                'ecb-tag-sync))))
   :initialize 'custom-initialize-default)
 

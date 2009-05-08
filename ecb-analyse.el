@@ -245,7 +245,7 @@ If the special value 'basic is set then ECB uses the setting of the option
                    (set symbol value)
                    (if (and (boundp 'ecb-minor-mode)
                             ecb-minor-mode)
-                       (ecb-activate-ecb-autocontrol-functions
+                       (ecb-activate-ecb-autocontrol-function
                         value 'ecb-analyse-buffer-sync))))
   :initialize 'custom-initialize-default)
 
@@ -512,8 +512,8 @@ used as window."
 
 (defecb-window-dedicator ecb-set-analyse-buffer ecb-analyse-buffer-name
   "Display the analyse buffer in current window and make window dedicated."
-  (ecb-activate-ecb-autocontrol-functions ecb-analyse-buffer-sync-delay
-                                          'ecb-analyse-buffer-sync)
+  (ecb-activate-ecb-autocontrol-function ecb-analyse-buffer-sync-delay
+                                         'ecb-analyse-buffer-sync)
   (switch-to-buffer ecb-analyse-buffer-name))
 
 (defun ecb-maximize-window-analyse ()
