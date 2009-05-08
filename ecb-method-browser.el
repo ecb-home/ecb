@@ -643,16 +643,16 @@ Current point depends on the clicked tag:
                                               :value ecb-jde-show-class-source)
                                        (function :tag "Function"))))))
 
-(defcustom ecb-display-image-icons-for-semantic-tags ecb-images-can-be-used
+(defcustom ecb-display-image-icons-for-semantic-tags t
   "*Display nice and pretty icons for semantic-tags in the Methods-buffer.
-This option takes only effect if Emacs can display images and if
+A non nil value takes only effect if Emacs can display images and if
 `ecb-tree-buffer-style' is set to 'image."
   :group 'ecb-methods
   :type 'boolean)
 
 (defsubst ecb-use-images-for-semantic-tags ()
   (and ecb-display-image-icons-for-semantic-tags
-       ecb-images-can-be-used
+       (ecb-images-can-be-used)
        (equal ecb-tree-buffer-style 'image)))
 
 (defcustom ecb-post-process-semantic-taglist

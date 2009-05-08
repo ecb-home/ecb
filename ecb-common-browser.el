@@ -201,16 +201,17 @@ the tree-buffer has to be horizontal scrolled to expand an item."
   :group 'ecb-most-important
   :type 'boolean)
 
-
-(defcustom ecb-tree-buffer-style (if ecb-images-can-be-used
-                                     'image
-                                   'ascii-guides)
+;; we can savely set here 'image as default because the tree-buffer-lib checks
+;; itslef if image-support is possible and switches back to 'ascii-style if not.
+(defcustom ecb-tree-buffer-style 'image
   "*The style of the tree-buffers.
 There are three different styles available:
 
 Image-style \(value 'image):
 Very nice and modern - just try it. For this style the options
 `ecb-tree-indent' and `ecb-tree-expand-symbol-before' have no effect!
+The value 'image means use image-style if images can be displayed with current
+Emacs-setup \(otherwise auto. 'ascii-style is used).
 Note: GNU Emacs <= 21.3.X for Windows does not support image-display so ECB
 uses always 'ascii-guides even when here 'image is set!
 
