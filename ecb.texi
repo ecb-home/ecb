@@ -23,7 +23,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.220 2009/05/07 06:59:43 berndl Exp $
+@c $Id: ecb.texi,v 1.221 2009/05/08 11:43:19 berndl Exp $
 
 @setfilename ecb.info
 
@@ -6788,11 +6788,13 @@ activate ECB again to take effect
 The style of the tree-buffers.
 There are three different styles available:
 
-Image-style (value @code{image}): Very nice and modern - just try it.
-For this style the options @code{ecb-tree-indent} and
-@code{ecb-tree-expand-symbol-before} have no effect! Note: GNU Emacs
-<= 21.3.X for Windows does not support image-display so ECB uses
-always 'ascii-guides even when here 'image is set!
+Image-style (value @code{image}): Very nice and modern - just try it. For this
+style the options @code{ecb-tree-indent} and
+@code{ecb-tree-expand-symbol-before} have no effect! The value 'image means
+use image-style if images can be displayed with current Emacs-setup
+\(otherwise auto. 'ascii-style is used). Note: GNU Emacs <= 21.3.X for Windows
+does not support image-display so ECB uses always 'ascii-guides even when here
+'image is set!
 
 Ascii-style with guide-lines (value @code{ascii-guides}):
 @example
@@ -7854,8 +7856,8 @@ regardless their size.
 
 
 @defopt display-image-icons-for-semantic-tags
-Display nice and pretty icons for semantic-tags in the Methods-buffer.
-This option takes only effect if Emacs can display images and if
+Display nice and pretty icons for semantic-tags in the Methods-buffer. A non
+nil value takes only effect if Emacs can display images and if
 @code{ecb-tree-buffer-style} is set to @code{image}.
 @end defopt
 

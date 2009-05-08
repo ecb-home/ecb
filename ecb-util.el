@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.149 2009/05/07 17:05:12 berndl Exp $
+;; $Id: ecb-util.el,v 1.150 2009/05/08 11:43:19 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -131,12 +131,27 @@
        (file-exists-p (expand-file-name (concat ecb-ecb-dir "_pkg.el")))
        (file-exists-p (expand-file-name (concat ecb-ecb-dir "auto-autoloads.el")))))
 
-(defconst ecb-images-can-be-used
-  (and (or (fboundp 'defimage)
-           (fboundp 'make-image-specifier))
-       (if (fboundp 'display-images-p)
-           (display-images-p)
-         window-system)))
+;; image support possible with current Emacs setup?
+;; This will first checked at activation-time of ECB because otherwise usage
+;; of emacs --deamon could fail...
+
+(defvar ecb-images-can-be-used nil
+  "INTERNAL - DO NOT USE AND CHANGE!")
+(defvar ecb-images-can-be-used-init-p nil
+  "INTERNAL - DO NOT USE AND CHANGE!")
+
+(defsubst ecb-images-can-be-used ()
+  "Not nil if images can be used with current Emacs setup."
+  (if ecb-images-can-be-used-init-p
+      ecb-images-can-be-used
+    (setq ecb-images-can-be-used-init-p t)
+    (setq ecb-images-can-be-used
+          (and (or (fboundp 'defimage)
+                   (fboundp 'make-image-specifier))
+               (if (fboundp 'display-images-p)
+                   (display-images-p)
+                 window-system)))))
+
 
 ;;; ----- Tracing ------------------------------------------
 

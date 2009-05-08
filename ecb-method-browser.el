@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.92 2009/05/08 08:05:45 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.93 2009/05/08 11:43:19 berndl Exp $
 
 ;;; Commentary:
 
@@ -643,16 +643,16 @@ Current point depends on the clicked tag:
                                               :value ecb-jde-show-class-source)
                                        (function :tag "Function"))))))
 
-(defcustom ecb-display-image-icons-for-semantic-tags ecb-images-can-be-used
+(defcustom ecb-display-image-icons-for-semantic-tags t
   "*Display nice and pretty icons for semantic-tags in the Methods-buffer.
-This option takes only effect if Emacs can display images and if
+A non nil value takes only effect if Emacs can display images and if
 `ecb-tree-buffer-style' is set to 'image."
   :group 'ecb-methods
   :type 'boolean)
 
 (defsubst ecb-use-images-for-semantic-tags ()
   (and ecb-display-image-icons-for-semantic-tags
-       ecb-images-can-be-used
+       (ecb-images-can-be-used)
        (equal ecb-tree-buffer-style 'image)))
 
 (defcustom ecb-post-process-semantic-taglist
