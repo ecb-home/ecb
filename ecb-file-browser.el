@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.74 2009/05/07 17:05:12 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.75 2009/05/08 15:51:31 berndl Exp $
 
 ;;; Commentary:
 
@@ -2449,6 +2449,7 @@ Returns t if the current history filter has been applied otherwise nil."
                                              (ecb-buffer-file-name buf)))
                                  (base-buf (buffer-base-buffer buf)))
                              (if (and file-name
+                                      (ecb-buffer-or-file-readable-p file-name)
                                       (not (member (buffer-name buf)
                                                    ignore-buffername-list))
                                       (not (ecb-check-filename-for-history-exclude file-name))
