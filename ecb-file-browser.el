@@ -2449,6 +2449,7 @@ Returns t if the current history filter has been applied otherwise nil."
                                              (ecb-buffer-file-name buf)))
                                  (base-buf (buffer-base-buffer buf)))
                              (if (and file-name
+                                      (ecb-buffer-or-file-readable-p file-name)
                                       (not (member (buffer-name buf)
                                                    ignore-buffername-list))
                                       (not (ecb-check-filename-for-history-exclude file-name))
