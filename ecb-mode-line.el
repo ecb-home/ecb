@@ -26,6 +26,7 @@
 
 ;; $Id$
 
+
 ;;; Commentary:
 ;;
 ;; Contains all mode-line enhancements for ECB.
