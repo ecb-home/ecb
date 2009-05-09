@@ -24,8 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-mode-line.el,v 1.38 2009/05/09 04:45:02 berndl Exp $
-
+;; $Id: ecb-mode-line.el,v 1.39 2009/05/09 04:46:09 berndl Exp $
 
 ;;; Commentary:
 ;;
