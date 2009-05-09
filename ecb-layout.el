@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.267 2009/05/08 08:05:45 berndl Exp $
+;; $Id: ecb-layout.el,v 1.268 2009/05/09 15:23:50 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -958,14 +958,22 @@ Per default this is only enabled for `switch-to-buffer'."
                      :value switch-to-buffer)))
 
 (defun ecb-canonical-ecb-windows-list (&optional winlist)
-  "Return a list of all current visible special dedicated ECB-windows
-\(starting from the left-most top-most window) in the order `other-window'
+  "Return a list of all visible ECB-windows.
+
+Such a window must be dedicated to its ecb-buffer and for the related buffer
+a dedicator-function must be defined with `defecb-window-dedicator' so this
+dedicator is registered for that ecb-buffer.
+The list starts from the left-most top-most window in the order `other-window'
 would walk through these windows."
-  (let ((windows-list (or winlist (ecb-canonical-windows-list))))
+  (let ((windows-list (or winlist (ecb-canonical-windows-list)))
+        (registered-ecb-buffers (ecb-dedicated-special-buffers))
+        )
     (delete nil (mapcar (function (lambda (elem)
-                                    (if (and (not (member elem
-                                                          ecb-layout-temporary-dedicated-windows))
-                                             (window-dedicated-p elem))
+                                    (if (and (not (memq elem
+                                                        ecb-layout-temporary-dedicated-windows))
+                                             (window-dedicated-p elem)
+                                             (memq (window-buffer elem) registered-ecb-buffers)
+                                             )
                                         elem)))
                         windows-list))))
 
@@ -3185,6 +3193,23 @@ NTH-WINDOW is nil then it is treated as 1."
                                        minibuf-win
                                        point-loc
                                        nth-window)))))))
+
+;; (defecb-advice other-window around ecb-layout-basic-adviced-functions
+;;   "The ECB-version of `other-window'. Works exactly like the original function
+;; with the following ECB-adjustment: The behavior depends on
+;; `ecb-other-window-behavior'."
+;;   (if (or (not ecb-minor-mode)
+;;           (not (equal (selected-frame) ecb-frame)))
+;;       (ecb-with-original-basic-functions
+;;        ad-do-it)
+;;     (let* ((count (if (ad-get-arg 0)
+;;                       (ad-get-arg 0)
+;;                     1))
+;;            (o-w (let ((ecb-other-window-behavior (if (interactive-p)
+;;                                                      ecb-other-window-behavior
+;;                                                    'only-edit)))
+;;                   (ecb-get-other-window count))))
+;;       (select-window o-w))))
 
 (defecb-advice other-window around ecb-layout-basic-adviced-functions
   "The ECB-version of `other-window'. Works exactly like the original function

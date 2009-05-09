@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.116 2009/05/08 15:37:27 berndl Exp $
+;; $Id: ecb-help.el,v 1.117 2009/05/09 15:23:50 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -251,8 +251,9 @@ this."
         ;;prepare the basic buffer
         (reporter-submit-bug-report
          ecb-problem-report-mail-address
-         (format "ECB: %s, semantic: %s, eieio: %s, speedbar: %s, JDEE: %s"
+         (format "ECB: %s, CEDET: %s, semantic: %s, eieio: %s, speedbar: %s, JDEE: %s"
                  ecb-version
+                 cedet-version
                  semantic-version
                  eieio-version
                  speedbar-version
@@ -442,6 +443,7 @@ could be interesting for support."
                                    ecb-toggle-layout-state
                                    ecb-tree-buffer-creators
                                    ecb-tree-buffers
+                                   ecb-buffer-setfunction-registration
                                    ecb-current-maximized-ecb-buffer-name
                                    ecb-special-ecb-buffers-of-current-layout)
                                  (function (lambda (l r)
