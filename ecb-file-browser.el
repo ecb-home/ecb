@@ -2449,6 +2449,12 @@ Returns t if the current history filter has been applied otherwise nil."
                                              (ecb-buffer-file-name buf)))
                                  (base-buf (buffer-base-buffer buf)))
                              (if (and file-name
+                                      ;; needed for revision-files temporally
+                                      ;; checked out (e.g. by ediff-revision)
+                                      ;; these not longer existing files
+                                      ;; would pollute the history - we do not
+                                      ;; want entries which could not loaded
+                                      ;; into a buffer
                                       (ecb-buffer-or-file-readable-p file-name)
                                       (not (member (buffer-name buf)
                                                    ignore-buffername-list))

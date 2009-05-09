@@ -251,8 +251,9 @@ this."
         ;;prepare the basic buffer
         (reporter-submit-bug-report
          ecb-problem-report-mail-address
-         (format "ECB: %s, semantic: %s, eieio: %s, speedbar: %s, JDEE: %s"
+         (format "ECB: %s, CEDET: %s, semantic: %s, eieio: %s, speedbar: %s, JDEE: %s"
                  ecb-version
+                 cedet-version
                  semantic-version
                  eieio-version
                  speedbar-version
@@ -442,6 +443,7 @@ could be interesting for support."
                                    ecb-toggle-layout-state
                                    ecb-tree-buffer-creators
                                    ecb-tree-buffers
+                                   ecb-buffer-setfunction-registration
                                    ecb-current-maximized-ecb-buffer-name
                                    ecb-special-ecb-buffers-of-current-layout)
                                  (function (lambda (l r)
