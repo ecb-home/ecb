@@ -25,9 +25,10 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-jde.el,v 1.18 2009/04/21 15:23:22 berndl Exp $
+;; $Id: ecb-jde.el,v 1.19 2009/05/10 16:41:42 berndl Exp $
 
 ;;; Commentary:
+;;
 ;;
 ;; Contains code for JDEE integrations into ECB or vice versa
 ;; JDEE is available at http://jdee.sunsite.dk/
