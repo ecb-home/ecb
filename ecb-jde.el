@@ -29,6 +29,7 @@
 
 ;;; Commentary:
 ;;
+;;
 ;; Contains code for JDEE integrations into ECB or vice versa
 ;; JDEE is available at http://jdee.sunsite.dk/
 
