@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.150 2009/05/08 11:43:19 berndl Exp $
+;; $Id: ecb-util.el,v 1.151 2009/05/10 16:53:19 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2046,6 +2046,92 @@ height is that fraction of the frame."
           (if (> enlargement 0)
               (enlarge-window enlargement))))
     (error "Window is not alive!")))
+
+(defun ecb-fit-window-to-buffer (&optional window max-height min-height)
+  "Make WINDOW the right height to display its contents exactly.
+If WINDOW is omitted or nil, it defaults to the selected window.
+If the optional argument MAX-HEIGHT is supplied, it is the maximum height
+  the window is allowed to be, defaulting to the frame height.
+If the optional argument MIN-HEIGHT is supplied, it is the minimum
+  height the window is allowed to be, defaulting to `window-min-height'.
+
+The heights in MAX-HEIGHT and MIN-HEIGHT include the mode-line and/or
+header-line."
+  (interactive)
+
+  (when (null window)
+    (setq window (selected-window)))
+  (when (null max-height)
+    (setq max-height (frame-height (window-frame window))))
+
+  (let* ((buf
+	  ;; Buffer that is displayed in WINDOW
+	  (window-buffer window))
+	 (window-height
+	  ;; The current height of WINDOW
+	  (window-height window))
+	 (desired-height
+	  ;; The height necessary to show the buffer displayed by WINDOW
+	  ;; (`count-screen-lines' always works on the current buffer).
+	  (with-current-buffer buf
+	    (+ (count-screen-lines)
+	       ;; If the buffer is empty, (count-screen-lines) is
+	       ;; zero.  But, even in that case, we need one text line
+	       ;; for cursor.
+	       (if (= (point-min) (point-max))
+		   1 0)
+	       ;; For non-minibuffers, count the mode-line, if any
+	       (if (and (not (window-minibuffer-p window))
+			mode-line-format)
+		   1 0)
+	       ;; Count the header-line, if any
+	       (if header-line-format 1 0))))
+	 (delta
+	  ;; Calculate how much the window height has to change to show
+	  ;; desired-height lines, constrained by MIN-HEIGHT and MAX-HEIGHT.
+	  (- (max (min desired-height max-height)
+		  (or min-height window-min-height))
+	     window-height))
+	 ;; We do our own height checking, so avoid any restrictions due to
+	 ;; window-min-height.
+	 (window-min-height 1))
+
+    ;; Don't try to redisplay with the cursor at the end
+    ;; on its own line--that would force a scroll and spoil things.
+    (when (with-current-buffer buf
+	    (and (eobp) (bolp) (not (bobp))))
+      (set-window-point window (1- (window-point window))))
+
+    (save-selected-window
+      (select-window window)
+
+      ;; Adjust WINDOW to the nominally correct size (which may actually
+      ;; be slightly off because of variable height text, etc).
+      (unless (zerop delta)
+	(enlarge-window delta))
+
+      ;; Check if the last line is surely fully visible.  If not,
+      ;; enlarge the window.
+      (let ((end (with-current-buffer buf
+		   (save-excursion
+		     (goto-char (point-max))
+		     (when (and (bolp) (not (bobp)))
+		       ;; Don't include final newline
+		       (backward-char 1))
+		     (when truncate-lines
+		       ;; If line-wrapping is turned off, test the
+		       ;; beginning of the last line for visibility
+		       ;; instead of the end, as the end of the line
+		       ;; could be invisible by virtue of extending past
+		       ;; the edge of the window.
+		       (forward-line 0))
+		     (point)))))
+	(set-window-vscroll window 0)
+	(while (and (< desired-height max-height)
+		    (= desired-height (window-height window))
+		    (not (pos-visible-in-window-p end window)))
+	  (enlarge-window 1)
+	  (setq desired-height (1+ desired-height)))))))
 
 (defun ecb-scroll-window (point window-start)
   "Scrolls window of current buffer. The window will start at WINDOW-START and

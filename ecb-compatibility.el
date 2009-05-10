@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compatibility.el,v 1.11 2009/05/06 16:16:25 berndl Exp $
+;; $Id: ecb-compatibility.el,v 1.12 2009/05/10 16:53:19 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -55,7 +55,7 @@
 (defecb-advice-set ecb-compatibility-advices
   "Contains all advices needed for package-compatibility.")
 
-;; package bs.el
+;; package bs.el ----------------------------------------------------------
 
 (defecb-advice bs-show before ecb-compatibility-advices
   "Ensures `bs-show' works well when called from another window as an
@@ -70,7 +70,7 @@ edit-window. Does nothing if called in another frame as the `ecb-frame'."
                  ecb-compile-window-height)
         (display-buffer (buffer-name my-bs-buffer))))))
 
-;; package electric.el
+;; package electric.el ------------------------------------------------------
 
 
 (defecb-advice one-window-p around ecb-always-disabled-advices
@@ -125,7 +125,7 @@ BUFFER is displayed in an edit-window!"
     (if (get-buffer "*Buffer List*")
         (bury-buffer (get-buffer "*Buffer List*")))))
 
-;; package master.el (only Emacs >= 22.X)
+;; package master.el (only Emacs >= 22.X) ------------------------------------
 
 ;; The adviced version of switch-to-buffer-other-window can redraw the layout
 ;; (e.g. if the buffer in the compile-window is the slave and the
@@ -144,7 +144,7 @@ BUFFER is displayed in an edit-window!"
              (point-loc (ecb-where-is-point))
              (p (point)))
          (if (not (eq (window-buffer window) (get-buffer master-of)))
-         (switch-to-buffer-other-window master-of))
+             (switch-to-buffer-other-window master-of))
          (if (ad-get-arg 0)
              (condition-case nil
                  (apply (ad-get-arg 0) (ad-get-arg 1))
@@ -157,11 +157,13 @@ BUFFER is displayed in an edit-window!"
                           (compile
                            ecb-compile-window)
                           (minibuf
-                           (minibuffer-window ecb-frame))))
+                           (minibuffer-window ecb-frame))
+                          (other-dedicated
+                           (ecb-get-window-by-number (cdr point-loc)))))
          (goto-char (point))))))
    )
 
-;; package scroll-all.el
+;; package scroll-all.el --------------------------------------------------
 
 
 (defecb-advice count-windows around ecb-always-disabled-advices
@@ -190,7 +192,7 @@ if `scroll-all-mode' is nil return the number of visible windows."
         ad-do-it))))
 
 
-;; package tmm.el
+;; package tmm.el --------------------------------------------------------
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: We can not use our
 ;; Electric-pop-up-window advice instaed of this advice because otherwise
@@ -217,7 +219,85 @@ if `scroll-all-mode' is nil return the number of visible windows."
        ad-do-it)))
  )
 
-;; view-stuff
+;; ediff-stuff ---------------------------------------------------------------
+
+(silentcomp-defun ediff-cleanup-mess)
+(silentcomp-defvar ediff-quit-hook)
+
+(defecb-advice ediff-setup-windows around ecb-compatibility-advices
+  "Ediff can manage all its windows with deactivated ECB-advices.
+
+This is possible because we have in the setup-hook cleared the whole ecb-frame."
+  (if (and (boundp 'ecb-minor-mode)
+           ecb-minor-mode
+           (eq (selected-frame) ecb-frame))
+      (ecb-with-original-basic-functions
+       ad-do-it)
+    ad-do-it))
+
+(defvar ecb-before-ediff-window-config nil)
+
+;; We must not add this function to `ediff-before-setup-windows-hook' because
+;; this hook is called very often - see docu. The hook
+;; `ediff-before-setup-hook' is called only once - so it can be used to store
+;; window-configs!
+(defun ecb-ediff-before-setup-hook ()
+  "Special ecb-setup before starting ediff."
+  (if (and ecb-minor-mode
+           (equal (selected-frame) ecb-frame))
+      (progn
+        (setq ecb-before-ediff-window-config (ecb-current-window-configuration))
+        (if ecb-run-ediff-in-ecb-frame
+            ;; !!!! we must delete all ECB-windows and the compile-window so
+            ;; ediff can manage the whole ecb-frame concerning its windows!
+            ;; This is the reason why we can advice `ediff-setup-windows' so
+            ;; it runs with all original layout basic functions (especially
+            ;; delete-other-window is necessary!)
+            (progn
+              (ecb-toggle-ecb-windows -1)
+              (ecb-toggle-compile-window -1))
+          (if (not ecb-windows-hidden)
+              (delete-other-windows (car (ecb-canonical-edit-windows-list))))))
+    (setq ecb-before-ediff-window-config nil)))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Should we add this function to
+;; `ediff-suspend-hook' too?! We should add something but this functions is
+;; not perfectly....in general suspending ediff need some work here...
+(defun ecb-ediff-quit-hook ()
+  "Added to the end of `ediff-quit-hook' during ECB is activated. It
+does all necessary after finishing ediff."
+  (when ecb-minor-mode
+    (if (and (not (equal (selected-frame) ecb-frame))
+             (y-or-n-p
+              "Ediff finished. Do you want to delete the extra ediff-frame? "))
+        (delete-frame (selected-frame) t))
+    (select-frame ecb-frame)
+    (when ecb-before-ediff-window-config
+      (ecb-set-window-configuration ecb-before-ediff-window-config)
+      (setq ecb-before-ediff-window-config nil))))
+
+(defun ecb-activate-ediff-compatibility ()
+  (if (boundp 'ediff-quit-hook)
+      (put 'ediff-quit-hook 'ecb-ediff-quit-hook-value
+           ediff-quit-hook))
+  (add-hook 'ediff-quit-hook 'ediff-cleanup-mess)
+  (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: suspending ediff and
+  ;; especially reactivating does currently not really work well...
+  ;; (add-hook 'ediff-suspend-hook 'ecb-ediff-quit-hook t)
+  (add-hook 'ediff-before-setup-hook
+            'ecb-ediff-before-setup-hook))
+
+(defun ecb-deactivate-ediff-compatibility ()
+  (if (get 'ediff-quit-hook 'ecb-ediff-quit-hook-value)
+      (setq ediff-quit-hook (get 'ediff-quit-hook
+                                 'ecb-ediff-quit-hook-value))
+    (remove-hook 'ediff-quit-hook 'ecb-ediff-quit-hook))
+  (remove-hook 'ediff-before-setup-hook
+               'ecb-ediff-before-setup-hook))
+
+
+;; view-stuff --------------------------------------------------------------------
 
 ;; The code of the view-package of GNU Emacs has to be advices when the
 ;; view-buffer is displayed in the compile-window of ECB.
@@ -243,8 +323,6 @@ if `scroll-all-mode' is nil return the number of visible windows."
 ;; one will be the deleted one...how to go back to that window we have to go
 ;; back??
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: we must test what happens, when
-;; we use a compile-window not full-frame-width - In Emasc 22 and 23!!
 (when-ecb-running-emacs
  (defecb-advice view-mode-exit around ecb-compatibility-advices
    "Makes view-mode compatible with ECB.
@@ -277,17 +355,7 @@ selected afterwards."
 )
 
 
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: we need to add compatibilty to
-;; view.el - especially view-mode-exit needs to be adviced: When vioew-buffer
-;; in compile-window then view-mode-exit just should select
-;; ecb-last-edit-window-with-point and call ecb-toggle-compile-window-height
-;; with -1 (so it is shrinked down). This should fix already a lot of problems
-;; - but we hav to test with Emacs 23 too...
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Then we have to test, we
-;; displaying completions in Emacs 23 with a compile-window does not longer
-;; work!!!
+;; not yet done ----------------------------------------------------------------
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
 ;; *** The new package gdb-ui.el provides an enhanced graphical interface to
