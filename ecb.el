@@ -225,8 +225,6 @@ is loaded or the value of `cedet-version' at ECB-compilation time.")
 (silentcomp-defun find-menu-item)
 (silentcomp-defun add-submenu)
 (silentcomp-defun delete-menu-item)
-(silentcomp-defun ediff-cleanup-mess)
-(silentcomp-defvar ediff-quit-hook)
 (silentcomp-defun Info-goto-node)
 
 (silentcomp-defun ecb-speedbar-deactivate)
@@ -1443,16 +1441,7 @@ If ECB detects a problem it is reported and then an error is thrown."
                             
               ;; ediff-stuff; we operate here only with symbols to avoid bytecompiler
               ;; warnings
-              (if (boundp 'ediff-quit-hook)
-                  (put 'ediff-quit-hook 'ecb-ediff-quit-hook-value
-                       ediff-quit-hook))
-              (add-hook 'ediff-quit-hook 'ediff-cleanup-mess)
-              (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
-              ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: suspending ediff and
-              ;; especially reactivating does currently not really work well...
-              ;; (add-hook 'ediff-suspend-hook 'ecb-ediff-quit-hook t)
-              (add-hook 'ediff-before-setup-hook
-                        'ecb-ediff-before-setup-hook)
+              (ecb-activate-ediff-compatibility)
 
               ;; enabling the VC-support
               (ecb-vc-enable-internals 1)
@@ -1616,42 +1605,6 @@ If ECB detects a problem it is reported and then an error is thrown."
         ))))
 
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Should we add this function to
-;; `ediff-suspend-hook' too?! We should add something but this functions is
-;; not perfectly....in general suspending ediff need some work here...
-(defun ecb-ediff-quit-hook ()
-  "Added to the end of `ediff-quit-hook' during ECB is activated. It
-does all necessary after finishing ediff."
-  (when ecb-minor-mode
-    (if (and (not (equal (selected-frame) ecb-frame))
-             (y-or-n-p
-              "Ediff finished. Do you want to delete the extra ediff-frame? "))
-        (delete-frame (selected-frame) t))
-    (select-frame ecb-frame)
-    (when ecb-before-ediff-window-config
-      (ecb-set-window-configuration ecb-before-ediff-window-config)
-      (setq ecb-before-ediff-window-config nil))))
-
-(defvar ecb-before-ediff-window-config nil)
-
-;; We must not add this function to `ediff-before-setup-windows-hook' because
-;; this hook is called very often - see docu. The hook
-;; `ediff-before-setup-hook' is called only once - so it can be used to store
-;; window-configs!
-(defun ecb-ediff-before-setup-hook ()
-  "Special ecb-setup before starting ediff."
-  (if (and ecb-minor-mode
-           (equal (selected-frame) ecb-frame))
-      (progn
-        (setq ecb-before-ediff-window-config (ecb-current-window-configuration))
-        (if ecb-run-ediff-in-ecb-frame
-            (progn
-              (ecb-toggle-ecb-windows -1)
-              (ecb-toggle-compile-window -1))
-          (if (not ecb-windows-hidden)
-              (delete-other-windows (car (ecb-canonical-edit-windows-list))))))
-    (setq ecb-before-ediff-window-config nil)))
-
 (defun ecb-deactivate ()
   "Deactivates the ECB and kills all ECB buffers and windows."
   (interactive)
@@ -1699,13 +1652,9 @@ does all necessary after finishing ediff."
       (remove-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
 
       (remove-hook 'find-file-hooks 'ecb-find-file-hook)
-      
-      (if (get 'ediff-quit-hook 'ecb-ediff-quit-hook-value)
-          (setq ediff-quit-hook (get 'ediff-quit-hook
-                                     'ecb-ediff-quit-hook-value))
-        (remove-hook 'ediff-quit-hook 'ecb-ediff-quit-hook))
-      (remove-hook 'ediff-before-setup-hook
-                   'ecb-ediff-before-setup-hook)
+
+      ;; ediff-stuff
+      (ecb-deactivate-ediff-compatibility)
 
       ;; disabling the VC-support
       (ecb-vc-enable-internals -1)
