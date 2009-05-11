@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compatibility.el,v 1.12 2009/05/10 16:53:19 berndl Exp $
+;; $Id: ecb-compatibility.el,v 1.13 2009/05/11 10:19:03 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -224,16 +224,16 @@ if `scroll-all-mode' is nil return the number of visible windows."
 (silentcomp-defun ediff-cleanup-mess)
 (silentcomp-defvar ediff-quit-hook)
 
-(defecb-advice ediff-setup-windows around ecb-compatibility-advices
-  "Ediff can manage all its windows with deactivated ECB-advices.
+;; (defecb-advice ediff-setup-windows around ecb-compatibility-advices
+;;   "Ediff can manage all its windows with deactivated ECB-advices.
 
-This is possible because we have in the setup-hook cleared the whole ecb-frame."
-  (if (and (boundp 'ecb-minor-mode)
-           ecb-minor-mode
-           (eq (selected-frame) ecb-frame))
-      (ecb-with-original-basic-functions
-       ad-do-it)
-    ad-do-it))
+;; This is possible because we have in the setup-hook cleared the whole ecb-frame."
+;;   (if (and (boundp 'ecb-minor-mode)
+;;            ecb-minor-mode
+;;            (eq (selected-frame) ecb-frame))
+;;       (ecb-with-original-basic-functions
+;;        ad-do-it)
+;;     ad-do-it))
 
 (defvar ecb-before-ediff-window-config nil)
 

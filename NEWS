@@ -187,7 +187,7 @@
     compile-window is used and never. This makes ECB fully compatible with the
     option `pop-up-frames'.
       
-** Full compatibility with Emacs 22
+** Full compatibility with Gnu Emacs 22
 
 *** `balance-windows' now works with Emacs 22 too
     Cause of the completely new implemantation based on `window-tree' ECB
@@ -220,7 +220,7 @@
     adopts this behavior also for its adviced version so the command works
     in a smart manner optimized for ECB.
 
-** Better compatibility with Emacs 23
+** Much better compatibility with forthcoming Gnu Emacs 23
 
 *** Removed an annoying behavior which has set the mark hundred of times even
     when the user just moves the cursor.
@@ -233,6 +233,31 @@
 
 *** The adviced `display-buffer' is now fully compatible with Emacs 23
     This means simply that you can work with ECB and Emacs 23 as you expect.
+
+*** Fixing some incompatibilities with Emacs 23 concerning using temp. buffers
+
+    The fit-window-to-buffer version of Emacs 23 can destroy windows and is
+    therefore not useable within ECB - now ECB has its own - stolen and
+    adapted from Emacs 22.
+
+    In addition to this the internal help-window-manager of Emacs 23
+    (responsible for displaying *Help*-buffers) chooses sometimes dedicated
+    windows (which is a problem because ECB uses dedicated windows for its
+    own special ECB-windows) whereas Emacs 22 doesn't do this. Now ECB works
+    smoothly with Emacs 23 help-system. Same for view-mode.
+
+*** ediff-support of ECB is now also fully Emacs 23-compatible
+
+    Emacs 23 uses dedicated windows: Now ECB can deal with frame-layouts where
+    some windows are neither an ecb-, edit- nor a compile-window. Therefore
+    now also single-frame mode (see `ediff-windows-setup-function') of ediff
+    wirks smoothly with ECB.
+
+*** All this together makes the new layout-engine of ECB much more robust.
+    
+** Better compatibility with XEmacs (21.4 and forthcoming 21.5)
+
+*** TODO TODO
     
 ** The commands `ecb-download-ecb' and `ecb-download-semantic' are deactivated
    These features are not supported anymore. It costs two much effort to keep
