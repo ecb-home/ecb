@@ -224,16 +224,16 @@ if `scroll-all-mode' is nil return the number of visible windows."
 (silentcomp-defun ediff-cleanup-mess)
 (silentcomp-defvar ediff-quit-hook)
 
-(defecb-advice ediff-setup-windows around ecb-compatibility-advices
-  "Ediff can manage all its windows with deactivated ECB-advices.
+;; (defecb-advice ediff-setup-windows around ecb-compatibility-advices
+;;   "Ediff can manage all its windows with deactivated ECB-advices.
 
-This is possible because we have in the setup-hook cleared the whole ecb-frame."
-  (if (and (boundp 'ecb-minor-mode)
-           ecb-minor-mode
-           (eq (selected-frame) ecb-frame))
-      (ecb-with-original-basic-functions
-       ad-do-it)
-    ad-do-it))
+;; This is possible because we have in the setup-hook cleared the whole ecb-frame."
+;;   (if (and (boundp 'ecb-minor-mode)
+;;            ecb-minor-mode
+;;            (eq (selected-frame) ecb-frame))
+;;       (ecb-with-original-basic-functions
+;;        ad-do-it)
+;;     ad-do-it))
 
 (defvar ecb-before-ediff-window-config nil)
 

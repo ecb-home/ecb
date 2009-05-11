@@ -80,6 +80,8 @@
 (silentcomp-defun display-images-p)
 (silentcomp-defvar tar-subfile-mode)
 (silentcomp-defvar archive-subfile-mode)
+(silentcomp-defun count-screen-lines)
+(silentcomp-defvar header-line-format)
 
 ;; timer stuff for Xemacs
 (silentcomp-defun delete-itimer)
@@ -217,8 +219,16 @@ Uses the `derived-mode-parent' property of the symbol to trace backwards."
       (while (and (not (memq parent modes))
                   (setq parent (get parent 'derived-mode-parent))))
       parent))
+  (defsubst ecb-count-screen-lines (&optional beg end)
+    (let ((b (or beg (point-min)))
+          (e (or end (point-max))))
+      (count-lines b e)))
   (defalias 'ecb-frame-parameter 'frame-property)
   (defalias 'ecb-line-beginning-pos 'point-at-bol)
+  (defalias 'ecb-bolp 'bolp)
+  (defalias 'ecb-eolp 'eolp)
+  (defalias 'ecb-bobp 'bobp)
+  (defalias 'ecb-eobp 'eobp)
   (defalias 'ecb-line-end-pos 'point-at-eol)
   (defalias 'ecb-event-window 'event-window)
   (defalias 'ecb-event-point 'event-point)
@@ -251,9 +261,15 @@ Uses the `derived-mode-parent' property of the symbol to trace backwards."
   (defalias 'ecb-subst-char-in-string 'subst-char-in-string)
   (defalias 'ecb-substring-no-properties 'substring-no-properties)
   (defalias 'ecb-derived-mode-p 'derived-mode-p)
+  (defsubst ecb-count-screen-lines (&optional beg end)
+    (count-screen-lines beg end))
   (defalias 'ecb-frame-parameter 'frame-parameter)
   (defalias 'ecb-line-beginning-pos 'line-beginning-position)
   (defalias 'ecb-line-end-pos 'line-end-position)
+  (defalias 'ecb-bolp 'bolp)
+  (defalias 'ecb-eolp 'eolp)
+  (defalias 'ecb-bobp 'bobp)
+  (defalias 'ecb-eobp 'eobp)
   (defun ecb-event-window (event)
     (posn-window (event-start event)))
   (defun ecb-event-point (event)
@@ -2055,6 +2071,10 @@ If the optional argument MAX-HEIGHT is supplied, it is the maximum height
 If the optional argument MIN-HEIGHT is supplied, it is the minimum
   height the window is allowed to be, defaulting to `window-min-height'.
 
+MAX-HEIGHT and MIN-HEIGHT can be also afraction between 0 and 1: then this is
+interpreted as that fraction of the frame-height of WINDOW \(or the selected
+window if WINDOW is nil).
+
 The heights in MAX-HEIGHT and MIN-HEIGHT include the mode-line and/or
 header-line."
   (interactive)
@@ -2069,12 +2089,17 @@ header-line."
 	  (window-buffer window))
 	 (window-height
 	  ;; The current height of WINDOW
-	  (window-height window))
+	  (ecb-window-full-height window)) ;; KB: was window-height
+         (max-height-norm (ecb-normalize-number max-height
+                                                (frame-height (window-frame window))))
+         (min-height-norm (and min-height
+                               (ecb-normalize-number min-height
+                                                     (frame-height (window-frame window)))))
 	 (desired-height
 	  ;; The height necessary to show the buffer displayed by WINDOW
 	  ;; (`count-screen-lines' always works on the current buffer).
 	  (with-current-buffer buf
-	    (+ (count-screen-lines)
+	    (+ (ecb-count-screen-lines)
 	       ;; If the buffer is empty, (count-screen-lines) is
 	       ;; zero.  But, even in that case, we need one text line
 	       ;; for cursor.
@@ -2085,12 +2110,14 @@ header-line."
 			mode-line-format)
 		   1 0)
 	       ;; Count the header-line, if any
-	       (if header-line-format 1 0))))
+               (if ecb-running-xemacs
+                   0
+                 (if header-line-format 1 0)))))
 	 (delta
 	  ;; Calculate how much the window height has to change to show
 	  ;; desired-height lines, constrained by MIN-HEIGHT and MAX-HEIGHT.
-	  (- (max (min desired-height max-height)
-		  (or min-height window-min-height))
+	  (- (max (min desired-height max-height-norm)
+		  (or min-height-norm window-min-height))
 	     window-height))
 	 ;; We do our own height checking, so avoid any restrictions due to
 	 ;; window-min-height.
@@ -2099,7 +2126,7 @@ header-line."
     ;; Don't try to redisplay with the cursor at the end
     ;; on its own line--that would force a scroll and spoil things.
     (when (with-current-buffer buf
-	    (and (eobp) (bolp) (not (bobp))))
+	    (and (ecb-eobp) (ecb-bolp) (not (ecb-bobp))))
       (set-window-point window (1- (window-point window))))
 
     (save-selected-window
@@ -2115,7 +2142,7 @@ header-line."
       (let ((end (with-current-buffer buf
 		   (save-excursion
 		     (goto-char (point-max))
-		     (when (and (bolp) (not (bobp)))
+		     (when (and (ecb-bolp) (not (ecb-bobp)))
 		       ;; Don't include final newline
 		       (backward-char 1))
 		     (when truncate-lines
@@ -2126,12 +2153,21 @@ header-line."
 		       ;; the edge of the window.
 		       (forward-line 0))
 		     (point)))))
-	(set-window-vscroll window 0)
-	(while (and (< desired-height max-height)
+        (unless ecb-running-xemacs
+          (set-window-vscroll window 0))
+	(while (and (< desired-height max-height-norm)
 		    (= desired-height (window-height window))
 		    (not (pos-visible-in-window-p end window)))
 	  (enlarge-window 1)
 	  (setq desired-height (1+ desired-height)))))))
+
+(defun ecb-test-fit-window-to-buffer ()
+  (interactive)
+  (ecb-fit-window-to-buffer
+   (selected-window)
+   (if (functionp temp-buffer-max-height)
+       (funcall temp-buffer-max-height (current-buffer))
+     temp-buffer-max-height)))
 
 (defun ecb-scroll-window (point window-start)
   "Scrolls window of current buffer. The window will start at WINDOW-START and

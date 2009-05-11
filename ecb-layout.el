@@ -1792,7 +1792,7 @@ for current layout."
             (if (functionp temp-buffer-max-height)
                 (funcall temp-buffer-max-height (current-buffer))
               temp-buffer-max-height)))))))
-
+ 
  (defecb-advice pop-to-buffer around ecb-layout-basic-adviced-functions
    "Chooses the window with the ECB-adviced version of `display-buffer'."
    (if (or (not ecb-minor-mode)
@@ -3053,7 +3053,13 @@ If called for other frames it works like the original version."
                  (let ((pop-up-frames (if (ecb-ignore-pop-up-frames)
                                           nil
                                         pop-up-frames)))
-                   (when (and pop-up-windows
+                   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: emacs 23
+                   ;; splits automatically when window-size allows this (see
+                   ;; split-width-threshold and split-height-threshold)...
+                   ;; Test and ev. modify (not a serious problem but not nice)
+                   (when (and (not ecb-windows-hidden)
+                              (not (ecb-layout-top-p))
+                              pop-up-windows
                               (not pop-up-frames)
                               (not (ecb-edit-window-splitted))
                               (not (ecb-check-for-same-window-buffer (ad-get-arg 0))))
@@ -3295,22 +3301,6 @@ NTH-WINDOW is nil then it is treated as 1."
 
 ;; (ecb-get-other-window-smart (ecb-canonical-windows-list) (ecb-canonical-edit-windows-list) (ecb-canonical-ecb-windows-list) nil nil '(other-dedicated . 2) 1)
 
-;; (defecb-advice other-window around ecb-layout-basic-adviced-functions
-;;   "The ECB-version of `other-window'. Works exactly like the original function
-;; with the following ECB-adjustment: The behavior depends on
-;; `ecb-other-window-behavior'."
-;;   (if (or (not ecb-minor-mode)
-;;           (not (equal (selected-frame) ecb-frame)))
-;;       (ecb-with-original-basic-functions
-;;        ad-do-it)
-;;     (let* ((count (if (ad-get-arg 0)
-;;                       (ad-get-arg 0)
-;;                     1))
-;;            (o-w (let ((ecb-other-window-behavior (if (interactive-p)
-;;                                                      ecb-other-window-behavior
-;;                                                    'only-edit)))
-;;                   (ecb-get-other-window count))))
-;;       (select-window o-w))))
 
 (defecb-advice other-window around ecb-layout-basic-adviced-functions
   "The ECB-version of `other-window'. Works exactly like the original function
@@ -3456,6 +3446,15 @@ compile-window then it will be hidden and otherwise the behavior depends on
   (if (or (not ecb-minor-mode)
           (not (equal (window-frame (or (ad-get-arg 0) (selected-window)))
                       ecb-frame))
+          ;; we are in the ecb-frame but neither a compile-window nor the
+          ;; ecb-windows are visible, so we have no windows to protect against
+          ;; deletion.
+          (and ecb-windows-hidden
+               (not (ecb-compile-window-live-p)))
+          ;; if all windows are dedicated (i.e. there is no edit-window left)
+          ;; we allow deletion of all other windows (incl. ecb-windows and
+          ;; compile-window
+          ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: not perfect but...
           (null (ecb-canonical-edit-windows-list)))
       (ecb-with-original-basic-functions
        ad-do-it)
@@ -3549,6 +3548,15 @@ behavior depends on `ecb-advice-window-functions-signal-error'."
   (if (or (not ecb-minor-mode)
           (not (equal (window-frame (or (ad-get-arg 0) (selected-window)))
                                     ecb-frame))
+          ;; we are in the ecb-frame but neither a compile-window nor the
+          ;; ecb-windows are visible, so we have no windows to protect against
+          ;; deletion.
+          (and ecb-windows-hidden
+               (not (ecb-compile-window-live-p)))
+          ;; if all windows are dedicated (i.e. there is no edit-window left)
+          ;; we allow deletion of all other windows (incl. ecb-windows and
+          ;; compile-window
+          ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: not perfect but...
           (null (ecb-canonical-edit-windows-list)))
       (ecb-with-original-basic-functions
        ad-do-it)
@@ -4342,9 +4350,26 @@ and TYPE must be an element of `ecb-layout-types'."
                   (function (lambda (l r)
                               (ecb-string< (car l) (car r)))))))))
 
-(defun ecb-get-layout-type (name)
-  "Return the type of layout NAME."
-  (cdr (assoc name ecb-available-layouts)))
+(defun ecb-get-layout-type (&optional name)
+  "Return the type of current layout or of layout NAME."
+  (let ((n (or name ecb-layout-name)))
+    (cdr (assoc n ecb-available-layouts))))
+
+(defun ecb-layout-left-p (&optional name)
+  "Return not nil if current layout or layout NAME is of type left."
+  (equal 'left (ecb-get-layout-type name)))
+
+(defun ecb-layout-leftright-p (&optional name)
+  "Return not nil if current layout or layout NAME is of type left-right."
+  (equal 'left-right (ecb-get-layout-type name)))
+
+(defun ecb-layout-right-p (&optional name)
+  "Return not nil if current layout or layout NAME is of type right."
+  (equal 'right (ecb-get-layout-type name)))
+
+(defun ecb-layout-top-p (&optional name)
+  "Return not nil if current layout or layout NAME is of type top."
+  (equal 'top (ecb-get-layout-type name)))
 
 ;; Macro for easy defining new layouts
 (defmacro ecb-layout-define (name type doc &rest create-code)
