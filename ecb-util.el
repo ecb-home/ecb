@@ -142,7 +142,7 @@
 (defvar ecb-images-can-be-used-init-p nil
   "INTERNAL - DO NOT USE AND CHANGE!")
 
-(defsubst ecb-images-can-be-used ()
+(defun ecb-images-can-be-used ()
   "Not nil if images can be used with current Emacs setup."
   (if ecb-images-can-be-used-init-p
       ecb-images-can-be-used
@@ -572,6 +572,8 @@ Example:
 
 
 (put 'ecb-with-original-adviced-function-set 'lisp-indent-function 1)
+
+
 
 (defecb-advice-set ecb-always-disabled-advices
   "These advices are always disabled.
@@ -2009,7 +2011,7 @@ means not to count the minibuffer even if it is active."
        ;; `window-list' because it returns an ordered list
        (window-list frame minibuf window)
      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: the following is needed for
-     ;; XEmacs >= 21.5 - but the best would be if we would not need
+     ;; XEmacs - but the best would be if we would not need
      ;; implementing window-list, means the best would be if window-list
      ;; returns an ordered list!
      (ecb-with-original-basic-functions
@@ -2018,10 +2020,11 @@ means not to count the minibuffer even if it is active."
       (if (not (eq (window-frame window) frame))
           (error "Window must be on frame."))
       (let ((current-frame (selected-frame))
+            (current-window (selected-window))
             (current-point (point))
             list)
         (unwind-protect
-            (save-window-excursion
+            (progn ;; save-window-excursion loops in XEmacs 21.5
               (select-frame frame)
               ;; this is needed for correct start-point
               (select-window window)
@@ -2036,6 +2039,7 @@ means not to count the minibuffer even if it is active."
               (setq list (nreverse list))
               (setq list (cons window list)))
           (select-frame current-frame)
+          (select-window current-window)
           ;; we must reset the point of the buffer which was current at call-time
           ;; of this function
           (goto-char current-point))))))

@@ -1617,6 +1617,8 @@ arguments. Do never set this variable; it is only set by
                        1 0)))
                (mini (frame-property (window-frame (ad-get-arg 0)) 'minibuffer))
                (edges (window-pixel-edges (selected-window))))
+           ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: try to replace this
+           ;; stuff with ecb-fit-window-to-buffer - should be possible
            (if (and (< 1 (let ((frame (selected-frame)))
                            (select-frame (window-frame (ad-get-arg 0)))
                            (unwind-protect
@@ -2888,6 +2890,9 @@ So never a dedicated window is returned during activated ECB."
 ;;     (ecb-with-ecb-advice 'get-lru-window 'before
 ;;       (cons (get-largest-window ecb-frame t)
 ;;             (get-lru-window ecb-frame t)))))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: check if brwose-kill-ring works
+;; correctly with current ECB and Emacs 22/23!
 
 ;; This advice is the heart of the mechanism which displays all buffer in the
 ;; compile-window if they are are "compilation-buffers" in the sense of
