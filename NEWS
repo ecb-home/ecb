@@ -167,14 +167,24 @@
 
 ** Changes in the version control support of ECB
 
+*** ECB now also offers version control support only if the current vc-package is
+    installed which offers support for modern vc-backends like subversion, git
+    and monotone.
+    Because vc-package lacks having a version number which can be checked ECB
+    uses the following check if the right vc-package is installed:
+    (locate-library "vc-svn") must return not nil.
+   
 *** New support for Git and Monotone as version-control systems
     If Git rsp. Monotone are supported by VC (means vc-git.el rsp. vc-mtn.el
     are distributed with Emacs) then ECB supports now both of them out of the
     box.
 
-*** Makes CVS-support fully compatible with Emacs 22 and 23, especially
-    with respect to `vc-cvs-stay-local'
-   
+*** `ecb-vc-supported-backends' offers now also a accurate recompute-state function
+    This is by offering `ecb-vc-recompute-state' as an alias to the function
+    `vc-recompute-state' as state-check function for this option.
+
+*** Makes CVS-support fully compatible with Emacs 22 and 23
+
 ** New features rsp. commands
 
 *** New command `ecb-goto-window-edit-by-smart-selection'

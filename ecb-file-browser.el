@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.76 2009/05/09 15:23:50 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.77 2009/05/12 17:39:25 berndl Exp $
 
 ;;; Commentary:
 
@@ -1126,7 +1126,13 @@ key-bindings only for the history-buffer of ECB."
   :group 'ecb-history
   :type 'hook)
 
-(defcustom ecb-vc-enable-support 'unless-remote
+(defvar ecb-vc-needed-vc-package-available-p
+  (if (locate-library "vc-svn") t nil)
+  "Not nil if that vc-package is installed needed by ECB to enable vc-support.
+If this variable is nil all other vc related options of ECB have no effect!")
+
+(defcustom ecb-vc-enable-support (and ecb-vc-needed-vc-package-available-p
+                                      'unless-remote)
   "*Enable support for version-control \(VC) systems.
 If on then in the directories-buffer \(if the value of the option
 `ecb-show-sources-in-directories-buffer' is on for current layout), the
@@ -1162,29 +1168,12 @@ sources will not be checked - This option takes only effect if
   :group 'ecb-sources
   :type '(repeat (regexp :tag "Directory-regexp")))
 
-(defcustom ecb-vc-xemacs-exclude-remote-cvs-repository
-  (if ecb-running-xemacs t nil)
-  "*Exclude directories with a remote cvs-repository from VC-check.
-This option takes only effect for XEmacs and is needed cause of the outdated
-VC-package of XEmacs which offers no heuristic state-checking and also no
-option `vc-cvs-stay-local'. So this option takes only effect if
-`vc-cvs-stay-local' is not avaiable. In this case ECB treats directories which
-are managed by CVS but have a remote repository as if the directory would be
-not managed by CVS \(so the files are not checked for their VC-state). This si
-done to avoid blocking XEmacs when running full cvs-commands \(e.g. \"cvs
-status\") over the net.
-
-Note: When ECB can find the option `vc-cvs-stay-local' then this option will
-automatically take no effect regardless which Emacs-version is used."
-  :group 'ecb-version-control
-  :group 'ecb-sources
-  :type 'boolean)
-
 (defsubst ecb-vc-directory-should-be-checked-p (dir)
   "Return not nil if the sources of DIR should be checked for VC-state.
 The check is performed according to the settings in the options
 `ecb-vc-enable-support' and `ecb-vc-directory-should-be-checked-p'."
-  (and (or (equal t ecb-vc-enable-support)
+  (and ecb-vc-needed-vc-package-available-p
+       (or (equal t ecb-vc-enable-support)
            (and (equal 'unless-remote ecb-vc-enable-support)
                 (not (ecb-remote-path dir))))
        (not (ecb-match-regexp-list dir ecb-vc-directory-exclude-regexps))))
@@ -1273,7 +1262,7 @@ Emacs) and `vc-cvs-status' \(Xemacs) to the ECB-VC-state-values."
                                (const :tag "ignored" :value ignored)
                                (const :tag "unknown" :value unknown)))))
 
-;; Remark why we need for ECB the information if a *directory* isa managed by
+;; Remark why we need for ECB the information if a *directory* is managed by
 ;; a version-control system and why we can not use the file-based machanism
 ;; offered by vc*.el:
 ;; With only a file-based check we would need to check each file in each directory
@@ -1284,15 +1273,19 @@ Emacs) and `vc-cvs-status' \(Xemacs) to the ECB-VC-state-values."
 ;; check for each file of a directory only in this case --> this is much
 ;; faster.
 ;; Therefore we can not use functions like `vc-backend' or `vc-registered'.
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XEmacs now contains also the new
+;; vc-package which was ported from GNU Emacs...
+;; Hmm, what to do: sopporting both or throwing away all the
+;; XEmacs-workarounds??
+;; let's ask henry.....
 (defcustom ecb-vc-supported-backends
-  (delq nil (if ecb-running-xemacs
-                `((ecb-vc-dir-managed-by-CVS . vc-cvs-status))
-              `((ecb-vc-dir-managed-by-CVS . ecb-vc-state)
+              '((ecb-vc-dir-managed-by-CVS . ecb-vc-state)
                 (ecb-vc-dir-managed-by-RCS . ecb-vc-state)
                 (ecb-vc-dir-managed-by-SCCS . ecb-vc-state)
                 (ecb-vc-dir-managed-by-SVN . ecb-vc-state)
                 (ecb-vc-dir-managed-by-GIT . ecb-vc-state)
-                (ecb-vc-dir-managed-by-MTN . ecb-vc-state))))
+                (ecb-vc-dir-managed-by-MTN . ecb-vc-state))
   "*Define how to to identify the VC-backend and how to check the state.
 The value of this option is a list containing cons-cells where the car is a
 function which is called to identify the VC-backend for a DIRECTORY and the
@@ -1323,24 +1316,23 @@ possible performance.
 To prepend ECB from checking the VC-state for any file set
 `ecb-vc-enable-support' to nil.
 
-Default value for GNU Emacs: Support for CVS, RCS, SCCS and Subversion \(for
-the later one the most recent version of the VC-package incl. the vc-svn
-library is needed). To identify the VC-backend the functions
-`ecb-vc-managed-by-CVS', `ecb-vc-managed-by-RCS' rsp. `ecb-vc-managed-by-SCCS'
-rsp. `ecb-vc-managed-by-SVN' are used. For all four backends the function
-`ecb-vc-state' of the VC-package is used.
+Default value: Support for CVS, RCS, SCCS, Subversion, Git and
+Monotone. To identify the VC-backend the functions
+`ecb-vc-managed-by-CVS', `ecb-vc-managed-by-RCS' rsp.
+`ecb-vc-managed-by-SCCS' rsp. `ecb-vc-managed-by-SVN' rsp.
+`ecb-vc-managed-by-GIT' rsp. `ecb-vc-managed-by-MTN'are used.
 
-Default value for XEmacs: XEmacs contains only a quite outdated VC-package,
-especially there is no backend-independent check-vc-state-function available
-\(like `vc-state' for GNU Emacs). Only for CVS a check-vc-state-function is
-available: `vc-cvs-status'. Therefore ECB adds per default only support for
-CVS and uses `ecb-vc-managed-by-CVS' rsp. `vc-cvs-status'. But read the
-documentation of `ecb-vc-dir-managed-by-CVS'!
+For all six backends the function `ecb-vc-state' of the
+VC-package is used by default \(which uses a heuristic and
+therefore faster but less accurate approach), but there is also
+`ecb-vc-recompute-state' available which is an alias for
+`vc-recompute-state' \(which returns accurate state-values by calling the
+backend which can be slow especialy for remote root-repositories!)
 
-Example for GNU Emacs: If `vc-recompute-state' \(to get real state-values not
+Example: If `ecb-vc-recompute-state' \(to get real state-values not
 only heuristic ones) should be used to check the state for CVS-managed files
-and `vc-state' for all other backends then an element
-\(ecb-vc-dir-managed-by-CVS . vc-recompute-state) should be added at the
+and `ecb-vc-state' for all other backends then an element
+\(ecb-vc-dir-managed-by-CVS . ecb-vc-recompute-state) should be added at the
 beginning of this option."
   :group 'ecb-version-control
   :group 'ecb-sources
@@ -1348,17 +1340,30 @@ beginning of this option."
   :set (function (lambda (sym val)
                    (set sym val)
                    (ecb-vc-cache-clear)))
-  :type '(repeat (cons (symbol :tag "Identify-backend-function")
-                       (symbol :tag "Check-state-function"))))
+  :type '(repeat (cons :tag "Backend-identifier and state-checker"
+                       (choice :tag "Identify-backend-function"
+                               :menu-tag "Identify-backend-function"
+                               (const :tag "ecb-vc-dir-managed-by-CVS"
+                                      :value ecb-vc-dir-managed-by-CVS)
+                               (const :tag "ecb-vc-dir-managed-by-RCS"
+                                      :value ecb-vc-dir-managed-by-RCS)
+                               (const :tag "ecb-vc-dir-managed-by-SCCS"
+                                      :value ecb-vc-dir-managed-by-SCCS)
+                               (const :tag "ecb-vc-dir-managed-by-SVN"
+                                      :value ecb-vc-dir-managed-by-SVN)
+                               (const :tag "ecb-vc-dir-managed-by-GIT"
+                                      :value ecb-vc-dir-managed-by-GIT)
+                               (const :tag "ecb-vc-dir-managed-by-MTN"
+                                      :value ecb-vc-dir-managed-by-MTN)
+                               (function :tag "Any function"))
+                       (choice :tag "Check-state-function"
+                               :menu-tag "Check-state-function"
+                               (const :tag "ecb-vc-state (heuristic)"
+                                      :value ecb-vc-state)
+                               (const :tag "ecb-vc-recompute-state (accurate)"
+                                      :value ecb-vc-recompute-state)
+                               (function :tag "Any function")))))
 
-;; Klaus Berndl <klaus.berndl@sdm.de>: For XEmacs a function like the
-;; following could be used to get always fresh state-values:
-
-;; (defun ecb-vc-recompute-state (file)
-;;   ;; Return the cvs status of FILE
-;;   ;; (Status field in output of "cvs status")
-;;   (vc-fetch-master-properties file)
-;;   (vc-file-getprop file 'vc-cvs-status))
 
 
 ;;====================================================
@@ -3237,7 +3242,6 @@ the SOURCES-cache."
 ;; windows-path as root without keyword :local:!
 ;; (ecb-vc-cvs-root-remote-p "C:/local/root")
 
-
 (defun ecb-vc-dir-managed-by-CVS (directory)
   "Return 'CVS if DIRECTORY is managed by CVS. nil if not.
 
@@ -3263,53 +3267,81 @@ if ECB treats such a directory as managed by CVS or not!"
        (or (ignore-errors (progn
                             (require 'vc)
                             (require 'vc-cvs)))
-           t)
-       (if (or (not (boundp 'vc-cvs-stay-local)) ;; XEmacs doesn't have this
-               (null vc-cvs-stay-local)
-               (stringp vc-cvs-stay-local)
-               (listp vc-cvs-stay-local))
-           ;; XEmacs has a quite outdated VC-package which has no option
-           ;; `vc-cvs-stay-local' so the user can not work with remote
-           ;; directories if working offline for example. so we use a
-           ;; workaround by checking the root of the CVS-repsoitory (we can
-           ;; get it from the file /CVS/Root) if it is a remote root and if
-           ;; yes we ping the host of that root. If accessible ...
-           (let* ((Root-content (ecb-file-content-as-string (concat directory
-                                                                    "/CVS/Root")))
-                  (host (and Root-content
-                             (ecb-vc-cvs-root-remote-p Root-content))))
-             (if (and host
-                      ecb-vc-xemacs-exclude-remote-cvs-repository
-                      (not (boundp 'vc-cvs-stay-local)))
-                 nil
-               (when (or (null host) ;; local repository
-                         ;; maybe vc-cvs-stay-local says VC should stay local for this
-                         ;; host - let's check it
-                         (and (boundp 'vc-cvs-stay-local)
-                              vc-cvs-stay-local
-                              ;; here vc-cvs-stay-local is either a string or
-                              ;; a list
-                              (let* ((stay-local-list (if (stringp vc-cvs-stay-local)
-                                                          (list vc-cvs-stay-local)
-                                                        vc-cvs-stay-local))
-                                     (conv-fcn (if (equal 'except (car stay-local-list))
-                                                   'not
-                                                 'identity))
-                                     (stay-local-list-1 (if (equal 'except (car stay-local-list))
-                                                            (cdr stay-local-list)
-                                                          stay-local-list)))
-                                (funcall conv-fcn
-                                         (catch 'found
-                                           (dolist (host-regexp stay-local-list-1)
-                                             (if (save-match-data (string-match host-regexp host))
-                                                 (throw 'found t)))
-                                           nil))))
-                         ;; well, we should not stay local, so we check if the
-                         ;; host is at least accessible
-                         (ecb-host-accessible-p host))
-                 'CVS)))
-         ;; VC always will stay local so we are satisfied ;-)
-         'CVS)))
+           t)))
+
+
+;; (defun ecb-vc-dir-managed-by-CVS (directory)
+;;   "Return 'CVS if DIRECTORY is managed by CVS. nil if not.
+
+;; This function tries to be as smart as possible: First it checks if DIRECTORY
+;; is managed by CVS by checking if there is a subdir CVS. If no then nil is
+;; returned. If yes then for GNU Emacs it takes into account the value of
+;; `vc-cvs-stay-local': If t then just return 'CVS. Otherwise ECB checks the root
+;; repository if it is a remote repository. If not just 'CVS is returned. If a
+;; remote repository it checks if the value of `vc-cvs-stay-local' is a string
+;; and matches the host of that repository. If yes then just 'CVS is returned. If
+;; not then ECB checks if that host is currently accessible by performing a ping.
+;; If accessible 'CVS is returned otherwise nil. This has the advantage that ECB
+;; will not be blocked by trying to get the state from a remote repository while
+;; the host is not accessible \(e.g. because the user works offline).
+
+;; Special remark for XEmacs: XEmacs has a quite outdated VC-package which has no
+;; option `vc-cvs-stay-local' so the user can not work with remote
+;; CVS-repositories if working offline for example. So if there is no option
+;; `vc-cvs-stay-local' then ECB performs always the repository check mentioned
+;; above and it depends on the value of `ecb-vc-xemacs-exclude-remote-repository'
+;; if ECB treats such a directory as managed by CVS or not!"
+;;   (and (ecb-file-exists-p (concat directory "/CVS/"))
+;;        (or (ignore-errors (progn
+;;                             (require 'vc)
+;;                             (require 'vc-cvs)))
+;;            t)
+;;        (if (or (not (boundp 'vc-cvs-stay-local)) ;; XEmacs doesn't have this
+;;                (null vc-cvs-stay-local)
+;;                (stringp vc-cvs-stay-local)
+;;                (listp vc-cvs-stay-local))
+;;            ;; XEmacs has a quite outdated VC-package which has no option
+;;            ;; `vc-cvs-stay-local' so the user can not work with remote
+;;            ;; directories if working offline for example. so we use a
+;;            ;; workaround by checking the root of the CVS-repsoitory (we can
+;;            ;; get it from the file /CVS/Root) if it is a remote root and if
+;;            ;; yes we ping the host of that root. If accessible ...
+;;            (let* ((Root-content (ecb-file-content-as-string (concat directory
+;;                                                                     "/CVS/Root")))
+;;                   (host (and Root-content
+;;                              (ecb-vc-cvs-root-remote-p Root-content))))
+;;              (if (and host
+;;                       ecb-vc-xemacs-exclude-remote-cvs-repository
+;;                       (not (boundp 'vc-cvs-stay-local)))
+;;                  nil
+;;                (when (or (null host) ;; local repository
+;;                          ;; maybe vc-cvs-stay-local says VC should stay local for this
+;;                          ;; host - let's check it
+;;                          (and (boundp 'vc-cvs-stay-local)
+;;                               vc-cvs-stay-local
+;;                               ;; here vc-cvs-stay-local is either a string or
+;;                               ;; a list
+;;                               (let* ((stay-local-list (if (stringp vc-cvs-stay-local)
+;;                                                           (list vc-cvs-stay-local)
+;;                                                         vc-cvs-stay-local))
+;;                                      (conv-fcn (if (equal 'except (car stay-local-list))
+;;                                                    'not
+;;                                                  'identity))
+;;                                      (stay-local-list-1 (if (equal 'except (car stay-local-list))
+;;                                                             (cdr stay-local-list)
+;;                                                           stay-local-list)))
+;;                                 (funcall conv-fcn
+;;                                          (catch 'found
+;;                                            (dolist (host-regexp stay-local-list-1)
+;;                                              (if (save-match-data (string-match host-regexp host))
+;;                                                  (throw 'found t)))
+;;                                            nil))))
+;;                          ;; well, we should not stay local, so we check if the
+;;                          ;; host is at least accessible
+;;                          (ecb-host-accessible-p host))
+;;                  'CVS)))
+;;          ;; VC always will stay local so we are satisfied ;-)
+;;          'CVS)))
 
 
 (defun ecb-vc-dir-managed-by-RCS (directory)
@@ -3417,14 +3449,20 @@ checked-in/out or added file is cleared. Does nothing if the function
 
 
 
-;; This function should work for all backends supported by vc, at least for
-;; the current vc of Gnu Emacs > 21.3
+;; This function should work for all backends supported by vc
 (defun ecb-vc-state (file)
   "Same as `vc-state' but it clears the internal caches of the VC-package for
 FILE before calling `vc-state'. Finally calls `vc-state' and returns that
-value. This function should work for all backends supported by vc."
+value. This function should work for all backends supported by vc.
+
+Note: `vc-state' probably uses the heuristic-state function of the backend
+which is much faster but can be sometimes inaccurate. If always the accurate
+state is needed `vc-recompute-state' has to be used - see
+`ecb-vc-recompute-state'."
   (and (fboundp 'vc-file-clearprops) (vc-file-clearprops file))
   (vc-state file))
+
+(defalias 'ecb-vc-recompute-state 'vc-recompute-state)
 
 (defun ecb-vc-get-state-fcn-for-dir (directory)
   "Get that function which should be used for checking the VC-state for files
@@ -3502,7 +3540,8 @@ history-buffer the VC-state. This function does the real job and is is only
 for use by a stealthy function defined with `defecb-stealthy'! STATE is the
 initial state-value the stealthy-function has when called. Return the new
 state-value."
-  (if (not ecb-vc-enable-support)
+  (if (or (not ecb-vc-needed-vc-package-available-p)
+          (not ecb-vc-enable-support))
       'done
     (if (not (or (string= (buffer-name (current-buffer))
                           ecb-history-buffer-name)
@@ -3561,7 +3600,8 @@ state-value."
 function does the real job and is is only for use by a stealthy function
 defined with `defecb-stealthy'! STATE is the initial state-value the
 stealthy-function has when called. Return the new state-value."
-  (if (not (ecb-vc-directory-should-be-checked-p ecb-path-selected-directory))
+  (if (or (not ecb-vc-needed-vc-package-available-p)
+          (not (ecb-vc-directory-should-be-checked-p ecb-path-selected-directory)))
       'done
     (let ((vc-state-fcn (ecb-vc-get-state-fcn-for-dir ecb-path-selected-directory)))
       (if (null vc-state-fcn)
