@@ -608,7 +608,6 @@ This means, that all values of `special-display-function',
       (and (equal ecb-ignore-special-display 'compile-window)
            ecb-compile-window-height)))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add this to texi too
 (defcustom ecb-ignore-pop-up-frames 'compile-window
   "*Ignore setting of option `pop-up-frames'.
 This means, that a value of not nil for `pop-up-frames' is ignored
@@ -2726,15 +2725,16 @@ some special tasks:
 
 ;; here come the advices
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
 ;; *** `special-display-buffer-names' and `special-display-regexps' now
 ;; understand two new boolean pseudo-frame-parameters `same-frame' and
-;; `same-window'. This is new in Emacs 22 so we have to integrate it!
-;; The format is: (same-window . VALUE) or (same-frame . VALUE). If VALUE is
-;; not nil then we have to take into account the new behavior! probably it is
-;; the best to include this check in `ecb-check-for-same-window-buffer' too!
-;; The best would be to handle same-window correct and ignore same-frame - the
-;; latter one could be difficult...
+;; `same-buffer'. This is new in Emacs 22 so we have to integrate it!
+;; The format is: (same-buffer . VALUE) or (same-frame . VALUE). But this is
+;; automatically taken into account by ecb-check-for-special-buffer because
+;; the car of an element of special-display-buffer-names must be a buffer-name
+;; and we must only check if the buffer-name matches... if yes our advice of
+;; display-buffer calls et the end by ad-do-it the display-buffer-code which
+;; itself evaluates these options... so we are fine with the following
+;; implementation!
 
 (defun ecb-check-for-special-buffer (buffer-or-name)
   "Return  not nil if and only if `special-display-function' is not nil and
@@ -2851,48 +2851,6 @@ So never a dedicated window is returned during activated ECB."
         (ad-set-arg 1 nil)))
  )
 
-;; (when-ecb-running-emacs
-;;  (defecb-advice get-largest-window before ecb-always-disabled-advices
-;;    "When called from within the `ecb-frame' then DEDICATED is always set to nil.
-;; So never a dedicated window is returned during activated ECB."
-;;    (ecb-layout-debug-error "get-largest-window for frame:%s, dedicated:%s"
-;;                            (ad-get-arg 0) (ad-get-arg 1))
-;;    (and (boundp 'ecb-minor-mode)
-;;         ecb-minor-mode
-;;         (eq (selected-frame) ecb-frame)
-;;         ;; dedicated windows should also taken into account
-;;         (ad-get-arg 1)
-;;         ;; we forbid dedicated windows
-;;         (ad-set-arg 1 nil)))
-      
-
-;;  (defecb-advice get-lru-window before ecb-always-disabled-advices
-;;    "When called from within the `ecb-frame' then DEDICATED is always set to nil.
-;; So never a dedicated window is returned during activated ECB."
-;;    (ecb-layout-debug-error "get-lru-window for frame:%s, dedicated:%s"
-;;                            (ad-get-arg 0) (ad-get-arg 1))
-;;    (and (boundp 'ecb-minor-mode)
-;;         ecb-minor-mode
-;;         (eq (selected-frame) ecb-frame)
-;;         ;; dedicated windows should also taken into account
-;;         (ad-get-arg 1)
-;;         ;; we forbid dedicated windows
-;;         (ad-set-arg 1 nil)))
-;;  )
-
-;; (defmacro ecb-with-largest/lru-win-always-not-dedicated (&rest body)
-;;   `(ecb-with-ecb-advice 'get-largest-window 'before
-;;      (ecb-with-ecb-advice 'get-lru-window 'before
-;;        ,@body)))
-
-;; (defun klausi-mausi-test ()
-;;   (ecb-with-ecb-advice 'get-largest-window 'before
-;;     (ecb-with-ecb-advice 'get-lru-window 'before
-;;       (cons (get-largest-window ecb-frame t)
-;;             (get-lru-window ecb-frame t)))))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: check if brwose-kill-ring works
-;; correctly with current ECB and Emacs 22/23!
 
 ;; This advice is the heart of the mechanism which displays all buffer in the
 ;; compile-window if they are are "compilation-buffers" in the sense of

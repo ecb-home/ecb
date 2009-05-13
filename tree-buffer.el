@@ -926,7 +926,7 @@ get the data.")
 (defvar tree-buffer-images-can-be-used-init-p nil
   "INTERNAL - DO NOT USE AND CHANGE!")
 
-(defsubst tree-buffer-images-can-be-used ()
+(defun tree-buffer-images-can-be-used ()
   "Not nil if images can be used with current Emacs setup."
   (if tree-buffer-images-can-be-used-init-p
       tree-buffer-images-can-be-used

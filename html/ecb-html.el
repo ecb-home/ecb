@@ -78,7 +78,16 @@
 (setq ecb-latest-news
       `(
         ,(h-sub-section "ECB 2.33 released! (2009-04-??)"
-                        "ECB now requires full CEDET being installed (at least 1.0pre6). ECB has now more user-responsible buffer-parsing based on the idle-mechanism of semantic. ECB is able to work with indirect buffers it the base-buffer is filebased. It has a complete reworked history-buffer which can be bucketized and shows dead- and indirect-buffers in different faces. It has new support for Git and Monotone as version-control systems and is now much more compatible with GNU Emacs >= 22. In addition a lot of bugs are fixed."
+                        "ECB now requires full CEDET being installed (at least
+                        1.0pre6). ECB has now more user-responsible
+                        buffer-parsing based on the idle-mechanism of
+                        semantic. ECB is full compatible with Emacs 22 and 23
+                        and also with XEmacs. ECB is able to work with
+                        indirect buffers it the base-buffer is filebased. It
+                        has a complete reworked history-buffer which can be
+                        bucketized and shows dead- and indirect-buffers in
+                        different faces. It has new support for Git and
+                        Monotone as version-control systems. In addition a lot of bugs are fixed."
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
@@ -274,10 +283,10 @@
 
               (h-p (h-bullet-list
                     "A directory tree,"
-                    "a list of source files in the current directory,"
+                    "a list of source files in the current directory (with full support and display of the VC-state),"
                     "a list of functions/classes/methods/... in the current file, (ECB uses the CEDET-semantic, or Imenu, or etags, for getting this list so all languages supported by any of these tools are automatically supported by ECB too)"
-                    "a history of recently visited files,"
-                    "a direct interactor for the semantic-analyzer for some intellisense,"
+                    "a history of recently visited files (groupable by several criterias),"
+                    "a direct and auto-updated ecb-window for the semantic-analyzer for some intellisense,"
                     "the Speedbar and"
                     (concat "output from compilation (the " (h-i "compilation") " window) and other modes like help, grep etc. or whatever a user defines to be displayed in this window.")
                     ))
@@ -298,10 +307,7 @@
    (h-section "Dependencies"
 	      (h-bullet-link-list
 	       ecb-bullet
-	       '(("http://cedet.sourceforge.net" "Full CEDET suite (Strongly recommended)" "Newest release offered at website - at least 1.0preX.")
-                 ("http://cedet.sourceforge.net/semantic.shtml" "Semantic Bovinator (outdated)" "Version 1.4 or higher.")
-		 ("http://cedet.sourceforge.net/eieio.shtml" "EIEIO (outdated)" "Version 0.17 or higher.")
-		 ("http://cedet.sourceforge.net/speedbar.shtml" "Speedbar (outdated)" "Version 0.14beta1 or higher.")
+	       '(("http://cedet.sourceforge.net" "Full CEDET suite" "Recommend is the newest release, required is at least a version >= 1.0pre6.")
 		 ("http://jdee.sunsite.dk" "JDEE (optional)" "If you use ECB for Java development."))
 		 "_top")
 	      (h-p "If you use XEmacs you must have installed the packages mail-lib and c-support (contains hideshow.el)."))
