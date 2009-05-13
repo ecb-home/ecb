@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.77 2009/05/12 17:39:25 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.78 2009/05/13 17:17:32 berndl Exp $
 
 ;;; Commentary:
 
@@ -1274,11 +1274,6 @@ Emacs) and `vc-cvs-status' \(Xemacs) to the ECB-VC-state-values."
 ;; faster.
 ;; Therefore we can not use functions like `vc-backend' or `vc-registered'.
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XEmacs now contains also the new
-;; vc-package which was ported from GNU Emacs...
-;; Hmm, what to do: sopporting both or throwing away all the
-;; XEmacs-workarounds??
-;; let's ask henry.....
 (defcustom ecb-vc-supported-backends
               '((ecb-vc-dir-managed-by-CVS . ecb-vc-state)
                 (ecb-vc-dir-managed-by-RCS . ecb-vc-state)
@@ -3216,14 +3211,15 @@ the SOURCES-cache."
                                             (ecb-buffer-substring (point-min)
                                                                   (point-max))))))))
 
-(defun ecb-vc-cvs-root-remote-p (root)
-  "Return not nil if ROOT is a remote CVS-repository."
-  (save-match-data
-    (if (string-match "^:local:" root)
-        nil
-      (and (string-match "^\\(:ext:\\|:server:\\)?\\([^@]+@\\)?\\([^:]+\\):"
-                         root)
-           (match-string 3 root)))))
+;; Not needed anymore - but we leave it here, who knows...
+;; (defun ecb-vc-cvs-root-remote-p (root)
+;;   "Return not nil if ROOT is a remote CVS-repository."
+;;   (save-match-data
+;;     (if (string-match "^:local:" root)
+;;         nil
+;;       (and (string-match "^\\(:ext:\\|:server:\\)?\\([^@]+@\\)?\\([^:]+\\):"
+;;                          root)
+;;            (match-string 3 root)))))
 
 ;; some tests:
 ;; The following must all return cvs.sourceforge.net!
@@ -3243,106 +3239,12 @@ the SOURCES-cache."
 ;; (ecb-vc-cvs-root-remote-p "C:/local/root")
 
 (defun ecb-vc-dir-managed-by-CVS (directory)
-  "Return 'CVS if DIRECTORY is managed by CVS. nil if not.
-
-This function tries to be as smart as possible: First it checks if DIRECTORY
-is managed by CVS by checking if there is a subdir CVS. If no then nil is
-returned. If yes then for GNU Emacs it takes into account the value of
-`vc-cvs-stay-local': If t then just return 'CVS. Otherwise ECB checks the root
-repository if it is a remote repository. If not just 'CVS is returned. If a
-remote repository it checks if the value of `vc-cvs-stay-local' is a string
-and matches the host of that repository. If yes then just 'CVS is returned. If
-not then ECB checks if that host is currently accessible by performing a ping.
-If accessible 'CVS is returned otherwise nil. This has the advantage that ECB
-will not be blocked by trying to get the state from a remote repository while
-the host is not accessible \(e.g. because the user works offline).
-
-Special remark for XEmacs: XEmacs has a quite outdated VC-package which has no
-option `vc-cvs-stay-local' so the user can not work with remote
-CVS-repositories if working offline for example. So if there is no option
-`vc-cvs-stay-local' then ECB performs always the repository check mentioned
-above and it depends on the value of `ecb-vc-xemacs-exclude-remote-repository'
-if ECB treats such a directory as managed by CVS or not!"
+  "Return 'CVS if DIRECTORY is managed by CVS. nil if not."
   (and (ecb-file-exists-p (concat directory "/CVS/"))
        (or (ignore-errors (progn
                             (require 'vc)
                             (require 'vc-cvs)))
            t)))
-
-
-;; (defun ecb-vc-dir-managed-by-CVS (directory)
-;;   "Return 'CVS if DIRECTORY is managed by CVS. nil if not.
-
-;; This function tries to be as smart as possible: First it checks if DIRECTORY
-;; is managed by CVS by checking if there is a subdir CVS. If no then nil is
-;; returned. If yes then for GNU Emacs it takes into account the value of
-;; `vc-cvs-stay-local': If t then just return 'CVS. Otherwise ECB checks the root
-;; repository if it is a remote repository. If not just 'CVS is returned. If a
-;; remote repository it checks if the value of `vc-cvs-stay-local' is a string
-;; and matches the host of that repository. If yes then just 'CVS is returned. If
-;; not then ECB checks if that host is currently accessible by performing a ping.
-;; If accessible 'CVS is returned otherwise nil. This has the advantage that ECB
-;; will not be blocked by trying to get the state from a remote repository while
-;; the host is not accessible \(e.g. because the user works offline).
-
-;; Special remark for XEmacs: XEmacs has a quite outdated VC-package which has no
-;; option `vc-cvs-stay-local' so the user can not work with remote
-;; CVS-repositories if working offline for example. So if there is no option
-;; `vc-cvs-stay-local' then ECB performs always the repository check mentioned
-;; above and it depends on the value of `ecb-vc-xemacs-exclude-remote-repository'
-;; if ECB treats such a directory as managed by CVS or not!"
-;;   (and (ecb-file-exists-p (concat directory "/CVS/"))
-;;        (or (ignore-errors (progn
-;;                             (require 'vc)
-;;                             (require 'vc-cvs)))
-;;            t)
-;;        (if (or (not (boundp 'vc-cvs-stay-local)) ;; XEmacs doesn't have this
-;;                (null vc-cvs-stay-local)
-;;                (stringp vc-cvs-stay-local)
-;;                (listp vc-cvs-stay-local))
-;;            ;; XEmacs has a quite outdated VC-package which has no option
-;;            ;; `vc-cvs-stay-local' so the user can not work with remote
-;;            ;; directories if working offline for example. so we use a
-;;            ;; workaround by checking the root of the CVS-repsoitory (we can
-;;            ;; get it from the file /CVS/Root) if it is a remote root and if
-;;            ;; yes we ping the host of that root. If accessible ...
-;;            (let* ((Root-content (ecb-file-content-as-string (concat directory
-;;                                                                     "/CVS/Root")))
-;;                   (host (and Root-content
-;;                              (ecb-vc-cvs-root-remote-p Root-content))))
-;;              (if (and host
-;;                       ecb-vc-xemacs-exclude-remote-cvs-repository
-;;                       (not (boundp 'vc-cvs-stay-local)))
-;;                  nil
-;;                (when (or (null host) ;; local repository
-;;                          ;; maybe vc-cvs-stay-local says VC should stay local for this
-;;                          ;; host - let's check it
-;;                          (and (boundp 'vc-cvs-stay-local)
-;;                               vc-cvs-stay-local
-;;                               ;; here vc-cvs-stay-local is either a string or
-;;                               ;; a list
-;;                               (let* ((stay-local-list (if (stringp vc-cvs-stay-local)
-;;                                                           (list vc-cvs-stay-local)
-;;                                                         vc-cvs-stay-local))
-;;                                      (conv-fcn (if (equal 'except (car stay-local-list))
-;;                                                    'not
-;;                                                  'identity))
-;;                                      (stay-local-list-1 (if (equal 'except (car stay-local-list))
-;;                                                             (cdr stay-local-list)
-;;                                                           stay-local-list)))
-;;                                 (funcall conv-fcn
-;;                                          (catch 'found
-;;                                            (dolist (host-regexp stay-local-list-1)
-;;                                              (if (save-match-data (string-match host-regexp host))
-;;                                                  (throw 'found t)))
-;;                                            nil))))
-;;                          ;; well, we should not stay local, so we check if the
-;;                          ;; host is at least accessible
-;;                          (ecb-host-accessible-p host))
-;;                  'CVS)))
-;;          ;; VC always will stay local so we are satisfied ;-)
-;;          'CVS)))
-
 
 (defun ecb-vc-dir-managed-by-RCS (directory)
   "Return 'RCS if DIRECTORY is managed by RCS. nil if not."

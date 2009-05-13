@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.179 2009/05/08 14:05:55 berndl Exp $
+;; $Id: tree-buffer.el,v 1.180 2009/05/13 17:17:32 berndl Exp $
 
 ;;; Commentary:
 
@@ -926,7 +926,7 @@ get the data.")
 (defvar tree-buffer-images-can-be-used-init-p nil
   "INTERNAL - DO NOT USE AND CHANGE!")
 
-(defsubst tree-buffer-images-can-be-used ()
+(defun tree-buffer-images-can-be-used ()
   "Not nil if images can be used with current Emacs setup."
   (if tree-buffer-images-can-be-used-init-p
       tree-buffer-images-can-be-used
