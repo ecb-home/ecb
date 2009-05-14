@@ -265,9 +265,7 @@
 
 *** All this together makes the new layout-engine of ECB much more robust.
     
-** Better compatibility with XEmacs (21.4 and forthcoming 21.5)
-
-*** TODO TODO
+** Better compatibility with XEmacs 21.4
     
 ** The commands `ecb-download-ecb' and `ecb-download-semantic' are deactivated
    These features are not supported anymore. It costs two much effort to keep

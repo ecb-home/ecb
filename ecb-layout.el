@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.272 2009/05/13 17:17:32 berndl Exp $
+;; $Id: ecb-layout.el,v 1.273 2009/05/14 08:50:06 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -4647,6 +4647,23 @@ ring-cache as add-on to CONFIGURATION."
      (ecb-layout-debug-error "advice of set-window-configuration failed: (error-type: %S, error-data: %S)"
                              (car oops) (cdr oops))))
   ad-return-value)
+
+(when-ecb-running-xemacs
+ (defecb-advice set-window-configuration/mapping after ecb-layout-basic-adviced-functions
+   "If `set-window-configuration' changes the values of `ecb-edit-window',
+`ecb-last-edit-window-with-point' or `ecb-compile-window', this advice reset
+them to the new values to allow ecb to run at all in XEmacs 21.5"
+   (let ((edit-window-changed (assq ecb-edit-window ad-return-value))
+         (last-edit-window-with-point-changed (assq ecb-last-edit-window-with-point ad-return-value))
+         (compile-window-changed (assq ecb-compile-window ad-return-value)))
+     (if edit-window-changed
+         (setq ecb-edit-window (cdr edit-window-changed)))
+     (if last-edit-window-with-point-changed
+         (setq ecb-last-edit-window-with-point (cdr last-edit-window-with-point-changed)))
+     (if compile-window-changed
+         (setq ecb-compile-window (cdr compile-window-changed)))))
+ )
+
 
 (defun ecb-current-window-configuration ()
   "Return the current ecb-window-configuration"
