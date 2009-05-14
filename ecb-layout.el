@@ -4648,6 +4648,23 @@ ring-cache as add-on to CONFIGURATION."
                              (car oops) (cdr oops))))
   ad-return-value)
 
+(when-ecb-running-xemacs
+ (defecb-advice set-window-configuration/mapping after ecb-layout-basic-adviced-functions
+   "If `set-window-configuration' changes the values of `ecb-edit-window',
+`ecb-last-edit-window-with-point' or `ecb-compile-window', this advice reset
+them to the new values to allow ecb to run at all in XEmacs 21.5"
+   (let ((edit-window-changed (assq ecb-edit-window ad-return-value))
+         (last-edit-window-with-point-changed (assq ecb-last-edit-window-with-point ad-return-value))
+         (compile-window-changed (assq ecb-compile-window ad-return-value)))
+     (if edit-window-changed
+         (setq ecb-edit-window (cdr edit-window-changed)))
+     (if last-edit-window-with-point-changed
+         (setq ecb-last-edit-window-with-point (cdr last-edit-window-with-point-changed)))
+     (if compile-window-changed
+         (setq ecb-compile-window (cdr compile-window-changed)))))
+ )
+
+
 (defun ecb-current-window-configuration ()
   "Return the current ecb-window-configuration"
   (progn
