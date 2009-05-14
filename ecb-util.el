@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.153 2009/05/12 17:39:25 berndl Exp $
+;; $Id: ecb-util.el,v 1.154 2009/05/14 16:55:25 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -368,6 +368,27 @@ This list is the set union of the values of all function-sets of
 
 DO NOT CHANGE THIS!")
 
+(defvar ecb-advices-debug-error nil)
+
+(defun ecb-advices-debug-error (advice class action &rest args)
+  "Run ARGS through `format' and write it to the *Messages*-buffer.
+ADVICE is the adviced-function-symbol, CLASS is the advice-class \(after,
+around or before) and ACTION is one of the symbols 'calling, 'enabling,
+'disabling or 'reporting.
+
+This will build up a message string like:
+ECB <version>: debug <ACTION> of '<CLASS>' advice ADVICE \[<time>]: ARGS.
+If ARGS is nil then only the message above is reported."
+  (when ecb-advices-debug-error
+    (message (concat (format "ECB %s: debug %s of '%s' advice %s [%s] "
+                             ecb-version
+                             action
+                             class
+                             advice
+                             (format-time-string "%H:%M:%S"))
+                     (if args
+                         (apply 'format args))))))
+
 (defmacro defecb-advice-set (advice-set docstring &optional permanent)
   "Defines an advice-set for ECB.
 This defines a variable which will contain adviced functions defined by
@@ -443,9 +464,17 @@ Example:
      (eval-and-compile
        (defadvice ,adviced-function (,advice-class ecb)
          ,advice-docstring
+         (ecb-advices-debug-error (quote ,adviced-function)
+                                  (quote ,advice-class)
+                                  'calling)
          ,@body))))
 
 (put 'defecb-advice 'lisp-indent-function 3)
+
+;; (insert (pp (macroexpand '(defecb-advice insert around
+;;                                          ecb-always-disabled-advices "doc"
+;;                                          (message "test")))))
+
 
 (defun ecb-enable-ecb-advice (function-symbol advice-class arg)
   "If ARG is greater or equal zero then enable the adviced version of
@@ -457,13 +486,19 @@ IMPORTANT: Do not use the function directly. Always use `ecb-enable-advices',
   (if (< arg 0)
       (progn
         (ad-disable-advice function-symbol advice-class 'ecb)
-        (ad-activate function-symbol))
+        (ad-activate function-symbol)
+        (ecb-advices-debug-error function-symbol advice-class 'disabling))
     (ad-enable-advice function-symbol advice-class 'ecb)
-    (ad-activate function-symbol)))
+    (ad-activate function-symbol)
+    (ecb-advices-debug-error function-symbol advice-class 'enabling)))
+    
 
 (defun ecb-enable-advices (adviced-function-set-var)
   "Enable all advices of ADVICED-FUNCTION-SET-VAR, which must be defined by
 `defecb-advice-set'."
+  (if ecb-advices-debug-error
+      (message "ECB %s: debug enabling the advice-set: %s"
+               ecb-version adviced-function-set-var))
   (if (eq adviced-function-set-var 'ecb-always-disabled-advices)
       (error "The advice-set ecb-always-disabled-advices must not be enabled!"))
   (if (not (assq adviced-function-set-var ecb-adviced-function-sets))
@@ -488,6 +523,9 @@ the adviced will be treated as permanent and will not being disabled.
 
 If optional FORCE-PERMANENT is not nil then ADVICED-FUNCTION-SET-VAR will
 be disabled regardless if permanent or not."
+  (if ecb-advices-debug-error
+      (message "ECB %s: debug disabling the advice-set: %s"
+               ecb-version adviced-function-set-var))
   (if (not (assq adviced-function-set-var ecb-adviced-function-sets))
       (error "The adviced function set %s is not defined by defecb-advice-set!"
              (symbol-name adviced-function-set-var)))
@@ -558,6 +596,9 @@ Example:
               ;; b) ourself, so we can later reset is
               (setcdr (assq ,adviced-function-set-var ecb-adviced-function-sets) 'outmost-caller))
             ))
+       (if ecb-advices-debug-error
+           (message "ECB %s: debug with original advice-set: %s - ENTRY"
+                    ecb-version ,adviced-function-set-var))
        (unwind-protect
            (progn
              (when ,outmost-caller-p
@@ -568,7 +609,10 @@ Example:
            ;; Only if we are the outmost caller we are allowed to re-enable the
            ;; disabled advice-set
            (setcdr (assq ,adviced-function-set-var ecb-adviced-function-sets) nil)
-           (ecb-enable-advices ,adviced-function-set-var))))))
+           (ecb-enable-advices ,adviced-function-set-var))
+         (if ecb-advices-debug-error
+             (message "ECB %s: debug with original advice-set: %s - EXIT"
+                      ecb-version ,adviced-function-set-var))))))
 
 
 (put 'ecb-with-original-adviced-function-set 'lisp-indent-function 1)
@@ -2024,7 +2068,7 @@ means not to count the minibuffer even if it is active."
             (current-point (point))
             list)
         (unwind-protect
-            (progn ;; save-window-excursion loops in XEmacs 21.5
+            (progn ;;save-window-excursion
               (select-frame frame)
               ;; this is needed for correct start-point
               (select-window window)

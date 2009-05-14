@@ -263,20 +263,23 @@
     now also single-frame mode (see `ediff-windows-setup-function') of ediff
     wirks smoothly with ECB.
 
-*** All this together makes the new layout-engine of ECB much more robust.
+*** All this together makes the new layout-engine of ECB much more robust so ECB
+    works smoothly with forthcoming Emacs 23.
     
 ** Better compatibility with XEmacs 21.4
+
+*** Compatibility has been increased but is still not perfect. There is a need
+    for much more tests with XEmacs. This can not been done by the
+    ECB-maintainer because it costs too much effort. Any help from
+    XEmacs-gurus using ECB for their daily work is very appreciated.
+
+** Deprecated, disabled and deactivated features:
     
-** The commands `ecb-download-ecb' and `ecb-download-semantic' are deactivated
-   These features are not supported anymore. It costs two much effort to keep
-   the needed links and mechanism to the sourceforge-download-area up to date.
-   Please download the needed release-archives and extract and install as
-   described in the shipped README rsp. INSTALL-files.
-
-** Better compatibility with XEmacs 21.5
-
-   Thanks to Henry S. Thompson who provided some patches which make ECB
-   compatible with current XEmacs 21.5.
+*** The commands `ecb-download-ecb' and `ecb-download-semantic' are deactivated
+    These features are not supported anymore. It costs two much effort to keep
+    the needed links and mechanism to the sourceforge-download-area up to date.
+    Please download the needed release-archives and extract and install as
+    described in the shipped README rsp. INSTALL-files.
 
 ** Fixed Bugs
 

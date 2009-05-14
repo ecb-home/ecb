@@ -21,7 +21,7 @@
 # GNU Emacs; see the file COPYING.  If not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# $Id: ecb-makedef.mk,v 1.7 2009/04/21 15:23:22 berndl Exp $
+# $Id: ecb-makedef.mk,v 1.8 2009/05/14 16:55:25 berndl Exp $
 
 RM=rm -f
 CP=cp
@@ -38,7 +38,7 @@ ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el \
 	    ecb-jde.el ecb-file-browser.el ecb-method-browser.el \
 	    ecb-winman-support.el ecb-cedet-wrapper.el \
 	    ecb-compatibility.el ecb-common-browser.el ecb-analyse.el \
-	    ecb-symboldef.el
+	    ecb-symboldef.el ecb-advice-test
 
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
 
