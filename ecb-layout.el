@@ -1525,44 +1525,62 @@ arguments. Do never set this variable; it is only set by
  ;; older XEmacsen the newest display-buffer- and
  ;; shrink-to-fit-mechanism. How this is done is described at beginning
  ;; of `ecb-display-buffer-xemacs'.
- (defecb-advice show-temp-buffer-in-current-frame around ecb-layout-basic-adviced-functions
-   "Makes the function compatible with ECB."
-   (let ((pre-display-buffer-function nil)) ; turn it off, whatever it is
-     ;; Here we run our display-buffer-version which in turn calls
-     ;; `ecb-display-buffer-xemacs' which contains the shrink-to-fit
-     ;; mechanism.
-     (let ((window (condition-case oops
-                       ;; For this call `ecb-temp-buffer-shrink-to-fit'
-                       ;; is always nil
-                       (display-buffer (ad-get-arg 0) nil nil
-                                       temp-buffer-shrink-to-fit)
-                     (wrong-number-of-arguments
-                      ;; we have a XEmacs which do not support the 4.
-                      ;; arg SHRINK-TO-FIT of `display-buffer'. So we
-                      ;; call it with only three args and simulate the
-                      ;; 4. arg by setting
-                      ;; `ecb-temp-buffer-shrink-to-fit' to the value of
-                      ;; `temp-buffer-shrink-to-fit'. The adviced
-                      ;; version of `display-buffer' calls
-                      ;; `ecb-display-buffer-xemacs' for XEmacs which in
-                      ;; turn evaluates `ecb-temp-buffer-shrink-to-fit'.
-                      ;; For details see `ecb-display-buffer-xemacs'.
-                      (let ((ecb-temp-buffer-shrink-to-fit temp-buffer-shrink-to-fit))
-                        (ecb-layout-debug-error "show-temp-buffer-in-current-frame for %s: we call a 3-arg display-buffer: %s"
-                                                (ad-get-arg 0) ecb-temp-buffer-shrink-to-fit)
-                        (display-buffer (ad-get-arg 0) nil nil)))
-                     (error (signal (car oops) (cdr oops)))
-                     (quit (signal 'quit nil)))))
-       (if (not (eq (last-nonminibuf-frame) (window-frame window)))
-           ;; only the pre-display-buffer-function should ever do this.
-           (error "display-buffer switched frames on its own!!"))
-       (setq minibuffer-scroll-window window)
-       (set-window-start window 1)      ; obeys narrowing
-       (set-window-point window 1)
-       (ecb-layout-debug-error "show-temp-buffer-in-current-frame: buffer: %s, window: %s, shrink-to-fit: %s"
-                               (ad-get-arg 0) window temp-buffer-shrink-to-fit)
-       nil)))
-      
+
+ ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XEmacs crashes in the following
+ ;; scenario:
+ ;; 1. acticate ECB
+ ;; 2. open a file
+ ;; 3. no compile-window active
+ ;; 4. set temp-buffer-shrink-to-fit to t
+ ;; 5. Split edit-window vertically
+ ;; 6. call from the above window help (e.g. for function insert)
+ ;; 7. insert help is displayed in the bottom window with shrinked window,
+ ;;    point stay in the help-window
+ ;; 8. press q --> the previous window-layout is restored (both window equally
+ ;;    high); point stays in the top-window.
+ ;; 9. now call C-x 1 (delete-other-windows) --> XEmacs crashes
+ ;; It crashes not if temp-buffer-shrink-to-fit is nil (see step 4 above)
+ 
+;; (defecb-advice show-temp-buffer-in-current-frame around ecb-layout-basic-adviced-functions
+;;    "Makes the function compatible with ECB."
+;;    (let ((pre-display-buffer-function nil)) ; turn it off, whatever it is
+;;      ;; Here we run our display-buffer-version which in turn calls
+;;      ;; `ecb-display-buffer-xemacs' which contains the shrink-to-fit
+;;      ;; mechanism.
+;;      (let ((window (condition-case oops
+;;                        ;; For this call `ecb-temp-buffer-shrink-to-fit'
+;;                        ;; is always nil
+;;                        (display-buffer (ad-get-arg 0) nil nil
+;;                                        temp-buffer-shrink-to-fit)
+;;                      (wrong-number-of-arguments
+;;                       ;; we have a XEmacs which do not support the 4.
+;;                       ;; arg SHRINK-TO-FIT of `display-buffer'. So we
+;;                       ;; call it with only three args and simulate the
+;;                       ;; 4. arg by setting
+;;                       ;; `ecb-temp-buffer-shrink-to-fit' to the value of
+;;                       ;; `temp-buffer-shrink-to-fit'. The adviced
+;;                       ;; version of `display-buffer' calls
+;;                       ;; `ecb-display-buffer-xemacs' for XEmacs which in
+;;                       ;; turn evaluates `ecb-temp-buffer-shrink-to-fit'.
+;;                       ;; For details see `ecb-display-buffer-xemacs'.
+;;                       (let ((ecb-temp-buffer-shrink-to-fit temp-buffer-shrink-to-fit))
+;;                         (ecb-layout-debug-error "show-temp-buffer-in-current-frame for %s: we call a 3-arg display-buffer: %s"
+;;                                                 (ad-get-arg 0) ecb-temp-buffer-shrink-to-fit)
+;;                         (display-buffer (ad-get-arg 0) nil nil)))
+;;                      (error (signal (car oops) (cdr oops)))
+;;                      (quit (signal 'quit nil)))))
+;;        (if (not (eq (last-nonminibuf-frame) (window-frame window)))
+;;            ;; only the pre-display-buffer-function should ever do this.
+;;            (error "display-buffer switched frames on its own!!"))
+;;        (setq minibuffer-scroll-window window)
+;;        (set-window-start window 1)      ; obeys narrowing
+;;        (set-window-point window 1)
+;;        (ecb-layout-debug-error "show-temp-buffer-in-current-frame: buffer: %s, window: %s, shrink-to-fit: %s"
+;;                                (ad-get-arg 0) window temp-buffer-shrink-to-fit)
+;;        nil)))
+
+ ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe this is the reason for the
+ ;; crash... lets test
  ;; XEmacs-version
  (defecb-advice shrink-window-if-larger-than-buffer around ecb-layout-basic-adviced-functions
    "Makes the function compatible with ECB."
@@ -2861,6 +2879,7 @@ So never a dedicated window is returned during activated ECB."
 ;; `display-buffer' can use (by setting the not choosable windows temporarly
 ;; dedicated) but the real choosing-task is done by the function
 ;; itself - this is much better and smarter than implementing the whole stuff.
+
 (defecb-advice display-buffer around ecb-layout-basic-adviced-functions
   "Makes this function compatible with ECB if called in or for the ecb-frame.
 It displays all buffers which are \"compilation-buffers\" in the sense of
@@ -2962,11 +2981,7 @@ If called for other frames it works like the original version."
                                 ;; `pop-up-windows' is nil so we must set it
                                 ;; here temporally to t
                                 (let ((pop-up-windows t))
-                                  (setq ad-return-value
-                                        (ecb-display-buffer-xemacs (ad-get-arg 0)
-                                                                   (ad-get-arg 1)
-                                                                   (ad-get-arg 2)
-                                                                   (ad-get-arg 3))))
+                                  ad-do-it)
                               ad-do-it)))
                        ;; making the edit-window(s) not dedicated
                        (mapc (function (lambda (w)
@@ -3031,13 +3046,7 @@ If called for other frames it works like the original version."
                      (split-window (car (ecb-canonical-edit-windows-list))))
                    ;; Here the values of temp-buffer-max-height and
                    ;; compilation-window-height take effect.
-                   (if ecb-running-xemacs
-                       (setq ad-return-value
-                             (ecb-display-buffer-xemacs (ad-get-arg 0)
-                                                        (ad-get-arg 1)
-                                                        (ad-get-arg 2)
-                                                        (ad-get-arg 3)))
-                     ad-do-it))))
+                   ad-do-it)))
             
               ((not (ecb-buffer-is-dedicated-special-buffer-p (ad-get-arg 0)))
                (ecb-layout-debug-error "display-buffer for normal buffer: %s"
@@ -3077,23 +3086,11 @@ If called for other frames it works like the original version."
                            ;; edit-window(s)
                            (setq ecb-layout-temporary-dedicated-windows
                                  (list ecb-compile-window))
-                           (if ecb-running-xemacs
-                               (setq ad-return-value
-                                     (ecb-display-buffer-xemacs (ad-get-arg 0)
-                                                                (ad-get-arg 1)
-                                                                (ad-get-arg 2)
-                                                                (ad-get-arg 3)))
-                             ad-do-it))
+                           ad-do-it)
                        ;; making the compile-window not dedicated
                        (set-window-dedicated-p ecb-compile-window nil)
                        (setq ecb-layout-temporary-dedicated-windows nil))
-                   (if ecb-running-xemacs
-                       (setq ad-return-value
-                             (ecb-display-buffer-xemacs (ad-get-arg 0)
-                                                        (ad-get-arg 1)
-                                                        (ad-get-arg 2)
-                                                        (ad-get-arg 3)))
-                     ad-do-it))))
+                   ad-do-it)))
             
               (t ;; buffer is a special ecb-buffer
                (ecb-layout-debug-error "display-buffer for special ecb-buffer: %s" (ad-get-arg 0))
@@ -3102,13 +3099,256 @@ If called for other frames it works like the original version."
 
     (ecb-layout-debug-error "display-buffer - just run original version.")
     (ecb-with-original-basic-functions
-      (if ecb-running-xemacs
-          (setq ad-return-value
-                (ecb-display-buffer-xemacs (ad-get-arg 0)
-                                           (ad-get-arg 1)
-                                           (ad-get-arg 2)
-                                           (ad-get-arg 3)))
-        ad-do-it))))
+     ad-do-it)))
+
+;; (defecb-advice display-buffer around ecb-layout-basic-adviced-functions
+;;   "Makes this function compatible with ECB if called in or for the ecb-frame.
+;; It displays all buffers which are \"compilation-buffers\" in the sense of
+;; `ecb-compilation-buffer-p' in the compile-window of ECB. If the compile-window
+;; is temporally hidden then it will be displayed first.
+
+;; If there is no compile-window \(`ecb-compile-window-height' is nil) then it
+;; splits the edit-window if unsplitted and displays BUFFER in the other
+;; edit-window but only if `pop-up-windows' is not nil \(otherwise the
+;; edit-window will not splitted).
+
+;; All buffers which are not \"compilation-buffers\" in the sense of
+;; `ecb-compilation-buffer-p' will be displayed in one of the edit-area and
+;; `display-buffer' behaves as if the edit-windows would be the only windows in
+;; the frame.
+
+;; If BUFFER is contained in `special-display-buffer-names' or matches
+;; `special-display-regexps' then `special-display-function' will be called \(if
+;; not nil). But this behavior depends on the value of the option
+;; `ecb-ignore-special-display'. The values of `same-window-buffer-names' and
+;; `same-window-regexps' are supported as well.
+
+;; See the value of the option `ecb-ignore-display-buffer-function'!
+
+;; If called for other frames it works like the original version."
+;;   (if ecb-running-xemacs
+;;       (ecb-layout-debug-error "display-buffer entered with: %s %s %s %s"
+;;                               (ad-get-arg 0)
+;;                               (ad-get-arg 1)
+;;                               (ad-get-arg 2)
+;;                               (ad-get-arg 3))
+;;     (ecb-layout-debug-error "display-buffer entered with: %s %s %s"
+;;                             (ad-get-arg 0)
+;;                             (ad-get-arg 1)
+;;                             (ad-get-arg 2)))
+;;   (if (and ecb-minor-mode
+;;            (or (and (ad-get-arg 2)
+;;                     (framep (ad-get-arg 2))
+;;                     (equal (ad-get-arg 2) ecb-frame))
+;;                (and (or (null (ad-get-arg 2))
+;;                         (equal (ad-get-arg 2) t)
+;;                         (equal (ad-get-arg 2) 0))
+;;                     (equal (selected-frame) ecb-frame)))
+;;            (not (ecb-check-for-special-buffer (ad-get-arg 0)))
+;;            (not (and (boundp 'display-buffer-function)
+;;                      (fboundp display-buffer-function)
+;;                      (not (ecb-ignore-display-buffer-function)))))
+;;       (let ((special-display-function (if (ecb-ignore-special-display)
+;;                                           nil
+;;                                         special-display-function)))
+;;         (cond ((ecb-compilation-buffer-p (ad-get-arg 0))
+;;                (ecb-layout-debug-error "display-buffer for a comp-buffer: %s"
+;;                                        (ad-get-arg 0))
+;;                ;; we have to display the buffer in the compile-window if a
+;;                ;; compile-window was set but currently hidden --> then we have
+;;                ;; to show it now. `ecb-toggle-compile-window' preserves always
+;;                ;; the selected window!
+;;                (when (and (equal 'hidden (ecb-compile-window-state))
+;;                           ;; calling this from minibuffer (e.g. completions)
+;;                           ;; seems to cause problems
+;;                           (not (equal (minibuffer-window ecb-frame) (selected-window))))
+;;                  (ecb-layout-debug-error "display-buffer: comp-win will be toggled.")
+;;                  (save-excursion (ecb-toggle-compile-window 1)))
+;;                (if (ecb-compile-window-live-p)
+;;                    ;; now we have to make the edit-window(s) dedicated
+;;                    (let ((edit-window-list (ecb-canonical-edit-windows-list))
+;;                          (pop-up-frames (if (ecb-ignore-pop-up-frames)
+;;                                             nil
+;;                                           pop-up-frames)))
+;;                      (ecb-layout-debug-error "display-buffer: buffer %s has to be displayed in the alive compile-window: %s"
+;;                                              (ad-get-arg 0) ecb-compile-window)
+;;                      (unwind-protect
+;;                          (progn
+;;                            (mapc (function (lambda (w)
+;;                                              (set-window-dedicated-p w t)))
+;;                                  edit-window-list)
+;;                            (setq ecb-layout-temporary-dedicated-windows
+;;                                  edit-window-list)
+;;                            ;; now we perform the original `display-buffer' but
+;;                            ;; now the only not dedicated window is the compile
+;;                            ;; window so `display-buffer' MUST use this.
+
+;;                            ;; `display-buffer' sometimes tries to split the
+;;                            ;; compile-window (e.g. if it is called from the
+;;                            ;; compile-window - e.g. calling help from the
+;;                            ;; compile-window - or with Emacs 23 also when
+;;                            ;; using a frame-width compile-window and do
+;;                            ;; completions). To avoid this we must temporally
+;;                            ;; make the ecb-frame unsplittable - but here we
+;;                            ;; can do this savely because here we have a live
+;;                            ;; compile-window and a buffer which should be
+;;                            ;; displayed there ==> display-buffer MUST
+;;                            ;; (because all other windows are temporally
+;;                            ;; dedicated) use exactly this window and there
+;;                            ;; is no need to split it
+;;                            (ecb-with-unsplittable-ecb-frame
+;;                             (if ecb-running-xemacs
+;;                                 ;; XEmacs does not shrink to fit if
+;;                                 ;; `pop-up-windows' is nil so we must set it
+;;                                 ;; here temporally to t
+;;                                 (let ((pop-up-windows t))
+;;                                   (setq ad-return-value
+;;                                         (ecb-display-buffer-xemacs (ad-get-arg 0)
+;;                                                                    (ad-get-arg 1)
+;;                                                                    (ad-get-arg 2)
+;;                                                                    (ad-get-arg 3))))
+;;                               ad-do-it)))
+;;                        ;; making the edit-window(s) not dedicated
+;;                        (mapc (function (lambda (w)
+;;                                          (set-window-dedicated-p w nil)))
+;;                              edit-window-list)
+;;                        ;;(modify-frame-parameters ecb-frame '((unsplittable . nil)))
+;;                        (setq ecb-layout-temporary-dedicated-windows nil)) ;; end unwind-protect
+
+;;                      ;; if called interactively we run now our
+;;                      ;; `ecb-toggle-compile-window-height' to set the height of
+;;                      ;; the compile-window according to the value of
+;;                      ;; `ecb-enlarged-compilation-window-max-height'. If called
+;;                      ;; non-interactively (e.g. by `compile-internal',
+;;                      ;; `with-output-to-temp-buffer' etc...) then all the
+;;                      ;; resizing or shrinking stuff is handled by
+;;                      ;; `compilation-set-window-height',
+;;                      ;; `resize-temp-buffer-window' (GNU Emacs) or
+;;                      ;; `shrink-window-if-larger-than-buffer' (called by the
+;;                      ;; SHRINK-TO-FIT arg of the XEmacs `display-buffer').
+
+;;                      ;; We can not do this in the non-interactive case because
+;;                      ;; here often after the call of display-buffer the buffer
+;;                      ;; to display does not contain its final contents so the
+;;                      ;; algorithm of `ecb-toggle-compile-window-height' fails
+;;                      ;; (e.g. during `compile-internal'!).
+;;                      (unless pop-up-frames
+;;                        (if (interactive-p)
+;;                            (ecb-set-compile-window-height)
+;;                          (if (save-excursion
+;;                                (set-buffer (ad-get-arg 0))
+;;                                (= (point-min) (point-max)))
+;;                              ;; Klaus Berndl <klaus.berndl@sdm.de>: If this
+;;                              ;; makes trouble we remove it.
+;;                              (ecb-toggle-compile-window-height -1)))
+                       
+;;                        (if (member ecb-compile-window-temporally-enlarge
+;;                                    '(after-selection both))
+;;                            (setq ecb-layout-prevent-handle-compile-window-selection t)))
+;;                      ) ;; end of let...
+
+;;                  ;; OK, we have really no compile-window...
+               
+;;                  ;; needed for TAB-completion if this offers the completions in
+;;                  ;; a temp-buffer. Without this manually split the whole
+;;                  ;; edit-window would be used for the completions which is not
+;;                  ;; the default-behavior of Emacs.
+;;                  (let ((pop-up-frames (if (ecb-ignore-pop-up-frames)
+;;                                           nil
+;;                                         pop-up-frames)))
+;;                    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: emacs 23
+;;                    ;; splits automatically when window-size allows this (see
+;;                    ;; split-width-threshold and split-height-threshold)...
+;;                    ;; Test and ev. modify (not a serious problem but not nice)
+;;                    (when (and (not ecb-windows-hidden)
+;;                               (not (ecb-layout-top-p))
+;;                               pop-up-windows
+;;                               (not pop-up-frames)
+;;                               (not (ecb-edit-window-splitted))
+;;                               (not (ecb-check-for-same-window-buffer (ad-get-arg 0))))
+;;                      (ecb-layout-debug-error "display-buffer for comp-buffer %s - split edit-window:"
+;;                                              (ad-get-arg 0))
+;;                      (split-window (car (ecb-canonical-edit-windows-list))))
+;;                    ;; Here the values of temp-buffer-max-height and
+;;                    ;; compilation-window-height take effect.
+;;                    (if ecb-running-xemacs
+;;                        (setq ad-return-value
+;;                              (ecb-display-buffer-xemacs (ad-get-arg 0)
+;;                                                         (ad-get-arg 1)
+;;                                                         (ad-get-arg 2)
+;;                                                         (ad-get-arg 3)))
+;;                      ad-do-it))))
+            
+;;               ((not (ecb-buffer-is-dedicated-special-buffer-p (ad-get-arg 0)))
+;;                (ecb-layout-debug-error "display-buffer for normal buffer: %s"
+;;                                        (ad-get-arg 0))
+;;                (let ((edit-win-list (ecb-canonical-edit-windows-list))
+;;                      (pop-up-frames (if (ecb-ignore-pop-up-frames)
+;;                                         nil
+;;                                       pop-up-frames)))
+;;                  ;; maybe we have to split the edit-area here
+;;                  (when (and (or pop-up-windows (ad-get-arg 1))
+;;                             (not pop-up-frames)
+;;                             (not (ecb-edit-window-splitted edit-win-list))
+;;                             ;; if the BUFFER is already displayed in an
+;;                             ;; edit-window and NOT-THIS-WINDOW is nil then
+;;                             ;; we must not split the edit-window because
+;;                             ;; display-buffer then just uses this window for
+;;                             ;; displaying BUFFER.
+;;                             (not (and (not (ad-get-arg 1))
+;;                                       (member (get-buffer-window (ad-get-arg 0) ecb-frame)
+;;                                               edit-win-list)))
+;;                             ;; if we display a "normal" buffer from outside
+;;                             ;; the edit-windows then we have per se another
+;;                             ;; window because the buffer will displayed in
+;;                             ;; an edit-window ==> we only split if we are
+;;                             ;; already in an edit-window.
+;;                             (ecb-point-in-edit-window-number edit-win-list)
+;;                             (not (ecb-check-for-same-window-buffer (ad-get-arg 0))))
+;;                    (ecb-layout-debug-error "display-buffer for normal-buffer %s - split edit-window:"
+;;                                            (ad-get-arg 0))
+;;                    (split-window (car edit-win-list)))
+;;                  (if (ecb-compile-window-live-p)
+;;                      (unwind-protect
+;;                          (progn
+;;                            (set-window-dedicated-p ecb-compile-window t)
+;;                            ;; now we perform the original `display-buffer' but
+;;                            ;; now the only not dedicated window(s) are the
+;;                            ;; edit-window(s)
+;;                            (setq ecb-layout-temporary-dedicated-windows
+;;                                  (list ecb-compile-window))
+;;                            (if ecb-running-xemacs
+;;                                (setq ad-return-value
+;;                                      (ecb-display-buffer-xemacs (ad-get-arg 0)
+;;                                                                 (ad-get-arg 1)
+;;                                                                 (ad-get-arg 2)
+;;                                                                 (ad-get-arg 3)))
+;;                              ad-do-it))
+;;                        ;; making the compile-window not dedicated
+;;                        (set-window-dedicated-p ecb-compile-window nil)
+;;                        (setq ecb-layout-temporary-dedicated-windows nil))
+;;                    (if ecb-running-xemacs
+;;                        (setq ad-return-value
+;;                              (ecb-display-buffer-xemacs (ad-get-arg 0)
+;;                                                         (ad-get-arg 1)
+;;                                                         (ad-get-arg 2)
+;;                                                         (ad-get-arg 3)))
+;;                      ad-do-it))))
+            
+;;               (t ;; buffer is a special ecb-buffer
+;;                (ecb-layout-debug-error "display-buffer for special ecb-buffer: %s" (ad-get-arg 0))
+;;                (or (setq ad-return-value (get-buffer-window (ad-get-arg 0) ecb-frame))
+;;                    (ecb-error "display-buffer can not display not visible ecb-buffers!")))))
+
+;;     (ecb-layout-debug-error "display-buffer - just run original version.")
+;;     (ecb-with-original-basic-functions
+;;      (if ecb-running-xemacs
+;;          (setq ad-return-value
+;;                (ecb-display-buffer-xemacs (ad-get-arg 0)
+;;                                           (ad-get-arg 1)
+;;                                           (ad-get-arg 2)
+;;                                           (ad-get-arg 3)))
+;;        ad-do-it))))
 
 
 (defun ecb-get-other-window-minibuf-active (win-list
@@ -3418,7 +3658,8 @@ compile-window then it will be hidden and otherwise the behavior depends on
           ;; we allow deletion of all other windows (incl. ecb-windows and
           ;; compile-window
           ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: not perfect but...
-          (null (ecb-canonical-edit-windows-list)))
+          (null (ecb-canonical-edit-windows-list))
+          )
       (ecb-with-original-basic-functions
        ad-do-it)
     (ecb-do-with-unfixed-ecb-buffers
@@ -3520,7 +3761,8 @@ behavior depends on `ecb-advice-window-functions-signal-error'."
           ;; we allow deletion of all other windows (incl. ecb-windows and
           ;; compile-window
           ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: not perfect but...
-          (null (ecb-canonical-edit-windows-list)))
+          (null (ecb-canonical-edit-windows-list))
+          )
       (ecb-with-original-basic-functions
        ad-do-it)
     (ecb-do-with-unfixed-ecb-buffers
