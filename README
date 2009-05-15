@@ -1,4 +1,4 @@
-README for the Emacs Code Browser (ECB) version 2.33
+README for the Emacs Code Browser (ECB) version 2.40
 
 
 About
@@ -14,9 +14,6 @@ The latest version can be found at: http://ecb.sourceforge.net
 ------------
 Requirements
 ------------
-
-The easiest way is to follow the steps "Requirements in a nutshell". Just
-do this and the requirements are fulfilled.
 
 1. Emacs-version: ECB works only with (X)Emacs >= 21! If you have an older
    one, please upgrade.

@@ -155,7 +155,7 @@
 ;; (defconst ecb-version "2.33beta1"
 ;;   "Current ECB version.")
 
-(defconst ecb-version "2.33"
+(defconst ecb-version "2.40"
   "Current ECB version.")
 
 (eval-when-compile
@@ -173,7 +173,7 @@
 
 ;; Each NEWS-string should be a one-liner shorter than 70 chars
 (defconst ecb-upgrade-news
-  '(("2.33" . ("ECB now requires full CEDET being installed (at least 1.0pre6)."
+  '(("2.40" . ("ECB now requires full CEDET being installed (at least 1.0pre6)."
                "More user-responsible buffer-parsing based on the idle-mechanism of semantic."
                "ECB is able to work with indirect buffers it the base-buffer is filebased."
                "The history can now be bucketized, see new `ecb-history-make-buckets'."
@@ -183,7 +183,7 @@
                "New command `ecb-goto-window-edit-by-smart-selection'."
                "New command `ecb-goto-window-ecb-by-smart-selection'."
                "New option `ecb-ignore-pop-up-frames'."
-               "Better compatibility with Emacs 22 - see NEWS file."
+               "Full compatibility with Emacs 22 and 23 - see NEWS file."
                "Better compatibility with CEDET 1.0preX and semantic 2.0preX - see NEWS file."
                "The internal download-feature of ECB has been completely disabled."
                ))

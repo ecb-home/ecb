@@ -41,6 +41,7 @@
 
 
 (require 'ecb-util)
+(require 'ecb-common-browser)
 (require 'ecb-layout)
 
 ;; To add compatibilty code for packages just do:

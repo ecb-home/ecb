@@ -635,6 +635,316 @@ examples how to use this macro!"
 ;; Internals
 ;;====================================================
 
+;;; ----- advice stuff -------------------------------------
+
+(defvar ecb-adviced-function-sets nil
+  "A list of adviced-function sets defined with `defecb-advice-set'.
+Each element is a cons-cell where car is the advice-set-var and cdr is an
+indicator if the caller of `ecb-with-original-adviced-function-set' is the
+outmost caller.
+
+DO NOT CHANGE THIS!")
+
+(defvar ecb-adviced-permanent-function-sets nil
+  "A list of symbols, each of them an advice-set which should be permanent.
+Permanent means this advice set will not be disabled during deactivation of
+ECB. This variable is only set by `defecb-advice-set'.
+
+DO NOT CHANGE THIS!")
+
+(defvar ecb-adviced-functions nil
+  "A list of all advices defined with `defecb-advice'.
+This list is the set union of the values of all function-sets of
+`ecb-adviced-function-sets'.
+
+DO NOT CHANGE THIS!")
+
+(defvar ecb-advices-debug-error nil
+  "It not nil then each advice of ECB reports when it's en/disabled or called.")
+
+(defun ecb-advices-debug-error (advice class action &rest args)
+  "Run ARGS through `format' and write it to the *Messages*-buffer.
+ADVICE is the adviced-function-symbol, CLASS is the advice-class \(after,
+around or before) and ACTION is one of the symbols 'calling, 'enabling,
+'disabling or 'reporting.
+
+This will build up a message string like:
+ECB <version>: debug <ACTION> of '<CLASS>' advice ADVICE: ARGS.
+If ARGS is nil then only the message above is reported."
+  (when ecb-advices-debug-error
+    (message (concat (format "ECB %s: debug %s of '%s' advice %s "
+                             ecb-version
+                             action
+                             class
+                             advice)
+                     (if args
+                         (apply 'format args))))))
+
+(defmacro defecb-advice-set (advice-set docstring &optional permanent)
+  "Defines an advice-set for ECB.
+This defines a variable which will contain adviced functions defined by
+`defecb-advice-set'. This is a set of advices which can be enabled or disabled
+\"en block\" which must be done either by `ecb-enable-advices',
+`ecb-disable-advices' or `ecb-with-original-adviced-function-set'.
+
+Before defining a new advice-set it's recommended to take a look at the value
+of `ecb-adviced-function-sets' if there is already a suitable advice-set.
+
+IMPORTANT: Each advice in ECB must be defined by `defecb-advice' and must
+belong to an advice-set previously defined by `defecb-advice-set'!
+
+All advice-sets of ECB will be automatically\(!) disabled at load-time of the
+ecb-library and at deactivation-time of ECB. But: Enabling of a certain
+advice-set must be done appropriately.
+
+If optional argument PERMANENT is t then this advice-set will NOT be disabled
+at deactivation-time of ECB! Calling `ecb-disable-advices' for an advice set
+defined with permanent is t will take no effect unless the optional argument
+FORCE-PERMANENT of this function is set to not nil.
+PERMANENT can also be a function which will be called by `ecb-disable-advices'
+for this advice set \(the function gets one argument: the symbol of the
+advice-set) and have to return not nil if the advice-set should not be disable
+by `ecb-disable-advices' unless the FORCE-PERMANENT of this function is set to
+not nil. 
+
+Example:
+
+\(defecb-advice-set ecb-always-disabled-advices
+  \"These advices are always disabled.\")"
+  `(eval-and-compile
+     (add-to-list 'ecb-adviced-function-sets (cons (quote ,advice-set), nil))
+     ,(if permanent
+          `(add-to-list 'ecb-adviced-permanent-function-sets
+                        (cons (quote ,advice-set) ,permanent)))
+     (defvar ,advice-set nil ,docstring)))
+
+(put 'defecb-advice-set 'lisp-indent-function 1)
+
+(defmacro defecb-advice (adviced-function advice-class advice-set advice-docstring &rest body)
+  "Defines an advice for ADVICED-FUNCTION with ADVICE-CLASS for ADVICE-SET.
+ADVICED-FUNCTION must be an advicable object \(e.g. a function, a subr
+etc...). ADVICE-CLASS must be one of around, after or before. ADVICE-SET must
+ba an advice-set previously defined by `defecb-advice-set'. ADVICE-DOCSTRING
+ist the docstring for the advice. BODY is the program-code for the advice as
+it would be written with `defadvice'.
+
+Do not quote ADVICED-FUNCTION, ADVICE-CLASS and ADVICE-SET.
+
+Example:
+
+\(defecb-advice delete-frame around ecb-layout-basic-adviced-functions
+  \"If FRAME is equal to the ECB frame then...\"
+  \(let \(\(frame \(or \(ad-get-arg 0) \(selected-frame))))
+    \(if \(and ecb-minor-mode
+             \(equal frame ecb-frame))
+        \(when \(ecb-confirm \"Attempt to delete the ECB-frame....Proceed? \")
+	  \(ecb-deactivate-internal) 
+	  ad-do-it)
+      ad-do-it)))"
+  `(progn
+     (if (assoc (quote ,advice-set) ecb-adviced-function-sets)
+         (add-to-list (quote ,advice-set)
+                      (cons (quote ,adviced-function) (quote ,advice-class)))
+       (error "The advice-set %s does not exist!"
+              (symbol-name (quote ,advice-set))))
+     (if (not (member (quote ,advice-class)
+                      '(around after before)))
+         (error "The advice-class %s is not allowed - only around, after and before!"
+                (symbol-name (quote ,advice-class))))
+     (add-to-list 'ecb-adviced-functions (cons (quote ,adviced-function) (quote ,advice-class)))
+     (eval-and-compile
+       (defadvice ,adviced-function (,advice-class ecb)
+         ,advice-docstring
+         (ecb-advices-debug-error (quote ,adviced-function)
+                                  (quote ,advice-class)
+                                  'calling)
+         ,@body))))
+
+(put 'defecb-advice 'lisp-indent-function 3)
+
+;; (insert (pp (macroexpand '(defecb-advice insert around
+;;                                          ecb-always-disabled-advices "doc"
+;;                                          (message "test")))))
+
+
+(defun ecb-enable-ecb-advice (function-symbol advice-class arg)
+  "If ARG is greater or equal zero then enable the adviced version of
+FUNCTION-SYMBOL. Otherwise disable the adviced version. The advice must be
+defined with class ADVICE-CLASS by `defecb-advice'.
+
+IMPORTANT: Do not use the function directly. Always use `ecb-enable-advices',
+`ecb-disable-advices' or `ecb-with-original-adviced-function-set'!."
+  (if (< arg 0)
+      (progn
+        (ad-disable-advice function-symbol advice-class 'ecb)
+        (ad-activate function-symbol)
+        (ecb-advices-debug-error function-symbol advice-class 'disabling))
+    (ad-enable-advice function-symbol advice-class 'ecb)
+    (ad-activate function-symbol)
+    (ecb-advices-debug-error function-symbol advice-class 'enabling)))
+    
+
+(defun ecb-enable-advices (adviced-function-set-var)
+  "Enable all advices of ADVICED-FUNCTION-SET-VAR, which must be defined by
+`defecb-advice-set'."
+  (if ecb-advices-debug-error
+      (message "ECB %s: debug enabling the advice-set: %s"
+               ecb-version adviced-function-set-var))
+  (if (eq adviced-function-set-var 'ecb-always-disabled-advices)
+      (error "The advice-set ecb-always-disabled-advices must not be enabled!"))
+  (if (not (assq adviced-function-set-var ecb-adviced-function-sets))
+      (error "The adviced function set %s is not defined by defecb-advice-set!"
+             (symbol-name adviced-function-set-var)))
+  (dolist (elem (symbol-value adviced-function-set-var))
+    (ecb-enable-ecb-advice (car elem) (cdr elem) 1)))
+  
+(defun ecb-disable-advices (adviced-function-set-var &optional force-permanent)
+  "Disable all advices of ADVICED-FUNCTION-SET-VAR, which must be defined by
+`defecb-advice-set'
+
+This function tests if ADVICED-FUNCTION-SET-VAR has been defined as permanent
+by `defecb-advice-set'.
+
+Calling `ecb-disable-advices' for an advice set defined with
+permanent t will take no effect unless the optional argument
+FORCE-PERMANENT is set to not nil. If the advice set is defined as permanent
+with a permanent-disable-function then this function is called with
+ADVICED-FUNCTION-SET-VAR as argument; if this function returns not nil then
+the adviced will be treated as permanent and will not being disabled.
+
+If optional FORCE-PERMANENT is not nil then ADVICED-FUNCTION-SET-VAR will
+be disabled regardless if permanent or not."
+  (if ecb-advices-debug-error
+      (message "ECB %s: debug disabling the advice-set: %s"
+               ecb-version adviced-function-set-var))
+  (if (not (assq adviced-function-set-var ecb-adviced-function-sets))
+      (error "The adviced function set %s is not defined by defecb-advice-set!"
+             (symbol-name adviced-function-set-var)))
+  (let ((permanent (if force-permanent
+                       nil
+                     (cdr (assq adviced-function-set-var
+                                ecb-adviced-permanent-function-sets)))))
+    (unless (or (eq permanent t)
+                (and (functionp permanent)
+                     (funcall permanent adviced-function-set-var)))
+      (dolist (elem (symbol-value adviced-function-set-var))
+        (ecb-enable-ecb-advice (car elem) (cdr elem) -1)))))
+
+;; for the outmost-caller-stuff see ecb-with-original-adviced-function-set
+(defmacro ecb-with-ecb-advice (function-symbol advice-class &rest body)
+  "Evaluates BODY with the adviced version of FUNCTION-SYMBOL. The advice must
+be defined by `defecb-advice' with class ADVICE-CLASS for the advice-set
+`ecb-always-disabled-advices'. Otherwise an error occurs. The advice is only
+active during BODY.
+
+BODY is protected by `unwind-protect' so in each case the advice
+will be disabled after finishing this macro unless it is nested
+within a call to this macro for the *same* FUNCTION-SYMBOL and
+ADVICE-CLASS-combination! This means that the usage of this macro
+is save for arbitrary nested calls, so full BODY is guaranted
+being evaluated with enabled ADVICE-CLASS advice for
+FUNCTION-SYMBOL.
+
+Returns the value of BODY.
+
+Example where this macro is used for `walk-windows' within another advice:
+
+\(ecb-with-ecb-advice 'walk-windows 'around
+   ad-do-it)"
+  (let ((outmost-caller-p (make-symbol "outmost-caller-p")))
+    ;; we have to check if we are the outmost-caller of this macro for this
+    ;; adviced function AND the advice-class! different advice-classes for the
+    ;; same function have to be treated differently!!
+    `(let ((,outmost-caller-p (unless (member ,advice-class (get ,function-symbol 'ecb-with-ecb-advice))
+                                (put ,function-symbol 'ecb-with-ecb-advice
+                                     (append (list ,advice-class) (get ,function-symbol 'ecb-with-ecb-advice)))
+                                ,advice-class)))
+       (if (not (member (cons ,function-symbol ,advice-class)
+                      ecb-always-disabled-advices))
+         (error "Advice for %s with class %s not registered in ecb-always-disabled-advices!"
+                (symbol-name ,function-symbol)
+                (symbol-name ,advice-class)))
+       (if ecb-advices-debug-error
+           (message "ECB %s: debug with always disabled ecb-advice: %s %s - ENTRY"
+                    ecb-version ,advice-class ,function-symbol))
+       (unwind-protect
+         (progn
+           (when ,outmost-caller-p
+             (ecb-enable-ecb-advice ,function-symbol ,advice-class 1))
+           ,@body)
+         (when ,outmost-caller-p
+           ;; Only if we are the outmost caller we are allowed to disable the
+           ;; enabled advice
+           (put ,function-symbol 'ecb-with-ecb-advice
+                (delete ,advice-class (get ,function-symbol 'ecb-with-ecb-advice)))
+           (ecb-enable-ecb-advice ,function-symbol ,advice-class -1))
+         (if ecb-advices-debug-error
+             (message "ECB %s: debug with always disabled ecb-advice: %s %s - EXIT"
+                      ecb-version ,advice-class ,function-symbol))))))
+         
+(put 'ecb-with-ecb-advice 'lisp-indent-function 2)
+
+;; (insert (pp (macroexpand '(ecb-with-ecb-advice 'one-window-p 'around
+;;                             (message "")))))
+
+(defmacro ecb-with-original-adviced-function-set (adviced-function-set-var &rest body)
+  "Evaluates BODY with all adviced functions of ADVICED-FUNCTION-SET-VAR
+being disabled \(means with their original definition). Restores always \(even
+if an error occurs during evaluating BODY) the previous state of the adviced
+functions, means it depends if the call to this macro is the outermost call:
+Only if it is the outermost-call the advices of the used advice-set will be
+disabled after finishing. So full BODY is guaranted being evaluated with
+disabled advices of ADVICED-FUNCTION-SET-VAR.
+
+ADVICED-FUNCTION-SET-VAR must be defined by `defecb-advice-set' and all
+advices of this set must be defined by `defecb-advice'. Otherwise an error
+occurs.
+
+Example:
+
+\(ecb-with-original-adviced-function-set 'ecb-layout-basic-adviced-functions
+   \(do-something..))"
+  (let ((outmost-caller-p (make-symbol "outmost-caller-p")))
+    `(let ((,outmost-caller-p 
+            (unless (equal (cdr (assq ,adviced-function-set-var ecb-adviced-function-sets))
+                           'outmost-caller)
+              ;; if we are the outmost caller of this macro we store this
+              ;; for
+              ;; a) following callers
+              ;; b) ourself, so we can later reset is
+              (setcdr (assq ,adviced-function-set-var ecb-adviced-function-sets) 'outmost-caller))
+            ))
+       (if ecb-advices-debug-error
+           (message "ECB %s: debug with original advice-set: %s - ENTRY"
+                    ecb-version ,adviced-function-set-var))
+       (unwind-protect
+           (progn
+             (when ,outmost-caller-p
+               ;; we must force disabling permanent advice-sets too
+               (ecb-disable-advices ,adviced-function-set-var t))
+             ,@body)
+         (when ,outmost-caller-p
+           ;; Only if we are the outmost caller we are allowed to re-enable the
+           ;; disabled advice-set
+           (setcdr (assq ,adviced-function-set-var ecb-adviced-function-sets) nil)
+           (ecb-enable-advices ,adviced-function-set-var))
+         (if ecb-advices-debug-error
+             (message "ECB %s: debug with original advice-set: %s - EXIT"
+                      ecb-version ,adviced-function-set-var))))))
+
+
+(put 'ecb-with-original-adviced-function-set 'lisp-indent-function 1)
+
+
+
+(defecb-advice-set ecb-always-disabled-advices
+  "These advices are always disabled.
+This advice-set can not be enabled by `ecb-enable-advices' but such an
+advice has to be activated 'on demand' by the caller. Such an advice must be
+used with the macro `ecb-with-ecb-advice'.")
+
+;; -- window stuff
+
 (defun ecb-combine-ecb-button/edit-win-nr (ecb-button edit-window-nr)
   "Depending on ECB-BUTTON and EDIT-WINDOW-NR return one value:
 - nil if ECB-BUTTON is 1.

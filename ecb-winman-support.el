@@ -98,6 +98,7 @@
   (require 'silentcomp))
 
 (require 'ecb-util)
+(require 'ecb-common-browser)
 
 (silentcomp-defvar escreen-current-screen-number)
 
