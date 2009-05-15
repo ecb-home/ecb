@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.78 2009/05/13 17:17:32 berndl Exp $
+;; $Id: ecb-html.el,v 1.79 2009/05/15 15:19:52 berndl Exp $
 
 ;;; Code:
 
@@ -77,7 +77,7 @@
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
       `(
-        ,(h-sub-section "ECB 2.33 released! (2009-04-??)"
+        ,(h-sub-section "ECB 2.40 released! (2009-05-??)"
                         "ECB now requires full CEDET being installed (at least
                         1.0pre6). ECB has now more user-responsible
                         buffer-parsing based on the idle-mechanism of

@@ -1,4 +1,4 @@
-* Changes for ECB version 2.33
+* Changes for ECB version 2.40
 
 ** ECB now requires full CEDET-suite being installed (at least version 1.0pre6)
 
@@ -14,22 +14,6 @@
    In general the current CEDET is much more powerful than older
    semantic-versions and ECB uses this power, especially the power of the
    semantic-analyzer.
-
-** Better compatibility with CEDET 1.0preX and semantic 2.0preX
-
-*** The ECB-analyse-window now works very well with current semantic analyzer
-    There is an own synchronize-option-set for the analyse-window:
-    `ecb-analyse-buffer-sync', `ecb-analyse-buffer-sync-delay' and
-    `ecb-analyse-buffer-sync-hook'. See the docstrings. The advantage is, that
-    now the synchronizing of the analyse-window can be customized separately
-    from the other ECB-windows. THis is important because for the
-    analyse-window a higher delay (or even disabled auto.synchronizing)
-    increases usability a lot. See the info-manual.
-    
-*** Fix compatibility about some changes of semantic concerning adopting
-    external member-functions (as in C++ or eieio).
-
-*** ECB now works very well with semantic-idle-scheduler-mode (s.a.)
 
 ** Completely reworked synchronizing mechanism of the ECB-windows
 
@@ -54,9 +38,25 @@
    `ecb-eshell-buffer-sync-delay' to 'basic then the value of
    `ecb-basic-buffer-sync-delay' is used.
 
-   The enhancement allows much more control for the synchronizing of certain
+   This enhancement allows much more control for the synchronizing of certain
    windows.
      
+** Better compatibility with CEDET >= 1.0pre6 and semantic >= 2.0pre6
+
+*** The ECB-analyse-window now works very well with current semantic analyzer
+    There is an own synchronize-option-set for the analyse-window:
+    `ecb-analyse-buffer-sync', `ecb-analyse-buffer-sync-delay' and
+    `ecb-analyse-buffer-sync-hook'. See the docstrings. The advantage is, that
+    now the synchronizing of the analyse-window can be customized separately
+    from the other ECB-windows. THis is important because for the
+    analyse-window a higher delay (or even disabled auto.synchronizing)
+    increases usability a lot. See the info-manual.
+    
+*** Fix compatibility about some changes of semantic concerning adopting
+    external member-functions (as in C++ or eieio).
+
+*** ECB now works very well with semantic-idle-scheduler-mode (s.a.)
+
 ** More user-responsible buffer-parsing based on the idle-mechanism of semantic
 
    Force a reparse of the semantic-source if the idle-scheduler is off.
@@ -97,13 +97,6 @@
    full reparse and this reparse is not being done when Emacs is idle but
    immediatelly and not interruptable (as with the idle-scheduler of
    semantic), which can be quite annoying with big source-files.
-
-** ECB is able to work with indirect buffers if the base-buffer is filebased
-
-   Now you can work with indirect-buffers as well as with normal file-buffers,
-   i.e. indirect buffers are shown in the historyÅ¥, their contents are
-   displayed in the methods-buffer, the ECB-analyse-buffer works with them,
-   autom. synchronizing the ECB-tree-buffers works for them etc...
 
 ** Complete reworked history-buffer
 
@@ -149,9 +142,9 @@
     `ecb-history-dead-buffer-face' and `ecb-history-indirect-buffer-face' and
     equaly named new faces.
 
-** Sticky parent-node for all ECB-windows of type tree-buffer
+** Sticky parent-node for all special ECB-windows of type tree-buffer
 
-   In the header-line (only for GNU Emacs) of a tree-buffer always the
+   Only for GNU Emacs: in the header-line of a tree-buffer always the
    current-parent node of the first visible node is displayed (if there is a
    parent node). This sticky node is exactly in the same manner clickable as
    all other nodes. There is a new option `ecb-tree-make-parent-node-sticky'
@@ -162,8 +155,8 @@
    This is not a user-visible change but enhances the stability of ECB by
    using now a new advice-backbone which guarantes that all ecb-advices are
    enabled rsp. disabled correctly depending on the surrounding context.
-   Introducing three new macros `defecb-advice-set', `defecb-advice' and
-   `ecb-with-original-adviced-function-set'.
+   Introducing four new macros `defecb-advice-set', `defecb-advice',
+   `ecb-with-original-adviced-function-set' and `ecb-with-ecb-advice'.
 
 ** Changes in the version control support of ECB
 
@@ -183,9 +176,9 @@
     This is by offering `ecb-vc-recompute-state' as an alias to the function
     `vc-recompute-state' as state-check function for this option.
 
-*** Makes CVS-support fully compatible with Emacs 22 and 23
+*** CVS-support is now fully compatible with Emacs 22 and 23
 
-** New features rsp. commands
+** New options rsp. commands
 
 *** New command `ecb-goto-window-edit-by-smart-selection'
 
@@ -196,82 +189,91 @@
     `pop-up-frames'. It allows three value: Always, only when a permanent
     compile-window is used and never. This makes ECB fully compatible with the
     option `pop-up-frames'.
-      
-** Full compatibility with Gnu Emacs 22
 
-*** `balance-windows' now works with Emacs 22 too
-    Cause of the completely new implemantation based on `window-tree' ECB
-    uses a new machanism for enabling balance-windows to work properly with
-    active ECB, so only the edit-windows are balanced but all ecb-windows
-    remain on their sizes.
+** Much better compatibility with current Emacs-versions
 
-*** view-mode works also when a permanent compile-window is active
-    This is especially important for displaying help and completions.
+*** Full compatibility with Gnu Emacs 22
 
-*** `master-mode' now works with Emacs 22
+**** `balance-windows' now works with Emacs 22 too
+     Cause of the completely new implemantation based on `window-tree' ECB
+     uses a new machanism for enabling balance-windows to work properly with
+     active ECB, so only the edit-windows are balanced but all ecb-windows
+     remain on their sizes.
 
-*** Grepping from ECB now uses per default `lgrep' rsp. `rgrep'.
+**** view-mode works also when a permanent compile-window is active
+     This is especially important for displaying help and completions.
 
-**** The option `ecb-grep-function' defaults to `lgrep' if available
-     If not it tries `igrep' or 'grep'.
+**** `master-mode' now works with Emacs 22
 
-**** `ecb-grep-find-function' has been renamed to `ecb-grep-recursive-function'
-     It defaults to `rgrep' if available. If not it tries `igrep-find' or
-     `grep-find'. The old value is automatically upgraded to the new option
-     name.
+**** Grepping from ECB now uses per default `lgrep' rsp. `rgrep'.
 
-*** Fixed problems with `ecb-fix-window-size' and active compile-windows
-    With Emacs >= 22 the bugs of Emacs 21.3.X concerning `window-size-fixed'
-    are fixed by the Emacs-team so now ECB supports this feature also with
-    active compile-window.
+***** The option `ecb-grep-function' defaults to `lgrep' if available
+      If not it tries `igrep' or 'grep'.
 
-*** Fixed small lack in the `switch-to-buffer-other-window'-advice.
-    In Emacs 22 this command ignores the settings in `same-window-*'. Now ECB
-    adopts this behavior also for its adviced version so the command works
-    in a smart manner optimized for ECB.
+***** `ecb-grep-find-function' has been renamed to `ecb-grep-recursive-function'
+      It defaults to `rgrep' if available. If not it tries `igrep-find' or
+      `grep-find'. The old value is automatically upgraded to the new option
+      name.
 
-** Much better compatibility with forthcoming Gnu Emacs 23
+**** Fixed problems with `ecb-fix-window-size' and active compile-windows
+     With Emacs >= 22 the bugs of Emacs 21.3.X concerning `window-size-fixed'
+     are fixed by the Emacs-team so now ECB supports this feature also with
+     active compile-window.
 
-*** Removed an annoying behavior which has set the mark hundred of times even
-    when the user just moves the cursor.
+**** Fixed small lack in the `switch-to-buffer-other-window'-advice.
+     In Emacs 22 this command ignores the settings in `same-window-*'. Now ECB
+     adopts this behavior also for its adviced version so the command works
+     in a smart manner optimized for ECB.
+
+*** Much better compatibility with forthcoming Gnu Emacs 23
+
+**** Removed an annoying behavior which has set the mark hundred of times even
+     when the user just moves the cursor.
     
-    This comes from a change within Emacs 23 and the function `goto-line'
-    which sets the mark in Emacs 23. This is not necessary when not used as
-    command but as internal utility. Now ECB uses its own goto-line-function
-    which does not set the mark --> No unnecessary mark settings with Emacs
-    23.
+     This comes from a change within Emacs 23 and the function `goto-line'
+     which sets the mark in Emacs 23. This is not necessary when not used as
+     command but as internal utility. Now ECB uses its own goto-line-function
+     which does not set the mark --> No unnecessary mark settings with Emacs
+     23.
 
-*** The adviced `display-buffer' is now fully compatible with Emacs 23
-    This means simply that you can work with ECB and Emacs 23 as you expect.
+**** The adviced `display-buffer' is now fully compatible with Emacs 23
+     This means simply that you can work with ECB and Emacs 23 as you expect.
 
-*** Fixing some incompatibilities with Emacs 23 concerning using temp. buffers
+**** Fixing some incompatibilities with Emacs 23 concerning using temp. buffers
 
-    The fit-window-to-buffer version of Emacs 23 can destroy windows and is
-    therefore not useable within ECB - now ECB has its own - stolen and
-    adapted from Emacs 22.
+     The fit-window-to-buffer version of Emacs 23 can destroy windows and is
+     therefore not useable within ECB - now ECB has its own - stolen and
+     adapted from Emacs 22.
+  
+     In addition to this the internal help-window-manager of Emacs 23
+     (responsible for displaying *Help*-buffers) chooses sometimes dedicated
+     windows (which is a problem because ECB uses dedicated windows for its
+     own special ECB-windows) whereas Emacs 22 doesn't do this. Now ECB works
+     smoothly with Emacs 23 help-system. Same for view-mode.
 
-    In addition to this the internal help-window-manager of Emacs 23
-    (responsible for displaying *Help*-buffers) chooses sometimes dedicated
-    windows (which is a problem because ECB uses dedicated windows for its
-    own special ECB-windows) whereas Emacs 22 doesn't do this. Now ECB works
-    smoothly with Emacs 23 help-system. Same for view-mode.
+**** ediff-support of ECB is now also fully Emacs 23-compatible
 
-*** ediff-support of ECB is now also fully Emacs 23-compatible
+     Emacs 23 uses dedicated windows: Now ECB can deal with frame-layouts where
+     some windows are neither an ecb-, edit- nor a compile-window. Therefore
+     now also single-frame mode (see `ediff-windows-setup-function') of ediff
+     wirks smoothly with ECB.
 
-    Emacs 23 uses dedicated windows: Now ECB can deal with frame-layouts where
-    some windows are neither an ecb-, edit- nor a compile-window. Therefore
-    now also single-frame mode (see `ediff-windows-setup-function') of ediff
-    wirks smoothly with ECB.
-
-*** All this together makes the new layout-engine of ECB much more robust so ECB
-    works smoothly with forthcoming Emacs 23.
+**** All this together makes the new layout-engine of ECB much more robust so ECB
+     works smoothly with forthcoming Emacs 23.
     
-** Better compatibility with XEmacs 21.4
+*** Better compatibility with XEmacs 21.4 and XEmacs 21.5
 
-*** Compatibility has been increased but is still not perfect. There is a need
+    Compatibility has been increased but is still not perfect. There is a need
     for much more tests with XEmacs. This can not been done by the
     ECB-maintainer because it costs too much effort. Any help from
     XEmacs-gurus using ECB for their daily work is very appreciated.
+
+** ECB is able to work with indirect buffers if the base-buffer is filebased
+
+   Now you can work with indirect-buffers as well as with normal file-buffers,
+   i.e. indirect buffers are shown in the historyÅ¥, their contents are
+   displayed in the methods-buffer, the ECB-analyse-buffer works with them,
+   autom. synchronizing the ECB-tree-buffers works for them etc...
 
 ** Deprecated, disabled and deactivated features:
     
