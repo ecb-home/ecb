@@ -309,6 +309,9 @@
     in the methods buffer. This was when the buffer was reparsed with
     `semantic-idle-scheduler-mode' or after saving the buffer.
 
+*** Fixed a bug in `ecb-create-new-layout' which has displayed wrong modelines
+    in the layout-creation frame.
+    
 *** Fixed a bug in `ecb-submit-problem-report' which prevented it from working
 
 
