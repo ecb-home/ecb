@@ -294,9 +294,9 @@ as \"W-<number>\"."
                             (concat " " prefix (if (stringp text) ": " ""))
                           (if (stringp text) " " "")))
           (win-width (window-width (get-buffer-window buffer-name)))
-          (avaiable-text-width nil))
+          (available-text-width nil))
       (setq shown-prefix (ecb-fit-str-to-width shown-prefix (1- win-width) 'right))
-      (setq avaiable-text-width (- win-width
+      (setq available-text-width (- win-width
                                    (+ (length shown-prefix)
                                       (if (and (not ecb-running-xemacs)
                                                ecb-mode-line-display-window-number
@@ -318,10 +318,9 @@ as \"W-<number>\"."
              (ecb-mode-line-make-modeline-str
               (concat (if (stringp text)
                           (ecb-fit-str-to-width text
-                                                avaiable-text-width
+                                                available-text-width
                                                 'left)))
               ecb-mode-line-data-face))))))
-
 
 
 (defun ecb-mode-line-update-buffer (buffer-name new-mode-line-format)
