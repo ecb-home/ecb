@@ -239,19 +239,33 @@
 **** The adviced `display-buffer' is now fully compatible with Emacs 23
      This means simply that you can work with ECB and Emacs 23 as you expect.
 
+     Especially for displaying temporary buffers (like completion, help,
+     compilation etc.) this means: Gnu Emacs 23 has a much smarter
+     window-manager for displaying temporary buffers (like help-buffers) and
+     "compile"-buffers. Therefore ECB uses completely the logic of Emacs 23
+     and does exactly what Emacs 23 would do without activated ECB: This means
+     mainly that the split-behavior depends on the settings of the options
+     `split-width-threshold' and `split-height-threshold'.
+      
+     So if you are wondering why displaying temporary-buffers (like help,
+     compile, grep, completion etc.) shows different behavior compared to
+     deactivated ECB, then you probably have to adjust the values of the
+     options `split-width-threshold' and `split-height-threshold' so they
+     matches the sizes of the edit-area of ECB (at least nearly).
+
 **** Fixing some incompatibilities with Emacs 23 concerning using temp. buffers
 
      The fit-window-to-buffer version of Emacs 23 can destroy windows and is
      therefore not useable within ECB - now ECB has its own - stolen and
      adapted from Emacs 22.
   
-     In addition to this the internal help-window-manager of Emacs 23
-     (responsible for displaying *Help*-buffers) chooses sometimes dedicated
+     In addition to this the internal help-window-manager of Emacs 23 (a.o.
+     responsible for displaying *Help*-buffers) chooses sometimes dedicated
      windows (which is a problem because ECB uses dedicated windows for its
      own special ECB-windows) whereas Emacs 22 doesn't do this. Now ECB works
      smoothly with Emacs 23 help-system. Same for view-mode.
 
-**** ediff-support of ECB is now also fully Emacs 23-compatible
+**** ediff-support of ECB is now also fully compatible with Emacs 23
 
      Emacs 23 uses dedicated windows: Now ECB can deal with frame-layouts where
      some windows are neither an ecb-, edit- nor a compile-window. Therefore

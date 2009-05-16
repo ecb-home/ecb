@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.275 2009/05/15 15:19:53 berndl Exp $
+;; $Id: ecb-layout.el,v 1.276 2009/05/16 13:24:19 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2971,11 +2971,11 @@ If called for other frames it works like the original version."
                  (let ((pop-up-frames (if (ecb-ignore-pop-up-frames)
                                           nil
                                         pop-up-frames)))
-                   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: emacs 23
-                   ;; splits automatically when window-size allows this (see
-                   ;; split-width-threshold and split-height-threshold)...
-                   ;; Test and ev. modify (not a serious problem but not nice)
-                   (when (and (not ecb-windows-hidden)
+                   ;; emacs 23 splits automatically when window-size allows
+                   ;; this (see split-width-threshold and
+                   ;; split-height-threshold)... 
+                   (when (and (not ecb-running-version-23)
+                              (not ecb-windows-hidden)
                               (not (ecb-layout-top-p))
                               pop-up-windows
                               (not pop-up-frames)

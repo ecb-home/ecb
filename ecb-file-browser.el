@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.78 2009/05/13 17:17:32 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.79 2009/05/16 13:24:19 berndl Exp $
 
 ;;; Commentary:
 
@@ -49,11 +49,10 @@
   (require 'silentcomp))
 
 (silentcomp-defun ecb-speedbar-update-contents)
-(silentcomp-defvar vc-cvs-stay-local)
+(silentcomp-defun vc-load-vc-hooks)
 ;; (silentcomp-defvar vc-svn-admin-directory)
 (silentcomp-defun substring-no-properties)
-(silentcomp-defun vc-git-root)
-(silentcomp-defun vc-mtn-root)
+(silentcomp-defun vc-find-root)
 (silentcomp-defun vc-file-clearprops)
 (silentcomp-defun vc-state)
 (silentcomp-defvar dired-directory)
@@ -3240,37 +3239,44 @@ the SOURCES-cache."
 
 (defun ecb-vc-dir-managed-by-CVS (directory)
   "Return 'CVS if DIRECTORY is managed by CVS. nil if not."
-  (and (ecb-file-exists-p (concat directory "/CVS/"))
-       (or (ignore-errors (progn
-                            (require 'vc)
-                            (require 'vc-cvs)))
-           t)))
+  (and (locate-library "vc-cvs")
+       (ecb-file-exists-p (concat directory "/CVS/"))
+       (require 'vc)
+       (require 'vc-cvs)
+       'CVS))
 
 (defun ecb-vc-dir-managed-by-RCS (directory)
   "Return 'RCS if DIRECTORY is managed by RCS. nil if not."
-  (and (ecb-file-exists-p (concat directory "/RCS/"))
+  (and (locate-library "vc-rcs")
+       (ecb-file-exists-p (concat directory "/RCS/"))
+       (require 'vc)
+       (require 'vc-rcs)
        'RCS))
 
 (defun ecb-vc-dir-managed-by-SVN (directory)
   "Return 'SVN if DIRECTORY is managed by SVN. nil if not."
   (and (locate-library "vc-svn")
-       (let ((admin-dir (if (boundp 'vc-svn-admin-directory)
-                            vc-svn-admin-directory
-                          (cond ((and (memq system-type '(cygwin windows-nt ms-dos))
-                                      (getenv "SVN_ASP_DOT_NET_HACK"))
-                                 "_svn")
-                                (t ".svn")))))
+       (let ((admin-dir (cond ((and (memq system-type '(cygwin windows-nt ms-dos))
+                                    (getenv "SVN_ASP_DOT_NET_HACK"))
+                               "_svn")
+                              (t ".svn"))))
          (ecb-file-exists-p (concat directory "/" admin-dir "/")))
+       (require 'vc)
+       (require 'vc-svn)
        'SVN))
 
 (defun ecb-vc-dir-managed-by-SCCS (directory)
   "Return 'SCCS if DIRECTORY is managed by SCCS. nil if not."
-  (or (and (ecb-file-exists-p (concat directory "/SCCS/")) 'SCCS)
-      ;; Remote SCCS project
-      (let ((proj-dir (getenv "PROJECTDIR")))
-        (if proj-dir
-            (and (ecb-file-exists-p (concat proj-dir "/SCCS")) 'SCCS)
-          nil))))
+  (and (locate-library "vc-sccs")
+       (or (ecb-file-exists-p (concat directory "/SCCS/"))
+           ;; Remote SCCS project
+           (let ((proj-dir (getenv "PROJECTDIR")))
+             (if proj-dir
+                 (ecb-file-exists-p (concat proj-dir "/SCCS")))))
+       (require 'vc)
+       (require 'vc-sccs)
+       'SCCS))
+       
 
 ;; Git support
 
@@ -3278,9 +3284,15 @@ the SOURCES-cache."
   "Return 'GIT if DIRECTORY is managed by Git. nil if not.
 Because with Git only the top-most directory of a source-tree has a subdir
 .git this function tries recursively upwards if there is a .git-subdir."
+  ;; With XEmacs we must first load the vc-hooks which contain the function
+  ;; `vc-find-root'
+  (when ecb-running-xemacs
+    (ignore-errors (vc-load-vc-hooks)))
   (and (locate-library "vc-git")
-       (fboundp 'vc-git-root)
-       (vc-git-root directory)
+       (fboundp 'vc-find-root)
+       (vc-find-root directory ".git")
+       (require 'vc)
+       (require 'vc-git)
        'GIT))
 
 ;; an own implementation for Git...
@@ -3300,11 +3312,16 @@ Because with Git only the top-most directory of a source-tree has a subdir
 
 (defun ecb-vc-dir-managed-by-MTN (directory)
   "Return 'MTN if DIRECTORY is managed by Monotone. nil if not."
+  ;; With XEmacs we must first load the vc-hooks which contain the function
+  ;; `vc-find-root'
+  (when ecb-running-xemacs
+    (ignore-errors (vc-load-vc-hooks)))
   (and (locate-library "vc-mtn")
-       (fboundp 'vc-mtn-root)
-       (vc-mtn-root directory)
+       (fboundp 'vc-find-root)
+       (vc-find-root directory "_MTN/format")
+       (require 'vc)
+       (require 'vc-mtn)
        'MTN))
-
 
 ;; clearcase support
 

@@ -23,7 +23,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.225 2009/05/15 15:19:53 berndl Exp $
+@c $Id: ecb.texi,v 1.226 2009/05/16 13:24:19 berndl Exp $
 
 @setfilename ecb.info
 
@@ -2949,20 +2949,40 @@ result-buffer in another window. This behavior you have also in ECB.
 
 @subsection Standard Emacs behavior
 
-If the edit-area is already splitted into at least two edit-windows
-then the temp-buffer is displayed in another edit-window otherwise the
-edit-area will be splitted first into two edit-windows, one above the
-other. The variables @code{temp-buffer-max-height} and
-@code{temp-buffer-resize-mode} (for GNU Emacs) and
-@code{temp-buffer-shrink-to-fit} (for XEmacs) work also correctly with
-ECB.
+@subsubsection Gnu Emacs 21.x, 22.x and XEmacs 21.4:
 
-Same for all compilation output-buffers (e.g. after a @code{compile} or
-@code{grep}) and the variable @code{compilation-window-height}.
+If the edit-area is already splitted into at least two edit-windows then the
+temp-buffer is displayed in another edit-window otherwise the edit-area will
+be splitted first vertically into two edit-windows, one above the other. The
+variables @code{temp-buffer-max-height} and @code{temp-buffer-resize-mode}
+(for GNU Emacs) and @code{temp-buffer-shrink-to-fit} (for XEmacs) work also
+correctly with ECB.
+
+Same for all completion-buffer and ``compile''-like output-buffers (e.g. after
+a @code{compile} or @code{grep}) and the variable
+@code{compilation-window-height}@footnote{It goes without saying that is is
+also true for @code{grep-window-height} and all other ``compile''-modes.}.
+
+@subsubsection Gnu Emacs 23.x
+
+Gnu Emacs 23 has a much smarter window-manager for displaying temporary
+buffers (like help-buffers) and ``compile''-buffers (like real compilation
+outputs but also grep-outputs, completions etc.). Therefore ECB uses
+completely the logic of Emacs 23 and does exactly what Emacs 23 would do
+without activated ECB: This means mainly that the split-behavior depends on
+the settings of the options @code{split-width-threshold} and
+@code{split-height-threshold}.
+
+@strong{Please note}: If you are wondering why displaying temporary-buffers
+(like help, compile, grep, completion etc.) shows different behavior compared
+to deactivated ECB, then you probably have to adjust the values of the options
+@code{split-width-threshold} and @code{split-height-threshold} to the sizes of
+the edit-area of ECB (at least nearly).
+
 
 This is default behavior of ECB. But there is also another way to
 display such buffers: Using a persistent extra window at the bottom of
-the ECB-frame:
+the ECB-frame, named the ``compile-window'':
 
 @subsection Using a persistent compile window
 
@@ -11769,7 +11789,7 @@ So, how to exclude some subdirectories or files from the grep?
 
 Basically this has to be done with the ``-prune'' option of the
 find-utility: If the standard-grep facility of Emacs is used then this
-is not easy but with the library @file{igrep.el} there is a convenient
+is not easy but with the command @file{igrep.el} there is a convenient
 way to exclude things like CVS- or RCS-directories from the find-call:
 See the variable @code{igrep-find-prune-clause} of the library
 @file{igrep.el}.
@@ -15097,8 +15117,8 @@ active ECB. This can be done with the hooks of ECB.
 @item
 Does ECB support C++ as well as Java?
 @tab @tab
-This depends strongly on the used semantic-version, but all
-semantic-versions >= semantic-1.4.3 support C++ really well.
+In general C++ is supported very well. But it depends on the used
+cedet-version, but cedet-version >= 1.0pre6 support C++ really well.
 
 @item @tab @tab
 
@@ -15140,20 +15160,6 @@ c++-mode in @code{auto-mode-alist} and/or your own Emacs-setup has
 @*
 @end ifinfo
 See @ref{Setting up Emacs}.
-
-@item @tab @tab
-
-@item
-Why doesn't ECB display the node name in the echo area if mouse moves
-over it?
-@tab @tab
-There can be several reasons: First the value of the option
-@code{ecb-show-node-name-in-minibuffer} must be either @code{always} or
-@code{if-too-long}. If this is OK, then maybe you have turned on
-follow-mouse AFTER activating ECB; follow-mouse must be turned on
-BEFORE ECB is activated, e.g. in the @code{ecb-activate-hook}! But with
-Emacs 21.X and XEmacs there are no problems with this feature, just
-activate it.
 
 @item @tab @tab
 
@@ -15560,13 +15566,75 @@ See also @ref{Version-control support} for hints what you can do.
 @item @tab @tab
 
 @item
-I get errors when trying to download new ECB with
-@code{ecb-download-ecb}.
+The state of the files under version control seems to be not accurate. What is
+the reason and what can i do?
 @tab @tab
-Ensure that the ECB-configuration of these tools is correct for your
-system (see @code{ecb-wget-setup}, @code{ecb-gzip-setup} and
-@code{ecb-tar-setup}).
+The option @code{ecb-vc-supported-backends} offers now also a accurate
+recompute-state function. This is by offering @code{ecb-vc-recompute-state} as
+an alias to the function @code{vc-recompute-state} as state-check function for
+this option. See also @ref{Version-control support}
 
+@item @tab @tab
+
+@item
+With Emacs 23 ECB shows a odd split-behavior when calling help or displaying
+completion-output or compilation- or grep-output. What is the reason.
+@tab @tab
+Check the values of the options @code{split-width-threshold} and
+@code{split-height-threshold}. ECBs split-behavior depends fully on the
+Emacs-logic and that one depends mainly on these two options. So adjust them
+to match (at least nearly) the sizes of the edit-area of ECB.
+
+@item @tab @tab
+
+@item
+When using a layout with the special ecb-window for the semantic analyzer then
+Emacs seems to be blocked when typing pauses. What is the reason and what can
+i do?
+@tab @tab
+This comes from the idle-mechanism ECB/semantic uses to offer some
+intellisense like displaying possible completions and local variables
+depending on current context (ie. location of point). So if point stays on a
+location within your code where hundreds (or even thousands) of completions
+are possible then parsing and displaying them can last annoying time. But in
+general a keypress interupts. If not then you have to possibilities offered by
+the options @code{ecb-analyse-buffer-sync} and
+@code{ecb-analyse-buffer-sync-delay}: You can increase the delay of the latter
+one so parsing current context starts later after Emacs goes idle (ie. after
+you pause typing). Or you can disable the automatic synchronizing the
+analyser-window with the former one - see the docstring. Then you have to
+synchronize (ie. start parsing context) on demand via the command
+@code{ecb-analyse-buffer-sync}@footnote{Yes, both the option and the command
+have the same name}.
+
+@item @tab @tab
+
+@item
+How can i change the bucketizing method of the history-window?
+@tab @tab
+Either via popup context-menu (right mouse-button) or with the option
+@code{ecb-history-make-buckets}.
+
+@item @tab @tab
+
+@item
+How can i disable this grey headerline in the tree-buffers?
+@tab @tab
+See the option @code{ecb-tree-make-parent-node-sticky}.
+
+@item @tab @tab
+
+@item
+When clicking onto a parent-node in the methods-window then ECB doesn't jump
+to the definition of this parent-type.
+@tab @tab
+ECB uses completely the smartness of the semanticdb and the semantic-analyzer.
+So if you have customized semantic accordingly to the needs of your project
+(ie. mainly setting up all so semantic can find files in your
+directory-structure) then ECB will find the parent-definition and also jump to
+it. See @ref{ECB Methods-window} and the subsection ``Jumping to the
+definition of external tags'' and see the option
+@code{ecb-find-external-tag-functions}.
 
 @end multitable
 
