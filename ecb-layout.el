@@ -2971,11 +2971,11 @@ If called for other frames it works like the original version."
                  (let ((pop-up-frames (if (ecb-ignore-pop-up-frames)
                                           nil
                                         pop-up-frames)))
-                   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: emacs 23
-                   ;; splits automatically when window-size allows this (see
-                   ;; split-width-threshold and split-height-threshold)...
-                   ;; Test and ev. modify (not a serious problem but not nice)
-                   (when (and (not ecb-windows-hidden)
+                   ;; emacs 23 splits automatically when window-size allows
+                   ;; this (see split-width-threshold and
+                   ;; split-height-threshold)... 
+                   (when (and (not ecb-running-version-23)
+                              (not ecb-windows-hidden)
                               (not (ecb-layout-top-p))
                               pop-up-windows
                               (not pop-up-frames)
