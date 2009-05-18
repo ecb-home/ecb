@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.79 2009/05/15 15:19:52 berndl Exp $
+;; $Id: ecb-html.el,v 1.80 2009/05/18 16:04:34 berndl Exp $
 
 ;;; Code:
 
@@ -53,44 +53,27 @@
 ;; These shouldn't have to be changed
 (defvar ecb-dirname nil)
 (setq ecb-dirname (concat "ecb-" ecb-version))
-(defvar ecb-zip-name nil)
-(setq ecb-zip-name (concat ecb-dirname ".zip"))
-(defvar ecb-gz-name nil)
-(setq ecb-gz-name (concat ecb-dirname ".tar.gz"))
-(defvar ecb-zip-url nil)
-(setq ecb-zip-url (concat ecb-download-ecb-url ecb-zip-name))
-(defvar ecb-gz-url nil)
-(setq ecb-gz-url (concat ecb-download-ecb-url ecb-gz-name))
-(defvar ecb-pdf-name nil)
-(setq ecb-pdf-name (concat ecb-dirname ".pdf"))
-(defvar ecb-pdf-zip-name nil)
-(setq ecb-pdf-zip-name (concat ecb-pdf-name ".zip"))
-(defvar ecb-pdf-gz-name nil)
-(setq ecb-pdf-gz-name (concat ecb-pdf-name ".gz"))
-(defvar ecb-pdf-zip-url nil)
-(setq ecb-pdf-zip-url (concat ecb-download-ecb-url ecb-pdf-zip-name))
-(defvar ecb-pdf-gz-url nil)
-(setq ecb-pdf-gz-url (concat ecb-download-ecb-url ecb-pdf-gz-name))
-
 
 (defvar ecb-latest-news nil
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
       `(
-        ,(h-sub-section "ECB 2.40 released! (2009-05-??)"
+        ,(h-sub-section "ECB 2.40 released! (2009-05-16)"
                         "ECB now requires full CEDET being installed (at least
                         1.0pre6). ECB has now more user-responsible
                         buffer-parsing based on the idle-mechanism of
-                        semantic. ECB is full compatible with Emacs 22 and 23
-                        and also with XEmacs. ECB is able to work with
-                        indirect buffers it the base-buffer is filebased. It
+                        semantic. In addition it fully supports current
+                        semantic-analyzer for intellisense and type-finding. ECB is more stable and now fully compatible with Emacs 22 and 23
+                        and also mostly with XEmacs. ECB is able to work with
+                        indirect buffers if the base-buffer is filebased. It
                         has a complete reworked history-buffer which can be
                         bucketized and shows dead- and indirect-buffers in
                         different faces. It has new support for Git and
-                        Monotone as version-control systems. In addition a lot of bugs are fixed."
+                        Monotone as version-control systems. In addition a lot
+                        of bugs are fixed. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
-                        " for information about changes in the new version. ")
+                        " for information about all changes in the new version. ")
         ,(h-sub-section "ECB 2.32 released! (2005-07-11)"
                         "ECB offers now two new interactors (special ecb-windows): One for the semantic-analyser (of cedet) and one for displaying the definition of current symbol at point. In addition the up- and down-arrow-keys are also smart in the tree-buffers. Much better maximizing and minimizing of the ecb-windows. Support for (X)Emacs < 21 has been officialy removed. Full documentation of the library tree-buffer.el. Some important bug-fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
@@ -308,7 +291,7 @@
 	      (h-bullet-link-list
 	       ecb-bullet
 	       '(("http://cedet.sourceforge.net" "Full CEDET suite" "Recommend is the newest release, required is at least a version >= 1.0pre6.")
-		 ("http://jdee.sunsite.dk" "JDEE (optional)" "If you use ECB for Java development."))
+		 ("http://jdee.sourceforge.net/" "JDEE (optional)" "If you use ECB for Java development."))
 		 "_top")
 	      (h-p "If you use XEmacs you must have installed the packages mail-lib and c-support (contains hideshow.el)."))
 
@@ -370,7 +353,7 @@
      (list
       (list "http://www.gnu.org/software/emacs/emacs.html" "GNU Emacs" (concat "No comment " (h-img "smiley.gif")))
        '("http://www.xemacs.org" "XEmacs" "")
-       '("http://jdee.sunsite.dk" "JDEE" "Recommended Java development environment for Emacs.")
+       '("http://jdee.sourceforge.net/" "JDEE" "Recommended Java development environment for Emacs.")
        '("http://cedet.sourceforge.net" "CEDET" "A collection of Emacs development tools created by Eric M. Ludlam.")
        '("http://www.anc.ed.ac.uk/~stephen/emacs/ell.html" "Emacs Lisp List" "A good collection of Emacs lisp packages.")
 	)
@@ -403,13 +386,13 @@
 	 ("links.html" "Links")
 	 )
        "main"))
-     (h-p
-     (h-b "Latest version: ") h-br
-     (h-img ecb-bullet) " " (h-link ecb-zip-url (h-b ecb-zip-name)) h-br
-     (h-img ecb-bullet) " " (h-link ecb-gz-url (h-b ecb-gz-name)))
+;;      (h-p
+;;      (h-b "Latest version: ") h-br
+;;      (h-img ecb-bullet) " " (h-link ecb-zip-url (h-b ecb-zip-name)) h-br
+;;      (h-img ecb-bullet) " " (h-link ecb-gz-url (h-b ecb-gz-name)))
      (h-p
       (h-b "Hosted by: ") h-br
-      (h-link "http://sourceforge.net/projects/ecb" '(target . "_top") (h-img "http://sflogo.sourceforge.net/sflogo.php?group_id=17484&amp;type=13" "width='120' height='30' border='0' alt='Get ECB at SourceForge.net. Fast, secure and Free Open Source software downloads'")))
+      (h-link "http://sourceforge.net/projects/ecb" '(target . "_top") (h-img "http://sflogo.sourceforge.net/sflogo.php?group_id=17484&amp;type=13" "width='120' height='30' border='0' alt='Get ECB at SourceForge.net. Fast, secure and Free Open Source software downloads'"))) ;;
      (h-p
       (h-b "Updated: ") h-br
       (h-date))
@@ -432,18 +415,6 @@
       "Go to the "
       (h-link "http://sourceforge.net/project/showfiles.php?group_id=17484"
               "ECB-Download Area") " at SourceForge.")
-     (h-line)
-     (h-sub-section
-      "Download ECB as regular XEmacs-package."
-      "ECB >= 1.80 can also be installed as a regular XEmacs-package. There are several possibilties:"
-      (h-bullet-link-list
-       ecb-bullet
-       (list
-        '("http://www.xemacs.org/Download/win32/setup.exe" "Windows XEmacs-netinstaller" "Use the netinstaller for easy installing ECB direct from the web.")
-        '("ftp://ftp.xemacs.org:/pub/xemacs/packages/" "Download from xemacs.org" "FTP-download of XEmacs-packages.")
-        '("http://ftp.xemacs.org:/pub/xemacs/packages/" "Download from xemacs.org" "HTTP-download of XEmacs-packages.")
-        )
-       "_top"))
      (h-line)
      (h-sub-section
       "Download from CVS repository"

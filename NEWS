@@ -1,3 +1,16 @@
+* Changes for ECB version 2.40.1
+
+** Fixed Bugs
+
+*** Fixed a bug which prevents the ecb-windows from being vertically resizeable
+    This bug occured only when using Gnu Emacs.
+
+*** Fixed a bug concerning horizontal mouse-scrolling of ecb-windows via
+    modeline-click when the ecb-window was not the selected window.
+    This  bug occured only when using Gnu Emacs.
+
+
+
 * Changes for ECB version 2.40
 
 ** ECB now requires full CEDET-suite being installed (at least version 1.0pre6)

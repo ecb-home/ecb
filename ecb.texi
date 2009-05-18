@@ -23,7 +23,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.226 2009/05/16 13:24:19 berndl Exp $
+@c $Id: ecb.texi,v 1.227 2009/05/18 16:04:35 berndl Exp $
 
 @setfilename ecb.info
 
@@ -238,7 +238,7 @@ Usage of ECB
 * The edit-area::               How to use the edit-area
 * Temp- and compile-buffers::   Displaying temp- and compilation-buffers
 * The other window::            How the ``other window'' is determined
-* The Methods buffer::          Using and customizing the Methods-buffer
+* The Methods window::          Using and customizing the Methods-window
 * Filtering the tree-buffers::  Applying filters to the ECB-tree-buffers 
 * The ECB-layout::              Changing, customizing, redrawing, creating
 * Hiding the ECB windows::      Hiding/Showing the ECB-windows
@@ -260,7 +260,9 @@ Using and customizing the ECB-Methods buffer
 * Visiting tags::               Possible actions after visiting a tag
 * Expanding::                   Explicit and automatic expanding
 * Customizing the display::     How to customize the Methods-buffer display
-* Rebuilding the Methods::      When to rebuild the Methods-buffer      
+* Updating Methods-window::     Updating Methods with contents of current buffer
+* Updating for ind. buffers::   Updating Methods for indirect buffers
+* Jumping to external tags::    Jumping to the definition of external types
 
 Applying filters to the special ECB-tree-buffers
 
@@ -343,6 +345,7 @@ Handling of common use-cases
 * Non-semantic sources::        Parsing and displaying non-semantic sources
 * Hide-show::                   Using hide-show from the methods-buffer-menu
 * Window-managers and ECB::     Support of several Emacs-window-managers
+* Virtual folders in History::  Simulating something like virtual folders
 
 Supporting Version control systems
 
@@ -901,21 +904,33 @@ for browsing your sources comfortable with the mouse and the keyboard.
 ECB offers some basic ECB-windows to browse your sources:
 @itemize @minus
 @item ECB-Directories for browsing directories
-@item ECB-Sources for browsing source-files and a file-history
+@item ECB-Sources for browsing source-files
 @item ECB-Methods for browsing the contents of a source
+@item ECB-History for a history for open or recently opened files
 @end itemize
 
 See @ref{Basic ECB-windows} for a detailled description what these
 basic ECB-windows offer. See @ref{ECB-windows} for a general
 introduction in the ECB-window-concept of ECB.
 
+In addition ECB offers some add-on ECB-window for special purposes:
+@itemize @minus
+@item ECB-Analyse for some intellisense stuff like possible completions or
+local variables
+@item ECB-Symboldef for displaying the documentation of current symbol under
+point
+@end itemize
+
+See @ref{Add-on ECB-windows} for a detailled description what these
+add-on ECB-windows offer.
+
 In addition to these ``special'' ECB-windows you have always an
-@dfn{edit-area} where you can edit your source-files. The edit-area
-can be divided into several @dfn{edit-windows} - as many as you need
-(@pxref{The edit-area}). And at the bottom of the ECB-frame a persistent
-@dfn{compilation-window} (also called @dfn{compile-window}) can be
-displayed (optional), where all the output of Emacs-compilation
-(compile, grep etc.) is shown (@pxref{Temp- and compile-buffers}).
+@dfn{edit-area} where you can edit your source-files. The edit-area can be
+divided into several @dfn{edit-windows} - as many as you need (@pxref{The
+edit-area}). And at the bottom of the ECB-frame a persistent
+@dfn{compilation-window} (also called @dfn{compile-window}) can be displayed
+(optional), where all the output of Emacs-compilation (compile, grep etc.) and
+Emacs temp-buffers (help etc.) is shown (@pxref{Temp- and compile-buffers}).
 
 The following ``screenshot'' illustrates the typical layout of the
 ECB-frame@footnote{This is only one example of the layouts ECB offers,
@@ -985,16 +1000,15 @@ Instructions what to do if you encounters problems with ECB.
 
 @item Upgrading and downloading ECB (@pxref{Upgrading})
 Gives an introduction into the automatic option-upgrading-feature of
-ECB and you can download and install a newer ECB-version from within
 ECB.
 
 @item Common use-cases (@pxref{Common use-cases})
-How to deal with special situations and circumstances, so e.g. working
-with big and small screens, working with large directories, using the
-builtin version-control-support of ECB, parsing non-semantic-supported
-sources like perl, using hide-show, working best with eshell and JDEE
-and some window-managers of Emacs (like escreen or winring) and many
-more...
+How to deal with common (and also some special) situations and circumstances,
+so e.g. working with big and small screens, working with large directories,
+using the builtin version-control-support of ECB, parsing
+non-semantic-supported sources like perl, using hide-show, working best with
+eshell and JDEE and some window-managers of Emacs (like escreen or winring)
+and many more...
 
 @item Entry points for Elisp programmers (@pxref{Elisp programming})
 All informations needed by programmers when using some ECB-concepts
@@ -1500,7 +1514,9 @@ buffers).
 
 Per default the content of the methods-ECB-window is automatically
 synchronized and updated with current point of the current source-buffer in
-the edit-area (@pxref{ECB-window synchronizing}).
+the edit-area (@pxref{ECB-window synchronizing}). This and other important
+informations about usage of the powerful Methods-window of ECB can be found in
+@ref{The Methods window}.
 
 @subsubsection Usage of the methods ECB-window
 
@@ -1541,320 +1557,6 @@ ECB-window (@pxref{Changing the ECB-layout}) (e.g. via @kbd{C-c . l
 c}) or create a new ecb-layout via the command
 @code{ecb-create-new-layout} and add a buffer of type ``methods'' into
 this new layout (@pxref{Creating a new ECB-layout}).
-
-@subsubsection Synchronizing the Methods-window with current source-buffer
-
-First a preliminary remark: Do not confuse this chapter with that
-synchronizing described in @ref{ECB-window synchronizing}. The latter one
-describes the mechanism for synchronizing the ECB-windows when the
-current-buffer in the edit-area has been changed. This chapter describes how
-to synchronize the ECB-methods-window with the contents of the current-buffer
-if the buffer has been modified!
-
-Now lets start:
-
-Generally ECB calls semantic to get the list of tags for current source-file
-of current edit-window. Per default ECB does never automatically force a
-reparse of the source-file after this has been changed - this is only done on
-demand by calling the command @code{ecb-rebuild-methods-buffer}. So per
-default the idle-scheduler of semantic is responsible for reparsing the
-source-file when this is necessary (see `semantic-idle-scheduler-mode' for
-further details). So this scheduler is also repsonsible in turn for
-updating/sychronizing the methods-window with current buffer-contents. This is
-the most user-resonsible and therefore the recommended approach.
-
-So it's strongly recommended to enable @code{semantic-idle-scheduler-mode} or
-@code{global-semantic-idle-scheduler-mode} (@pxref{Setting up CEDET/semantic})
-because then reparsing is always done during idle-time of Emacs and - maybe
-even more important - it is also interruptable.
-
-But if this idle-scheduler is switched off then ECB offers now two
-possibilities (via @code{ecb-force-reparse-when-semantic-idle-scheduler-off}):
-
-@itemize @bullet
-
-@item
-
-Not forcing itself a reparse when tags are needed by ECB: then a user declines
-knowingly Emacs/semantic-driven parsing of code when he/she switches off the
-idle-mode of semantic. This is the default behavior of ECB and the default
-value of this option. But this has also the consequence that the
-methods-buffer is only filed on demand via @code{ecb-rebuild-methods-buffer}
-(bound to @key{C-c . r})!
-
-This means also in consequence that the methods-buffer is not
-automatically filled when a source-file is opened but first on demand
-after calling the command @code{ecb-rebuild-methods-buffer}!
-
-@item
-
-Forcing a reparse when tags are needed: Then ECB forces semantic to parse
-the source-file when ECB needs tags to display. For this behavior this
-option has to be set to not nil.
-@end itemize
-
-The term ``forcing a reparse by semantic'' is a simplification: ECB uses then
-the function @code{semantic-fetch-tags} which can decide that the cached tags
-are up-to-date so no real reparsing is necessary - but it can also run a full
-reparse and this reparse is not being done when Emacs is idle but immediatelly
-and not interruptable (as with the idle-scheduler of semantic), which can be
-quite annoying with big source-files.
-
-To make a long story short: It is strongly recommended to enable the
-@code{semantic-idle-scheduler-mode} or
-@code{global-semantic-idle-scheduler-mode}! See @ref{Setting up
-CEDET/semantic}. This will give you in all cases the behavior you would expect
-of en IDE like ECB/semantic.
-
-@subsubsection Synchronizing with indirect buffers
-
-ECB works out of the box with indirect buffers, especially with indirect
-buffer clones created with the command @code{clone-indirect-buffer} (only
-available with GNU Emacs >= 21). They will be handled as all other buffers and
-you can work with them with no difference to ``normal'' buffers. With one
-exception:
-
-@strong{Please note}: Cause of a bug in Emacs 22 (and maybe also in Emacs 23)
-the propagation of parsing informations from one buffer to all others which are
-in an indirect-buffer relation to the same base-buffer does currently not
-work.
-
-What does this mean: If you modify a buffer then Emacs propagates this change
-to all buffers with the same base-buffer. ECB/semantic recognize this change
-and do all necessary to automatically reparse the changed buffer (at least if
-you have customized semantic/ECB to do this). So far so good, but: If you
-switch to another buffer with the same base-buffer then you will notice that
-the methods-window of ECB still displays the contents before the change, ie.
-the need for a reparse has not been propagated to these other buffers. This is
-a bug in Emacs.
-
-What can you do: As long as this bug is not fixed there is no chance that all
-other affected ``indirect-related'' buffers will be reparsed automatically
-after modifying one of them. So you have to do this reparse ``by hand'' after
-switching to such an indirect-related buffer, but this is very simple: Just
-call the command @code{ecb-rebuild-methods-buffer} with prefix arg or hit
-@key{C-u C-c . r} (key this command is bound to).
-
-Lets make an example:
-
-@enumerate
-
-@item
-
-Suppose we have a sourcefile test.java loaded as a buffer into Emacs and
-suppose further we have created two indirect-buffer clones test-clone1.java and
-test-clone2.java - all of these buffers point to the same file: test.java.
-
-@item
-
-Now lets be the buffer test-clone1.java the current buffer and let us modify
-it (e.g. adding a new method). If you have enabled the idle-reparse mechanism
-of semantic (@pxref{Setting up CEDET/semantic}) then this buffer will be
-reparsed automatically and ECBs methods-window will be updated in turn too.
-
-@item
-
-So far so good. But if you now switch to one of the two other buffers, lets
-say to test.java, then you will notice that the change done in
-test-clone1.java is also visible in the buffer test.java but the
-ECB-methods-window for test.java will display the contents before the change.
-This is cause of the Emacs-bug described above.
-
-@item
-
-To update the methods-window for test.java to the new contents you have to call
-@code{ecb-rebuild-methods-buffer} with prefix argument (ie. clear-cache is
-true) or hitting @key{C-u C-c . r}. Note: Calling this command without prefix
-argument is not enough!
-
-@end enumerate
-
-@subsubsection Jumping to the definition of external types
-
-There are two common types of ``external'' tags displayed in the
-method-window, mostly with object oriented programing-languages:
-
-@enumerate
-
-@item parent-types
-
-Tags which represent the type of a parent-class (which can be defined in the
-same file but which is more often defined in another file). All parents
-(regardless if defined internaly or externaly) of a type will be displayed
-under a bucket ``[Parents]'' in the methods-window of ECB.
-
-@item ``virtual'' types
-
-In OO-languages like CLOS, eieio and C++ there can be nodes with type-tags in
-the method-buffer which are somehow virtual because there is no definition in
-the current source-file. But such a virtual type collects all its outside
-defined members like methods in C++ which are defined in the @file{*.cc} file
-whereas the class-definition is defined in the associated header-file.
-
-@end enumerate
-
-In both cases the user wants to jump to the definition of the type if he clicks
-onto the related node in the methods-window of ECB.
-
-Here is a C++-example for ``virtual'' types (2) and parent types (1) which
-explains this in detail:
-
-Let's say this class is defined in a file @file{ParentClass.h}:
-
-@example
-@group
-class ParentClass
-@{
-protected:
-  int p;
-@};  
-@end group
-@end example
-
-Let's say this class is defined in a file @file{ClassWithExternals.h}
-
-@example
-@group
-#include "ParentClass.h"
-
-class ClassWithExternals : public ParentClass
-@{
-private:
-  int i;
-
-public:
-  ClassWithExternals();
-  ~ClassWithExternals();
-@};
-@end group
-@end example
-
-Both the constructor and the destructor of the class
-``ClassWithExternals'' are implemented in a file
-@file{ClassWithExternals.cc}:
-
-@example
-@group
-#include "test.h"
-
-ClassWithExternals::ClassWithExternals(int i,
-                                       boolean b,
-                                       char c)
-@{
-  return;
-@}
-
-void
-ClassWithExternals::~ClassWithExternals()
-@{
-  return;
-@}
-@end group
-@end example
-
-ECB displays the contents of @file{ClassWithExternals.cc} in its methods-buffer like
-follows:
-
-@example
-@group
-[-] [Includes]
- `- test.h
-[-] ClassWithExternals
- |  +ClassWithExternals (+i:int, +b:class boolean, +c:char):ClassWithExternals
- `- +~ClassWithExternals ():void
-@end group
-@end example
-
-Both the constructor and the destructor of the class
-``ClassWithExternals'' are grouped under their class-type. But this class-type
-``ClassWithExternals'' is represented by a so called ``virtual'' or ``faux''
-node-tag, i.e. there is no real tag in the current source-buffer for this tag.
-
-If a user now clicks onto the node of ``ClassWithExternals'' then he wants to
-jump to the right location in the right file where ``ClassWithExternals'' is
-defined. ECB now uses now some smart mechanisms (see below) to do this. In
-case of success (means ECB has found the definition) it opens the right file
-and point will stay at beginning of the definition of the type
-``ClassWithExternals''.
-
-The contents of @file{ClassWithExternals.h} are then displayed like
-follows:
-
-@example
-@group
-[-] [Includes]
- `- ParentClass.h
-[-] ClassWithExternals:class
- |  [-] [Parents]
- |   `- ParentClass
- |  [-] [Variables]
- |   `- -i:int
- |  +ClassWithExternals ():ClassWithExternals
- |  +~ClassWithExternals ():void
- `- [+] [Misc]
-@end group
-@end example
-
-Now let's play it again: Now we want to go to the definition of the
-parent-type ``ParentClass'' when we click onto the related node under the
-bucket ``[Parents]''. Again ECB uses its smartness to jump to the definition
-of the class ``ParentClass'' when you click onto the node ``ParentClass''.
-
-Now lets explain the precondition which must be fulfilled so ECB can do its
-job:
-
-@itemize
-@item Customizing the semantic analyzer for your needs
-
-ECB itself is quite stupid concerning finding external tags. But it can use
-the semantic-analyzer of the CEDET-suite (remember: The CEDET-suite is a
-must-requirement of ECB, see @ref{Requirements}). But this in turn means that the
-semantic-analyzer must be customized in the right way for the needs of your
-programing projects. Mainly this means activating semanticdb and setting the
-correct include-path etc...
-
-@strong{Please note}: Read the related manuals of semantic and - strongly
-recommended - read in addition the article ``Gentle introduction to Cedet''.
-It's worth to read it! The website of CEDET contains a link, you find it here:
-@ifhtml
-@uref{http://xtalk.msk.su/~ott/en/writings/emacs-devenv/EmacsCedet.html}
-@end ifhtml
-@ifnothtml
-@url{http://xtalk.msk.su/~ott/en/writings/emacs-devenv/EmacsCedet.html}
-@end ifnothtml
-
-@item Customize the related options of ECB:
-
-There is exactly one option you have to take into account:
-@code{ecb-find-external-tag-functions}. This defines the method ECB uses to
-find these external tags.
-
-Mostly there is nothing to do because the default values should do a good job.
-But if things are running bad then maybe this is the right screw for you.
-
-Finding such external types can be very complex and there are several roads to
-success. ECB uses per default methods based on the semantic-analyzer. But this
-option allows to define own find-functions and tell ECB to uses them.
-
-This functionality is set on a major-mode base, i.e. for every major-mode a
-different setting can be used. ECB first performs all find-functions defined
-for current major-mode (if any) anf then all find-functions defined for the
-special symbol 'default (if any).
-
-ECB offers some predefined senseful finding-functions. Currently there are:
-
-@itemize @minus
-@item @code{ecb-search-tag-by-semantic-analyzer}: The most powerfil one, based
-on the semantic-analyzer
-@item @code{ecb-search-tag-by-semanticdb}: A backup for the first one
-@item @code{ecb-jde-show-class-source}: For major-mode @code{jde-mode} when
-coding in java, uses java-mechanisms - maybe for java the best choice.
-@end itemize
-
-See the documentation of the option and also of these function for details how
-they work and how to write own finding-functions.
-
-@end itemize
 
 
 @subsubsection Customizing the methods ECB-window
@@ -2265,7 +1967,7 @@ Emacs Code Browser.
 * The edit-area::               How to use the edit-area
 * Temp- and compile-buffers::   Displaying temp- and compilation-buffers
 * The other window::            How the ``other window'' is determined
-* The Methods buffer::          Using and customizing the Methods-buffer
+* The Methods window::          Using and customizing the Methods-window
 * Filtering the tree-buffers::  Applying filters to the ECB-tree-buffers 
 * The ECB-layout::              Changing, customizing, redrawing, creating
 * Hiding the ECB windows::      Hiding/Showing the ECB-windows
@@ -3094,7 +2796,7 @@ compile-window is set or not. In the latter case using
 @code{display-buffer} or @code{pop-to-buffer} takes always account for
 the values of these options - like the original behavior of Emacs.
 
-@node The other window, The Methods buffer, Temp- and compile-buffers, Usage of ECB
+@node The other window, The Methods window, Temp- and compile-buffers, Usage of ECB
 @section How the ``other window'' is determined by ECB
 
 @cindex other window
@@ -3284,8 +2986,8 @@ Here is an example for such a function:
 
 This example implements the builtin smart behavior described above.
 
-@node The Methods buffer, Filtering the tree-buffers, The other window, Usage of ECB
-@section Using and customizing the ECB-Methods buffer
+@node The Methods window, Filtering the tree-buffers, The other window, Usage of ECB
+@section Using and customizing the ECB-Methods window
 
 ECB is mostly designed to display parsing information for files
 supported by semantic. But beginning with version 1.94 it also
@@ -3319,10 +3021,12 @@ ECB.
 * Visiting tags::               Possible actions after visiting a tag
 * Expanding::                   Explicit and automatic expanding
 * Customizing the display::     How to customize the Methods-buffer display
-* Rebuilding the Methods::      When to rebuild the Methods-buffer      
+* Updating Methods-window::     Updating Methods with contents of current buffer
+* Updating for ind. buffers::   Updating Methods for indirect buffers
+* Jumping to external tags::    Jumping to the definition of external types
 @end menu
 
-@node Visiting tags, Expanding, The Methods buffer, The Methods buffer
+@node Visiting tags, Expanding, The Methods window, The Methods window
 @subsection Possible actions after visiting a tag
 
 You visit a tag by clicking with either the primary oder secondary
@@ -3357,7 +3061,7 @@ Per default ECB performs the actions
 @code{ecb-tag-visit-highlight-tag-header} for all major-modes.
 
 
-@node Expanding, Customizing the display, Visiting tags, The Methods buffer
+@node Expanding, Customizing the display, Visiting tags, The Methods window
 @subsection Explicit and automatic expanding of the ECB-methods-buffer
 
 @subsubsection Explicit expanding all nodes to a certain expansion level
@@ -3495,7 +3199,7 @@ the following highlighting of the node for the current tag expands the
 needed parts of the tree-buffer.
 
 
-@node Customizing the display, Rebuilding the Methods, Expanding, The Methods buffer
+@node Customizing the display, Updating Methods-window, Expanding, The Methods window
 @subsection Customizing the display of the Methods-buffer
 
 @cindex semantic tag
@@ -3567,8 +3271,19 @@ recommended to have a look into the customize-group @code{ecb-methods}
 All these options are only relevant for semantic-sources and take no
 effect for non-semantic-sources!
 
-@node Rebuilding the Methods, , Customizing the display, The Methods buffer
-@subsection Rebuilding the Methods-buffer
+XXXXX
+
+@node Updating Methods-window, Updating for ind. buffers, Customizing the display, The Methods window
+@subsection Updating the Methods-window with contents of current source-buffer
+
+First a preliminary remark: Do not confuse this chapter with that
+synchronizing described in @ref{ECB-window synchronizing}. The latter one
+describes the mechanism for synchronizing the ECB-windows when the
+current-buffer in the edit-area has been changed. This chapter describes how
+to update the ECB-methods-window with the contents of the current-buffer
+if the buffer has been modified!
+
+@subsubsection The short version
 
 In almost all cases there is @strong{NO} need to manually rebuild the
 method-buffer, because it is always done automatically if necessary;
@@ -3576,8 +3291,9 @@ the mechanism depends on the sources:
 
 @itemize @minus
 @item semantic-sources:
-The command @code{global-semantic-auto-parse-mode} switches on autom.
-reparsing of semantic-sources.
+The command @code{global-semantic-idle-scheduler-mode} switches on autom.
+reparsing of semantic-sources. All the rest will be done by semantic and ECB
+automatically.
 
 @item non-semantic-sources (imenu supported):
 You can switch on autom. rescanning/reparsing with the option
@@ -3595,24 +3311,314 @@ external tool. But of course you can program such a an
 etags-auto-rescan mechanism for yourself!
 @end itemize
 
-Besides for etags-supported non-semantic-sources there exist a few rare
-scenarios also for the other sources where a complete manual rebuild
-can be necessary. Here is one example:
+@subsubsection The full and long story
 
-Depending on the semantic-version: If an Elisp-file is parsed which
-contains a defun X in the middle where the closing ) is missing, then
-semantic parses only until this defun X is reached and you will get an
-incomplete ECB-method buffer. In such a case you must complete the
-defun X and then completely reparse the Elisp-file and rebuild the ECB
-method buffer!
+Generally ECB calls semantic to get the list of tags for current source-file
+of current edit-window. Per default ECB does never automatically force a
+reparse of the source-file after this has been changed - this is only done on
+demand by calling the command @code{ecb-rebuild-methods-buffer}. So per
+default the idle-scheduler of semantic is responsible for reparsing the
+source-file when this is necessary (see `semantic-idle-scheduler-mode' for
+further details). So this scheduler is also repsonsible in turn for
+updating/sychronizing the methods-window with current buffer-contents. This is
+the most user-resonsible and therefore the recommended approach.
 
-A complete manually rebuild is done by
-@code{ecb-rebuild-methods-buffer}. For etags-parsed
-non-semantic-sources this causes an automatic saving of the
-source-buffer because otherwise etags would not operate with the
-latest contents!
+So it's strongly recommended to enable @code{semantic-idle-scheduler-mode} or
+@code{global-semantic-idle-scheduler-mode} (@pxref{Setting up CEDET/semantic})
+because then reparsing is always done during idle-time of Emacs and - maybe
+even more important - it is also interruptable.
 
-@node Filtering the tree-buffers, The ECB-layout, The Methods buffer, Usage of ECB
+But if this idle-scheduler is switched off then ECB offers now two
+possibilities (via @code{ecb-force-reparse-when-semantic-idle-scheduler-off}):
+
+@itemize @bullet
+
+@item
+
+Not forcing itself a reparse when tags are needed by ECB: then a user declines
+knowingly Emacs/semantic-driven parsing of code when he/she switches off the
+idle-mode of semantic. This is the default behavior of ECB and the default
+value of this option. But this has also the consequence that the
+methods-buffer is only filed on demand via @code{ecb-rebuild-methods-buffer}
+(bound to @key{C-c . r})!
+
+This means also in consequence that the methods-buffer is not
+automatically filled when a source-file is opened but first on demand
+after calling the command @code{ecb-rebuild-methods-buffer}!
+
+@item
+
+Forcing a reparse when tags are needed: Then ECB forces semantic to parse
+the source-file when ECB needs tags to display. For this behavior this
+option has to be set to not nil.
+@end itemize
+
+The term ``forcing a reparse by semantic'' is a simplification: ECB uses then
+the function @code{semantic-fetch-tags} which can decide that the cached tags
+are up-to-date so no real reparsing is necessary - but it can also run a full
+reparse and this reparse is not being done when Emacs is idle but immediatelly
+and not interruptable (as with the idle-scheduler of semantic), which can be
+quite annoying with big source-files.
+
+To make a long story short: It is strongly recommended to enable the
+@code{semantic-idle-scheduler-mode} or
+@code{global-semantic-idle-scheduler-mode}! See @ref{Setting up
+CEDET/semantic}. This will give you in all cases the behavior you would expect
+of en IDE like ECB/semantic.
+
+@node Updating for ind. buffers, Jumping to external tags, Updating Methods-window, The Methods window
+@subsection Updating Methods for indirect buffers
+
+ECB works out of the box with indirect buffers, especially with indirect
+buffer clones created with the command @code{clone-indirect-buffer} (only
+available with GNU Emacs >= 21). They will be handled as all other buffers and
+you can work with them with no difference to ``normal'' buffers. With one
+exception:
+
+@strong{Please note}: Cause of a bug in Emacs 22 (and maybe also in Emacs 23)
+the propagation of parsing informations from one buffer to all others which are
+in an indirect-buffer relation to the same base-buffer does currently not
+work.
+
+What does this mean: If you modify a buffer then Emacs propagates this change
+to all buffers with the same base-buffer. ECB/semantic recognize this change
+and do all necessary to automatically reparse the changed buffer (at least if
+you have customized semantic/ECB to do this). So far so good, but: If you
+switch to another buffer with the same base-buffer then you will notice that
+the methods-window of ECB still displays the contents before the change, ie.
+the need for a reparse has not been propagated to these other buffers. This is
+a bug in Emacs.
+
+What can you do: As long as this bug is not fixed there is no chance that all
+other affected ``indirect-related'' buffers will be reparsed automatically
+after modifying one of them. So you have to do this reparse ``by hand'' after
+switching to such an indirect-related buffer, but this is very simple: Just
+call the command @code{ecb-rebuild-methods-buffer} with prefix arg or hit
+@key{C-u C-c . r} (key this command is bound to).
+
+Lets make an example:
+
+@enumerate
+
+@item
+
+Suppose we have a sourcefile test.java loaded as a buffer into Emacs and
+suppose further we have created two indirect-buffer clones test-clone1.java and
+test-clone2.java - all of these buffers point to the same file: test.java.
+
+@item
+
+Now lets be the buffer test-clone1.java the current buffer and let us modify
+it (e.g. adding a new method). If you have enabled the idle-reparse mechanism
+of semantic (@pxref{Setting up CEDET/semantic}) then this buffer will be
+reparsed automatically and ECBs methods-window will be updated in turn too.
+
+@item
+
+So far so good. But if you now switch to one of the two other buffers, lets
+say to test.java, then you will notice that the change done in
+test-clone1.java is also visible in the buffer test.java but the
+ECB-methods-window for test.java will display the contents before the change.
+This is cause of the Emacs-bug described above.
+
+@item
+
+To update the methods-window for test.java to the new contents you have to call
+@code{ecb-rebuild-methods-buffer} with prefix argument (ie. clear-cache is
+true) or hitting @key{C-u C-c . r}. Note: Calling this command without prefix
+argument is not enough!
+
+@end enumerate
+
+@node Jumping to external tags, , Updating for ind. buffers, The Methods window
+@subsection Jumping to the definition of external types
+
+There are two common types of ``external'' tags displayed in the
+method-window, mostly with object oriented programing-languages:
+
+@enumerate
+
+@item parent-types
+
+Tags which represent the type of a parent-class (which can be defined in the
+same file but which is more often defined in another file). All parents
+(regardless if defined internaly or externaly) of a type will be displayed
+under a bucket ``[Parents]'' in the methods-window of ECB.
+
+@item ``virtual'' types
+
+In OO-languages like CLOS, eieio and C++ there can be nodes with type-tags in
+the method-buffer which are somehow virtual because there is no definition in
+the current source-file. But such a virtual type collects all its outside
+defined members like methods in C++ which are defined in the @file{*.cc} file
+whereas the class-definition is defined in the associated header-file.
+
+@end enumerate
+
+In both cases the user wants to jump to the definition of the type if he clicks
+onto the related node in the methods-window of ECB.
+
+Here is a C++-example for ``virtual'' types (2) and parent types (1) which
+explains this in detail:
+
+Let's say this class is defined in a file @file{ParentClass.h}:
+
+@example
+@group
+class ParentClass
+@{
+protected:
+  int p;
+@};  
+@end group
+@end example
+
+Let's say this class is defined in a file @file{ClassWithExternals.h}
+
+@example
+@group
+#include "ParentClass.h"
+
+class ClassWithExternals : public ParentClass
+@{
+private:
+  int i;
+
+public:
+  ClassWithExternals();
+  ~ClassWithExternals();
+@};
+@end group
+@end example
+
+Both the constructor and the destructor of the class
+``ClassWithExternals'' are implemented in a file
+@file{ClassWithExternals.cc}:
+
+@example
+@group
+#include "test.h"
+
+ClassWithExternals::ClassWithExternals(int i,
+                                       boolean b,
+                                       char c)
+@{
+  return;
+@}
+
+void
+ClassWithExternals::~ClassWithExternals()
+@{
+  return;
+@}
+@end group
+@end example
+
+ECB displays the contents of @file{ClassWithExternals.cc} in its methods-buffer like
+follows:
+
+@example
+@group
+[-] [Includes]
+ `- test.h
+[-] ClassWithExternals
+ |  +ClassWithExternals (+i:int, +b:class boolean, +c:char):ClassWithExternals
+ `- +~ClassWithExternals ():void
+@end group
+@end example
+
+Both the constructor and the destructor of the class
+``ClassWithExternals'' are grouped under their class-type. But this class-type
+``ClassWithExternals'' is represented by a so called ``virtual'' or ``faux''
+node-tag, i.e. there is no real tag in the current source-buffer for this tag.
+
+If a user now clicks onto the node of ``ClassWithExternals'' then he wants to
+jump to the right location in the right file where ``ClassWithExternals'' is
+defined. ECB now uses now some smart mechanisms (see below) to do this. In
+case of success (means ECB has found the definition) it opens the right file
+and point will stay at beginning of the definition of the type
+``ClassWithExternals''.
+
+The contents of @file{ClassWithExternals.h} are then displayed like
+follows:
+
+@example
+@group
+[-] [Includes]
+ `- ParentClass.h
+[-] ClassWithExternals:class
+ |  [-] [Parents]
+ |   `- ParentClass
+ |  [-] [Variables]
+ |   `- -i:int
+ |  +ClassWithExternals ():ClassWithExternals
+ |  +~ClassWithExternals ():void
+ `- [+] [Misc]
+@end group
+@end example
+
+Now let's play it again: Now we want to go to the definition of the
+parent-type ``ParentClass'' when we click onto the related node under the
+bucket ``[Parents]''. Again ECB uses its smartness to jump to the definition
+of the class ``ParentClass'' when you click onto the node ``ParentClass''.
+
+Now lets explain the precondition which must be fulfilled so ECB can do its
+job:
+
+@itemize
+@item Customizing the semantic analyzer for your needs
+
+ECB itself is quite stupid concerning finding external tags. But it can use
+the semantic-analyzer of the CEDET-suite (remember: The CEDET-suite is a
+must-requirement of ECB, see @ref{Requirements}). But this in turn means that the
+semantic-analyzer must be customized in the right way for the needs of your
+programing projects. Mainly this means activating semanticdb and setting the
+correct include-path etc...
+
+@strong{Please note}: Read the related manuals of semantic and - strongly
+recommended - read in addition the article ``Gentle introduction to Cedet''.
+It's worth to read it! The website of CEDET contains a link, you find it here:
+@ifhtml
+@uref{http://xtalk.msk.su/~ott/en/writings/emacs-devenv/EmacsCedet.html}
+@end ifhtml
+@ifnothtml
+@url{http://xtalk.msk.su/~ott/en/writings/emacs-devenv/EmacsCedet.html}
+@end ifnothtml
+
+@item Customize the related options of ECB:
+
+There is exactly one option you have to take into account:
+@code{ecb-find-external-tag-functions}. This defines the method ECB uses to
+find these external tags.
+
+Mostly there is nothing to do because the default values should do a good job.
+But if things are running bad then maybe this is the right screw for you.
+
+Finding such external types can be very complex and there are several roads to
+success. ECB uses per default methods based on the semantic-analyzer. But this
+option allows to define own find-functions and tell ECB to uses them.
+
+This functionality is set on a major-mode base, i.e. for every major-mode a
+different setting can be used. ECB first performs all find-functions defined
+for current major-mode (if any) anf then all find-functions defined for the
+special symbol 'default (if any).
+
+ECB offers some predefined senseful finding-functions. Currently there are:
+
+@itemize @minus
+@item @code{ecb-search-tag-by-semantic-analyzer}: The most powerfil one, based
+on the semantic-analyzer
+@item @code{ecb-search-tag-by-semanticdb}: A backup for the first one
+@item @code{ecb-jde-show-class-source}: For major-mode @code{jde-mode} when
+coding in java, uses java-mechanisms - maybe for java the best choice.
+@end itemize
+
+See the documentation of the option and also of these function for details how
+they work and how to write own finding-functions.
+
+@end itemize
+
+@node Filtering the tree-buffers, The ECB-layout, The Methods window, Usage of ECB
 @section Applying filters to the special ECB-tree-buffers
 
 @cindex Filter
@@ -11962,7 +11968,7 @@ from being tried to parsed and this (annoying) message will not occur.
 
 @subsection Automatic rescanning/reparsing of non-semantic-sources
 
-In contrast to semantic (see @code{global-semantic-auto-parse-mode})
+In contrast to semantic (see @code{global-semantic-idle-scheduler-mode})
 there is no built-in mechanism for autom. reparsing
 non-semantic-sources and then updating the contents of the
 Methods-buffer.
