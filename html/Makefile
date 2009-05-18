@@ -118,18 +118,19 @@ upload-build: $(ecb_HTMLDOCU_DIR)/index.html NEWS.html website
 # Uploads a complete new website build to ecb.sourceforge.net
 upload: website upload-build
 	$(SCP) $(ecb_UPLOAD_ARC) $(ecb_SCP_login):$(ecb_WEBSITE_LOC)
-	@echo "Unpacking the new website..."
-	$(SSH) "cd $(ecb_ECB_LOC)/$(ecb_WEBSITE_LOC); gzip -d $(ecb_UPLOAD_ARC); tar -xf $(ecb_UPLOAD_ARC_UNZIPPED); rm -f $(ecb_UPLOAD_ARC_UNZIPPED)"
+	@echo "For unpacking and installing the new contents do:"
+	@echo "1. open a shell at SF with ssh: ssh -t berndl,ecb@shell.sourceforge.net create"
+	@echo "2. Run ./update_website.sh (this extracts the archive and performs all chmods)"
 
 # Uploads all files currently in ./files-for-upload
 upload-update:
 	@(cd files-for-upload; \
-	$(TARC) update.tar.gz *; \
+	$(TARC) $(ecb_UPLOAD_ARC) *; \
 	echo "Uploading the updates..."; \
-	$(SCP) update.tar.gz $(ecb_SCP_login):$(ecb_WEBSITE_LOC); \
-	echo "Unpacking the updates..."; \
-	$(SSH) "cd $(ecb_ECB_LOC)/$(ecb_WEBSITE_LOC); gzip -d update.tar.gz; tar -xf update.tar; rm -f update.tar"; \
-	$(RM) update.tar.gz)
+	$(SCP) $(ecb_UPLOAD_ARC) $(ecb_SCP_login):$(ecb_WEBSITE_LOC); \
+	echo "1. open a shell at SF with ssh: ssh -t berndl,ecb@shell.sourceforge.net create"; \
+	echo "2. Run ./update_website.sh (this extracts the archive and performs all chmods)"; \
+	$(RM) $(ecb_UPLOAD_ARC))
 
 
 update-cvs-snapshot:

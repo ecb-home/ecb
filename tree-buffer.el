@@ -107,6 +107,8 @@
            ;; wrong-type-argument error.
            (ignore-errors (event-key event)))))
       (defalias 'tree-buffer-event-window 'event-window)
+      (defun tree-buffer-event-buffer (event)
+        (window-buffer (tree-buffer-event-window event)))
       (defalias 'tree-buffer-event-point 'event-point)
       ;; stolen from dframe.el of the speedbar-library.
       (defun tree-buffer-mouse-set-point (e)
@@ -134,6 +136,8 @@
   (defalias 'tree-buffer-window-display-height 'window-text-height)
   (defun tree-buffer-event-window (event)
     (posn-window (event-start event)))
+  (defun tree-buffer-event-buffer (event)
+    (window-buffer (tree-buffer-event-window event)))
   (defun tree-buffer-event-point (event)
     (posn-point (event-start event)))
   (defalias 'tree-buffer-mouse-set-point 'mouse-set-point)
@@ -950,7 +954,25 @@ get the data.")
   tree-buffer-running-xemacs
   "If true then tree-buffer tries to deal best with the XEmacs-bug to display
 adjacent images not correctly. Set this to nil if your XEmacs-version has fixed
-this bug.")
+this bug.
+
+This bug can be reproduced with XEmacs without active
+tree-buffers - just copy the following code to the *scratch*
+buffer and evaluate it:
+
+\(progn
+  \(pop-to-buffer \(get-buffer-create \"*test*\"))
+  \(let \(\(str1 \"abc\") 
+        \(str2 \"def\") 
+        \(glyph1 \(make-glyph \"X\")) 
+        \(glyph2 \(make-glyph \"Y\"))) 
+    \(add-text-properties 0 3 `\(end-glyph ,glyph1 invisible t) str1) 
+    \(add-text-properties 0 3 `\(end-glyph ,glyph2 invisible t) str2) 
+    \(insert str1) \(insert str2)))
+
+If the bug is still there then there is only a Y being displayed but the correct
+behavior would be displaying XY. Only in the latter case this variable should
+be set to nil!")
 
 (defconst tree-buffer-image-formats
   '((xpm ".xpm") (png ".png") (gif ".gif") (jpeg ".jpg" ".jpeg")
@@ -1318,8 +1340,10 @@ to test NODE-DATA-1 and NODE-DATA-2 for equality."
 			       (frame-width)))
 	 (click-col (+ (/ (* 10 x-point) pixels-per-10-col)
                        (if include-fringe-scrollbar
-                           (length (tree-buffer-spec->sticky-indent-string
-                                    tree-buffer-spec))
+                           (length (save-excursion
+                                     (set-buffer (tree-buffer-event-buffer e))
+                                     (tree-buffer-spec->sticky-indent-string
+                                      tree-buffer-spec)))
                          0))))
     click-col))
 
@@ -1338,12 +1362,14 @@ If the mouse is being clicked on the far left, or far right of the
 mode-line.  This is only useful for non-XEmacs"
   (interactive "e")
   (let* ((click-col (tree-buffer-get-event-column e t)))
-    (cond ((< click-col 4)
-	   (tree-buffer-hscroll (- (tree-buffer-spec->hor-scroll-step tree-buffer-spec))))
-	  ((> click-col (- (window-width) 4))
-	   (tree-buffer-hscroll (tree-buffer-spec->hor-scroll-step tree-buffer-spec)))
-          (t (tree-buffer-nolog-message
-	      "Click on the edge of the modeline to scroll left/right")))
+    (save-selected-window
+      (select-window (tree-buffer-event-window e))
+      (cond ((< click-col 4)
+             (tree-buffer-hscroll (- (tree-buffer-spec->hor-scroll-step tree-buffer-spec))))
+            ((> click-col (- (window-width) 4))
+             (tree-buffer-hscroll (tree-buffer-spec->hor-scroll-step tree-buffer-spec)))
+            (t (tree-buffer-nolog-message
+                "Click on the edge of the modeline to scroll left/right"))))
     ))
 
 (defun tree-buffer-count-subnodes-to-display (node)
@@ -3321,7 +3347,7 @@ See Info node `(ecb)tree-buffer' for all details of using tree-buffers."
       ;; This lets the GNU Emacs user scroll as if we had a horiz.
       ;; scrollbar...
       (define-key tree-buffer-key-map
-        (tree-buffer-create-mouse-key 1 'button-press nil 'mode-line)
+        (tree-buffer-create-mouse-key 1 'button-release nil 'mode-line)
         'tree-buffer-mouse-hscroll))
 
     (use-local-map tree-buffer-key-map)

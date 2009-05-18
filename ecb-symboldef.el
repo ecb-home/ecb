@@ -272,21 +272,23 @@ Only prints mode and info but does not find any symbol-definition."
                                             keys ", "))
                               "is a command with no keys"))
                         "is a function")))
-      (insert (format "%s\n\n" (or (documentation symbol)
-                                   "Not documented")))
       (setq args (ecb-symboldef-get-elisp-arglist symbol))
-      ;; KB: We display the arglist AFTER the documentation because in GNU
-      ;; Emacs the documentation of subr's (test by subrp) contains the
-      ;; arglist at the end of the documentation so we display it at the same
-      ;; place for all other functions. The internal help of GNU Emacs has an
-      ;; ugly hack for its function-help (see `describe-function-1' in
+      ;; KB: we could display the arglist AFTER the documentation because in
+      ;; GNU Emacs the documentation of subr's (test by subrp) contains the
+      ;; arglist at the end of the documentation so we could display it at the
+      ;; same place for all other functions. The internal help of GNU Emacs
+      ;; has an ugly hack for its function-help (see `describe-function-1' in
       ;; help.el) which searches for the arglist of subr's in the docu,
       ;; removes it from the end and inserts it again at beginning of the
       ;; documentation. I'm to lazy to do the same here because it's a clumsy
       ;; hack...but if you want the arglist in front of the docu-text you have
       ;; to do this here too (how to do it can be seen in
       ;; `describe-function-1').
+      ;; but so we have at least for most functions the arglist before the
+      ;; docs which is much better.
       (and args (insert (format "%s\n\n" args)))
+      (insert (format "%s\n\n" (or (documentation symbol)
+                                   "Not documented")))
       (setq retval (format "Lisp %s"
                            (if (commandp symbol)
                                "Command"

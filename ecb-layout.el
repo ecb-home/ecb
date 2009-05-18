@@ -4139,7 +4139,7 @@ visibility of the ECB windows. ECB minor mode remains active!"
             (let ((compwin-hidden (equal 'hidden
                                          (ecb-compile-window-state))))
               (if (ecb-buffer-is-maximized-p)
-                   (ecb-maximize-ecb-buffer ecb-current-maximized-ecb-buffer-name)
+                   (ecb-maximize-ecb-buffer (ecb-maximized-ecb-buffer-name))
                 (ecb-redraw-layout-full))
               (if compwin-hidden
                   (ecb-toggle-compile-window -1)))
@@ -4219,8 +4219,8 @@ current edit-window is selected."
            (ecb-window-select ecb-compile-window))))
       (ecb-info-message "Maximizing has been undone."))))
 
-(defun ecb-maximized-tree-buffer-name ()
-  "Return the currently maximized tree-buffer-name or nil if there is none."
+(defun ecb-maximized-ecb-buffer-name ()
+  "Return the currently maximized special ecb-buffer-name or nil if there is none."
   ecb-current-maximized-ecb-buffer-name)
 
 (defun ecb-buffer-is-maximized-p (&optional ecb-buffer-name)
@@ -4231,8 +4231,8 @@ buffer of current layout is maximized otherwise nil."
   (if ecb-buffer-name
       (and (ecb-buffer-is-ecb-buffer-of-current-layout-p ecb-buffer-name)
            (equal ecb-buffer-name
-                  ecb-current-maximized-ecb-buffer-name))
-    ecb-current-maximized-ecb-buffer-name))
+                  (ecb-maximized-ecb-buffer-name)))
+    (ecb-maximized-ecb-buffer-name)))
 
 (defun ecb-maximize-ecb-buffer (ecb-buffer-name &optional preserve-selected-window)
   "Maximize that window which displays the special ECB-buffer ECB-BUFFER-NAME.

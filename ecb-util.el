@@ -665,6 +665,22 @@ results in
 ;;        (string< (symbol-name (cdr item1)) (symbol-name (cdr item2)))
 ;;      (string< (car item1) (car item2)))))
 
+(defun ecb-values-of-symbol/value-list (list &optional elem-accessor)
+  "Return a list of values build from the members of LIST.
+The result-list is a list which is build from LIST by using the
+symbol-value if a list-member is a symbol and otherwise the
+list-member itself.
+
+If ELEM-ACCESSOR is a function then it is used to get that part of an elem
+of LIST for which the rule above should be applied."
+  (let ((elem-acc (or elem-accessor 'identity)))
+    (mapcar (function (lambda (elem)
+                        (let ((e (funcall elem-acc elem)))
+                          (if (symbolp e)
+                              (symbol-value e)
+                            e))))
+            list)))
+
 ;; Maybe we should enhance this docstring ;-)
 (defun ecb-member-of-symbol/value-list (value list &optional elem-accessor
                                               return-accessor compare-fcn)

@@ -68,12 +68,12 @@
   :group 'ecb-create-layout
   :type 'file)
 
-(defcustom ecb-create-layout-frame-width 110
+(defcustom ecb-create-layout-frame-width 140
   "*Frame width of the layout creation frame."
   :group 'ecb-create-layout
   :type 'integer)
 
-(defcustom ecb-create-layout-frame-height 42
+(defcustom ecb-create-layout-frame-height 51
   "*Frame height of the layout creation frame."
   :group 'ecb-create-layout
   :type 'integer)
@@ -85,7 +85,7 @@
 (defconst ecb-create-layout-buf-prefix " *ECB-LC-")
 (defconst ecb-create-layout-frame-name "Creation of a new ECB-layout")
 (defconst ecb-create-layout-all-buf-types
-  '("directories" "history" "methods" "sources" "speedbar" "analyse"))
+  '("directories" "history" "methods" "sources" "speedbar" "analyse" "symboldef"))
 
 (defconst ecb-create-layout-help-text-left-right
   "
