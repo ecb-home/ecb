@@ -1,5 +1,48 @@
 * Changes for ECB version 2.40.1
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add this to the texi
+
+** ECB now uses the partial reparse feature of semantic
+
+   The main effect a user will notice is that edit actions which trigger just a
+   partial reparse will just update the related node in the methods-window and
+   not the whole methods-window. One of the main advantages is that this
+   preserves the expand/collapse state of the methods-window.
+
+   Editing examples which trigger only a partial reparse:
+   - editing a function- or methodbody
+   - changing the name of a variable or function/method
+   - modifying the return-type of a function/method
+   - and some other...
+
+   In these cases only the related node in the methods-window will change
+   nothing else, ie. the expand/collapse-states of all other nodes in the
+   methods-window will not be changed.
+
+** New default-value for `ecb-auto-update-methods-after-save': nil
+
+   Switching off this by default makes sense because now ECB uses the
+   idle-scheduler of semantic (if it is switched on but this is at least very
+   recommended) and therefore the methods-buffer will be up-to-date most of
+   the time. Therefore updating it after saving makes not much sense. In
+   addition this auto update is always a full-fetch for the tags which does
+   not preserve the expand/collapse-state of the methods-window whereas a
+   partial reparse does (s.a.).
+   
+** The contents of the methods-window are updated even if currently hidden
+
+   If at least the current ecb-window-layout contains a methods-window then
+   the contents will be autom-updated even if the methods-window is currently
+   invisible (e.g. because the ecb-windows are all hidden or another
+   ecb-window is currently maximized. But the updates takes only place if the
+   semantic idle scheduler is active (see instructions in the manuals of ECB
+   and/or cedet).
+
+   The advantage of this new behavior is that now editing changes done with
+   invisible methods-window will be reflected immediately after showing the
+   methods-window (e.g. by unhiding the ecb-windows via the command
+   `ecb-toggle-ecb-windows' - bound to [C-c . l w]).
+
 ** Fixed Bugs
 
 *** Fixed a bug which prevents the ecb-windows from being vertically resizeable
@@ -9,6 +52,7 @@
     modeline-click when the ecb-window was not the selected window.
     This  bug occured only when using Gnu Emacs.
 
+*** Fixed a bug which prevented `ecb-type-tag-display' from taking effect.
 
 
 * Changes for ECB version 2.40

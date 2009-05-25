@@ -316,13 +316,17 @@ Uses the `derived-mode-parent' property of the symbol to trace backwards."
 (if (not ecb-running-xemacs)
     (progn
       (defalias 'ecb-make-overlay            'make-overlay)
+      (defalias 'ecb-overlay-p               'overlayp)
       (defalias 'ecb-overlay-put             'overlay-put)
+      (defalias 'ecb-overlay-get             'overlay-get)
       (defalias 'ecb-overlay-move            'move-overlay)
       (defalias 'ecb-overlay-delete          'delete-overlay)
       (defalias 'ecb-overlay-kill            'delete-overlay))
   ;; XEmacs
   (defalias 'ecb-make-overlay            'make-extent)
+  (defalias 'ecb-overlay-p               'extentp)
   (defalias 'ecb-overlay-put             'set-extent-property)
+  (defalias 'ecb-overlay-get             'extent-property)
   (defalias 'ecb-overlay-move            'set-extent-endpoints)
   (defalias 'ecb-overlay-delete          'detach-extent)
   (defalias 'ecb-overlay-kill            'delete-extent))

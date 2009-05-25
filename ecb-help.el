@@ -437,6 +437,7 @@ could be interesting for support."
                                    ecb-adviced-functions
                                    ecb-last-window-config-before-deactivation
                                    ecb-edit-area-creators
+                                   ecb-partial-reparse-always-full-fetch
                                    ecb-stealthy-function-list
                                    ecb-stealthy-function-state-alist
                                    ecb-windows-hidden

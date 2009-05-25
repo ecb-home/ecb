@@ -1311,7 +1311,7 @@ performance-problem!"
 
 (defun ecb-layout-debug-error (&rest args)
   "Run ARGS through `format' and write it to the *Messages*-buffer."
-  (when ecb-layout-debug-mode
+  (when (and ecb-layout-debug-mode args)
     (message (concat (format "ECB %s layout debug [%s] " ecb-version
                              (format-time-string "%H:%M:%S"))
                      (apply 'format args)))))
