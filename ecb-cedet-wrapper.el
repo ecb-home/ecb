@@ -21,7 +21,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-cedet-wrapper.el,v 1.1 2009/04/21 15:23:22 berndl Exp $
+;; $Id: ecb-cedet-wrapper.el,v 1.2 2009/05/25 05:50:42 berndl Exp $
 
 ;;; Commentary:
 
@@ -120,6 +120,7 @@
     semantic-analyze-tag-type
     semantic-brute-find-first-tag-by-name
     semantic-bucketize
+    semantic-c-template-string
     semantic-calculate-scope
     semantic-clear-toplevel-cache
     semantic-current-tag
@@ -146,6 +147,7 @@
     semantic-tag-children-compatibility
     semantic-tag-class
     semantic-tag-components
+    semantic-tag-components-with-overlays
     semantic-tag-end
     semantic-tag-faux-p
     semantic-tag-function-arguments
@@ -154,6 +156,7 @@
     semantic-tag-function-parent
     semantic-tag-get-attribute
     semantic-tag-name
+    semantic-tag-named-parent
     semantic-tag-new-variable
     semantic-tag-overlay
     semantic-tag-p

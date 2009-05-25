@@ -23,7 +23,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.227 2009/05/18 16:04:35 berndl Exp $
+@c $Id: ecb.texi,v 1.228 2009/05/25 05:50:42 berndl Exp $
 
 @setfilename ecb.info
 
@@ -3293,7 +3293,8 @@ the mechanism depends on the sources:
 @item semantic-sources:
 The command @code{global-semantic-idle-scheduler-mode} switches on autom.
 reparsing of semantic-sources. All the rest will be done by semantic and ECB
-automatically.
+automatically. ECB and semantic always try to reparse and update as less as
+possible of the sourcecode-buffer.
 
 @item non-semantic-sources (imenu supported):
 You can switch on autom. rescanning/reparsing with the option
@@ -3319,11 +3320,36 @@ reparse of the source-file after this has been changed - this is only done on
 demand by calling the command @code{ecb-rebuild-methods-buffer}. So per
 default the idle-scheduler of semantic is responsible for reparsing the
 source-file when this is necessary (see `semantic-idle-scheduler-mode' for
-further details). So this scheduler is also repsonsible in turn for
+further details). So this scheduler is also responsible when
 updating/sychronizing the methods-window with current buffer-contents. This is
 the most user-resonsible and therefore the recommended approach.
 
-So it's strongly recommended to enable @code{semantic-idle-scheduler-mode} or
+ECB is responsible to update the methods-window after the idle scheduler of
+semantic has triggered either a full or partial reparse of the source-buffer.
+Semantic always tries to reparse as less tags of the buffer as possible, often
+just the edited section (if it has no sideeffect to tags outside the edited
+parts). ECB handles this partial reparse output smoothly and updates only
+these nodes which are releated to the reparsed tags.
+
+The main effect a user will notice is that edit actions which trigger just a
+partial reparse will just update the related node in the methods-window and
+not the whole methods-window. One of the main advantages is that this
+preserves the expand/collapse state of the methods-window.
+
+Editing examples which trigger only a partial reparse:
+@itemize
+@item editing a function- or method-body
+@item changing the name of a variable or function/method
+@item modifying the return-type of a function/method
+@item and some other...
+@end itemize
+
+In these cases only the related node in the methods-window will change
+nothing else, ie. the expand/collapse-states of all other nodes in the
+methods-window will not be changed.
+
+@strong{Summary}: It's strongly recommended to enable
+@code{semantic-idle-scheduler-mode} or
 @code{global-semantic-idle-scheduler-mode} (@pxref{Setting up CEDET/semantic})
 because then reparsing is always done during idle-time of Emacs and - maybe
 even more important - it is also interruptable.
@@ -3364,7 +3390,7 @@ To make a long story short: It is strongly recommended to enable the
 @code{semantic-idle-scheduler-mode} or
 @code{global-semantic-idle-scheduler-mode}! See @ref{Setting up
 CEDET/semantic}. This will give you in all cases the behavior you would expect
-of en IDE like ECB/semantic.
+of an IDE like ECB/semantic.
 
 @node Updating for ind. buffers, Jumping to external tags, Updating Methods-window, The Methods window
 @subsection Updating Methods for indirect buffers
@@ -13446,7 +13472,8 @@ the details how to use it.
 @item @code{tree-node-remove-child-by-data/name}
 @item @code{tree-node-find-child-by-data/name}
 @item @code{tree-node-find-child-by-name}
-@item @code{tree-node-search-subtree-by-data/name}
+@item @code{tree-node-search-subtree-by-data}
+@item @code{tree-node-search-subtree-by-id}
 @item @code{tree-node-sort-children}
 @item @code{tree-node-toggle-expanded}
 @end itemize

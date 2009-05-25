@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.277 2009/05/18 16:04:35 berndl Exp $
+;; $Id: ecb-layout.el,v 1.278 2009/05/25 05:50:42 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1311,7 +1311,7 @@ performance-problem!"
 
 (defun ecb-layout-debug-error (&rest args)
   "Run ARGS through `format' and write it to the *Messages*-buffer."
-  (when ecb-layout-debug-mode
+  (when (and ecb-layout-debug-mode args)
     (message (concat (format "ECB %s layout debug [%s] " ecb-version
                              (format-time-string "%H:%M:%S"))
                      (apply 'format args)))))

@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.181 2009/05/18 16:04:35 berndl Exp $
+;; $Id: tree-buffer.el,v 1.182 2009/05/25 05:50:42 berndl Exp $
 
 ;;; Commentary:
 
@@ -330,6 +330,23 @@ Do nothing if `tree-buffer-debug-mode' is nil!"
 
 ;; tree-node
 
+;; Klaus Berndl <klaus.berndl@sdm.de>: hmmm, we can not uses this in
+;; tree-node-new if we want an own id-gen for each tree-buffer (reason: not
+;; all tree-node-new are called with the tree-buffer the current buffer, e.g.
+;; ecb-add-tags runs not with method-buffer as current tree-buffer)...we can
+;; it use if we use one id-gen for all tree-buffers....
+(defvar tree-node-id nil)
+
+(defconst tree-node-id-init-value -268435456)
+
+(defun tree-node-id-init ()
+  (setq tree-node-id tree-node-id-init-value))
+
+(tree-node-id-init)
+
+(defsubst tree-node-id-next ()
+  (setq tree-node-id (1+ tree-node-id)))
+
 (defstruct (tree-node
             (:constructor -tree-node-new)
             (:copier nil)
@@ -343,7 +360,8 @@ Do nothing if `tree-buffer-debug-mode' is nil!"
   expandable
   expanded
   displayed-name
-  indentstr)
+  indentstr
+  id)
 
 (defun tree-node-new (name type data &optional not-expandable parent
                            shrink-name)
@@ -387,16 +405,18 @@ slot-list above. If the first optional argument NOT-EXPANDABLE is set to not
 nil then the slot EXPANDABLE will be set to nil; otherwise to t.
 
 See Info node `(ecb)tree-buffer' for all details of using tree-nodes."
-  (let ((n (-tree-node-new :name name
-                           :type type
-                           :data data
-                           :expandable (not not-expandable)
-                           :parent parent
-                           :shrink-name shrink-name
-                           :children nil
-                           :expanded nil
-                           :displayed-name nil
-                           :indentstr nil)))
+  (let* ((new-id (tree-node-id-next))
+         (n (-tree-node-new :id new-id
+                            :name name
+                            :type type
+                            :data data
+                            :expandable (not not-expandable)
+                            :parent parent
+                            :shrink-name shrink-name
+                            :children nil
+                            :expanded nil
+                            :displayed-name nil
+                            :indentstr nil)))
     (when (and parent (tree-node-p parent))
       (tree-node-add-children parent n))
     n))
@@ -523,22 +543,68 @@ CHILD-NAME and must match."
       (when (equal (tree-node->name child) child-name)
         (throw 'exit child)))))
 
-(defun tree-node-search-subtree-by-data/name (start-node data &optional name)
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: if the version with map-subtree
+;; is too slow reuse the following code
+;; (defun tree-node-search-subtree-by-data (start-node data)
+;;   "Search the full subtree of START-NODE for the first \(sub-)node with DATA.
+;; The \"full subtree\" means the START-NODE itself, its children, their grandchildren
+;; etc. The search is done by a depth-first-search. Data-comparison is performed
+;; with `tree-buffer-node-data-equal-p'."
+;;   (if (tree-buffer-node-data-equal-p data (tree-node->data start-node))
+;;       start-node
+;;     (catch 'exit
+;;       (dolist (child (tree-node->children start-node))
+;; 	(let ((n (tree-node-search-subtree-by-data child data)))
+;; 	  (when n
+;; 	    (throw 'exit n)))))))
+
+(defun tree-node-search-subtree-by-data (start-node data)
   "Search the full subtree of START-NODE for the first \(sub-)node with DATA.
-If NAME is set then not only the data but also the name must match.
 The \"full subtree\" means the START-NODE itself, its children, their grandchildren
 etc. The search is done by a depth-first-search. Data-comparison is performed
-with `tree-buffer-node-data-equal-p', name-comparison with `string='."
-  (if (and (tree-buffer-node-data-equal-p data (tree-node->data start-node))
-           (or (null name) (string= name (tree-node->name start-node))))
-      start-node
-    (catch 'exit
-      (dolist (child (tree-node->children start-node))
-	(let ((n (tree-node-search-subtree-by-data/name child data name)))
-	  (when n
-	    (throw 'exit n)))))))
+with `tree-buffer-node-data-equal-p'."
+  (car (delq nil
+             (tree-node-map-subtree start-node
+                                    (function
+                                     (lambda (n)
+                                       (if (tree-buffer-node-data-equal-p
+                                            data
+                                            (tree-node->data n))
+                                           n)))))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add this to texi
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: if the version with map-subtree
+;; is too slow reuse the following code
+;; (defun tree-node-search-subtree-by-id (start-node node-id)
+;;   "Search the full subtree of START-NODE for the first \(sub-)node with NODE-ID.
+;; The \"full subtree\" means the START-NODE itself, its children, their grandchildren
+;; etc. The search is done by a depth-first-search."
+;;   (if (= node-id (tree-node->id start-node))
+;;       start-node
+;;     (catch 'exit
+;;       (dolist (child (tree-node->children start-node))
+;; 	(let ((n (tree-node-search-subtree-by-id child node-id)))
+;; 	  (when n
+;; 	    (throw 'exit n)))))))
+
+(defun tree-node-search-subtree-by-id (start-node node-id)
+  "Search the full subtree of START-NODE for the first \(sub-)node with NODE-ID.
+The \"full subtree\" means the START-NODE itself, its children, their grandchildren
+etc. The search is done by a depth-first-search."
+  (car (delq nil
+             (tree-node-map-subtree start-node
+                                    (function (lambda (n)
+                                                (if (= node-id (tree-node->id n))
+                                                    n)))))))
+
+;; (defun tree-buffer-map-test ()
+;;   (let ((id (ecb-overlay-get
+;;              (ecb--semantic-tag-overlay
+;;               (ecb--semantic-current-tag)) 'ECB-tree-node-id)))
+;;     (ecb-exec-in-window ecb-methods-buffer-name
+;;       (message (tree-node->name (tree-node-search-subtree-by-id
+;;                                  (tree-buffer-get-root)
+;;                                  id))))))
+    
 (defun tree-node-map-subtree (start-node map-fcn)
   "Apply MAP-FCN to full subtree of START-NODE and make a list of the results.
 MAP-FCN is a function which gets a node of this subtree as argument.
@@ -746,7 +812,6 @@ The value is buffer-local in current tree-buffer.")
 This function gets as argument a node and should either return nil \(if there
 is not suitable parent node) or node. This node will be display as sticky in
 the header-line of the tree-buffer.")
-
 
 ;; tree-buffer specification
 
