@@ -1327,11 +1327,14 @@ should stopped but no debugging is senseful."
 
 ;;; ----- Text and string-stuff ----------------------------
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: adapt to
+;; tree-buffer-merge-face-into-text 
 (defun ecb-merge-face-into-text (text face)
   "Merge FACE to the already precolored TEXT so the values of all
 face-attributes of FACE take effect and but the values of all face-attributes
-of TEXT which are not set by FACE are preserved."
-  (if (null face)
+of TEXT which are not set by FACE are preserved.
+If FACE or TEXT is nil then simply TEXT is returned."
+  (if (or (null face) (null text))
       text
     (if ecb-running-xemacs
         (put-text-property 0 (length text) 'face
@@ -2022,8 +2025,6 @@ the same ordering as `other-window' would walk through the frame.
 If WINDOW is nil then the currently selected window is used."
   (let ((win-number (ecb-position win-list (or window (selected-window)))))
     (if win-number (1+ win-number) nil)))
-
-
 
 ;;; ----- Time  stuff -----------------------------------------
 

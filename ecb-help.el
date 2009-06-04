@@ -443,8 +443,7 @@ could be interesting for support."
                                    ecb-windows-hidden
                                    ecb-toggle-layout-state
                                    ecb-tree-buffer-creators
-                                   ecb-tree-buffers
-                                   ecb-buffer-setfunction-registration
+                                   ecb-ecb-buffer-registry
                                    ecb-current-maximized-ecb-buffer-name
                                    ecb-special-ecb-buffers-of-current-layout)
                                  (function (lambda (l r)

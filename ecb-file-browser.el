@@ -783,7 +783,7 @@ Do NOT set this option directly via setq but use always customize!"
                        (const :tag "Full path" :value path)
                        (const :tag "Node-name \(Full path)" :value name-path))))
 
-(defcustom ecb-history-make-buckets 'directory
+(defcustom ecb-history-make-buckets 'directory-with-source-path
   "*Bucketize the entries of the history-buffer.
 
 There are several options how the bucketizing should be done:
@@ -791,6 +791,12 @@ There are several options how the bucketizing should be done:
   displayed flat.
 - 'directory: All entries with related filesources residing in the same
   directory will be contained in a bucket named with that directory.
+- 'directory-with-source-path: Same as 'directory but the best
+  matching source-path of the directory-window \(see
+  `ecb-source-path') substituts the matching part of the
+  directory with its alias \(if there is any set). For this a
+  special face is used \(see
+  `ecb-history-bucket-node-dir-soure-path-face').
 - 'mode: All entries with related buffers have the same
   major-mode will be contained in a bucket named with that major-mode
 - 'extension: All entries with related filesources having the
@@ -812,6 +818,7 @@ The default value is 'directory."
                        (ecb-add-buffers-to-history-new)))))
   :type '(radio (const :tag "Never" :value never)
                 (const :tag "By directory" :value directory)
+                (const :tag "By directory with source-path" :value directory-with-source-path)
                 (const :tag "By major-mode" :value mode)
                 (const :tag "By file-extension" :value extension)
                 (repeat :tag "By regexps"
@@ -1674,7 +1681,7 @@ ECB-history-window is not visible in current layout."
   (interactive)
   (ecb-maximize-ecb-buffer ecb-history-buffer-name t))
 
-(defecb-window-dedicator ecb-set-directories-buffer ecb-directories-buffer-name
+(defecb-window-dedicator-to-ecb-buffer ecb-set-directories-buffer ecb-directories-buffer-name t
   "Display the Directories-buffer in current window and make window dedicated."
   (let ((set-directories-buffer
          (not (equal ecb-use-speedbar-instead-native-tree-buffer 'dir))))
@@ -1695,7 +1702,7 @@ ECB-history-window is not visible in current layout."
           (ignore-errors (ecb-speedbar-deactivate)))
       (switch-to-buffer ecb-directories-buffer-name))))
 
-(defecb-window-dedicator ecb-set-sources-buffer ecb-sources-buffer-name
+(defecb-window-dedicator-to-ecb-buffer ecb-set-sources-buffer ecb-sources-buffer-name t
   "Display the Sources-buffer in current window and make window dedicated."
   (let ((set-sources-buffer
          (not (equal ecb-use-speedbar-instead-native-tree-buffer 'source))))
@@ -1716,7 +1723,7 @@ ECB-history-window is not visible in current layout."
           (ignore-errors (ecb-speedbar-deactivate)))
       (switch-to-buffer ecb-sources-buffer-name))))
 
-(defecb-window-dedicator ecb-set-history-buffer ecb-history-buffer-name
+(defecb-window-dedicator-to-ecb-buffer ecb-set-history-buffer ecb-history-buffer-name t
   "Display the History-buffer in current window and make window dedicated."
   (switch-to-buffer ecb-history-buffer-name))
 
@@ -2039,7 +2046,7 @@ selected before this update."
 nil then it asks for a regexp. If second argument FILTER-DISPLAY is not nil
 then it is displayed in the modeline of the history-buffer for current
 regexp-filter. Otherwise the regexp itself."
-(let ((regexp-str (or regexp (read-string "Insert the filter-regexp: "))))
+  (let ((regexp-str (or regexp (read-string "Insert the filter-regexp: "))))
     (if (> (length regexp-str) 0)
         (ecb-apply-filter-to-sources-buffer regexp-str filter-display))))
   
@@ -2144,34 +2151,50 @@ nil. Returns 'window-not-visible if the ECB-sources-buffer is not visible."
     ;; displayed in the mode-line. See `ecb-sources-filter-modeline-prefix'.
     (ecb-mode-line-format)))
 
+(defun ecb-normed-source-paths ()
+  "Return a normalized list of all source-paths.
+
+This is a list created from all elements of `ecb-source-path' and all
+source-paths created by `ecb-source-path-functions'.
+
+Each element is a cons whereas car is the normed and expanded pathname \(done by
+`ecb-fix-filename') and cdr is either the alias defined for this path \(see
+`ecb-source-path') or - if there is no alias defined - the path itself \(in
+this case car and cdr are equal)."
+  (mapcar (function (lambda (elem)
+                      (let* ((path (ecb-fix-filename (if (listp elem) (car elem) elem)))
+                             (alias (if (listp elem) (cdr elem) path)))
+                        (cons path alias))))
+          (append (ecb-get-source-paths-from-functions)
+                  ecb-source-path)))
+  
 (defun ecb-matching-source-paths (path-to-match &optional sorted)
   "Return all source-paths of `ecb-source-path' which match PATH-TO-MATCH. If
 SORTED is not nil then the paths are sorted by descending length, means the
 longest path \(which is the best matching) is the first elem and the shortest
 path the last elem. Otherwise the matching paths are returned in that sequence
-they occur in `ecb-source-paths'."
+they occur in `ecb-source-paths'.
+Each matching path is a cons in the sense of `ecb-normed-source-paths'."
   (let* ((p-t-m (ecb-fix-filename path-to-match))
-         (normed-current-source-paths
-          (mapcar (function (lambda (elem)
-                              (ecb-fix-filename (if (listp elem) (car elem) elem))))
-                  (append (ecb-get-source-paths-from-functions)
-                          ecb-source-path)))
+         (normed-current-source-paths (ecb-normed-source-paths))
          (matching-paths
           (delq nil
                 (mapcar (lambda (elem)
                           (save-match-data
-                            (if (string-match (concat "^" (regexp-quote elem))
+                            (if (string-match (concat "^" (regexp-quote (car elem)))
                                               p-t-m)
                                 elem)))
                         normed-current-source-paths))))
     (if (not sorted)
         matching-paths
       (sort matching-paths
-            (lambda (lhs rhs)
-              (> (length lhs) (length rhs)))))))
+            (function (lambda (lhs rhs)
+                        (> (length (car lhs)) (length (car rhs)))))))))
 
 (defun ecb-get-best-matching-source-path (path)
-  "Return the best-matching source-path for PATH."
+  "Return the best-matching source-path for PATH.
+It's either nil if no source-path matches or a cons in the sense of
+`ecb-normed-source-paths'."
   (car (ecb-matching-source-paths path t)))
 
 (defun ecb-set-selected-directory (path &optional force)
@@ -2197,8 +2220,8 @@ then nothing is done unless first optional argument FORCE is not nil."
                         ;; otherwise the node of the best matching
                         ;; source-path
                         (let ((best-source-path
-                               (ecb-get-best-matching-source-path
-                                ecb-path-selected-directory)))
+                               (car (ecb-get-best-matching-source-path
+                                     ecb-path-selected-directory))))
                           (if best-source-path
                               (tree-buffer-search-displayed-node-list
                                (function
@@ -2253,7 +2276,7 @@ then nothing is done unless first optional argument FORCE is not nil."
   ;; is this necessary if neither dir.- nor sources-buffer-contents have been
   ;; changed? I think not but anyway, doesn't matter, costs are very low.
   (save-excursion
-    (dolist (buf (ecb-tree-buffers-buffer-list))
+    (dolist (buf (ecb-ecb-buffer-registry-buffer-list))
       (set-buffer buf)
       (setq default-directory
             (concat ecb-path-selected-directory
@@ -2338,7 +2361,7 @@ added.")
                      (tree-buffer-find-displayed-node-by-data/name
                       (ecb-source-make buffer-file curr-buf)))))
          (buffer-name-to-ignore-list-for-rebuild nil))
-    (when node
+    (when (tree-node-p node)
       (when (or (buffer-base-buffer curr-buf) ; indirect-buffers always!
                 (equal ecb-kill-buffer-clears-history 'auto)
                 (and (equal ecb-kill-buffer-clears-history 'ask)
@@ -2492,11 +2515,12 @@ Returns t if the current history filter has been applied otherwise nil."
                                 ;; an elem is a cons (<buffername> . <filename>)
                                 (cons (case ecb-history-make-buckets
                                         (never never-bucket-string)
-                                        (directory (ecb-substring-no-properties
-                                                    (ecb-fix-filename
-                                                     (file-name-directory
-                                                      (cdr elem)))
-                                                    (if ecb-running-xemacs 0)))
+                                        ((directory directory-with-source-path)
+                                         (ecb-substring-no-properties
+                                          (ecb-fix-filename
+                                           (file-name-directory
+                                            (cdr elem)))
+                                          (if ecb-running-xemacs 0)))
                                         (mode (symbol-name
                                                (if (get-buffer (car elem))
                                                    (save-excursion
@@ -2550,29 +2574,64 @@ Returns t if the current history filter has been applied otherwise nil."
       (set-buffer ecb-history-buffer-name)
       (tree-buffer-clear-tree)
       (dolist (bucket-elem aggregated-alist-with-buckets)
-        (let* ((bucket-name (car bucket-elem))
-               (bucket-name-formatted (ecb-merge-face-into-text (ecb-format-bucket-name bucket-name)
-                                                                ecb-history-bucket-node-face))
-               (bucket-node (if (string= never-bucket-string bucket-name)
+        (let* ((best-matching-sp (if (eq ecb-history-make-buckets 'directory-with-source-path)
+                                    (ecb-get-best-matching-source-path (car bucket-elem))))
+               ;; we use concat to get a new string to avoid side-effect in
+               ;; facing source-paths in the directory-buffer
+               (best-matching-path (concat (car best-matching-sp)))
+               (best-matching-alias (concat (cadr best-matching-sp)))
+               (bucket-name-formated nil)
+               (bucket-node nil))
+          (if (or (null best-matching-sp)
+                  ;; if the alias is not smaller then the path
+                  ;; itself we use the path
+                  ;; with this condition we adress also the case that the alias
+                  ;; isn't an alias but only the duplicated path...
+                  (>= (length best-matching-alias)
+                      (length best-matching-path)))
+              (setq bucket-name-formated
+                    (ecb-format-bucket-name
+                     (ecb-merge-face-into-text (ecb-format-bucket-name (car bucket-elem))
+                                               ecb-history-bucket-node-face)
+                     nil 'only-name))
+            (setq bucket-name-formated
+                  (ecb-format-bucket-name
+                   (concat (ecb-merge-face-into-text
+                            (ecb-merge-face-into-text
+                             best-matching-alias ecb-history-bucket-node-face)
+                            ecb-history-bucket-node-dir-soure-path-face)
+                           (unless (string= best-matching-path
+                                            (car bucket-elem))
+                             (ecb-merge-face-into-text
+                              (ecb-substring-no-properties
+                               (car bucket-elem)
+                               (length best-matching-path))
+                              ecb-history-bucket-node-face)))
+                   nil 'only-name))
+            ;; now we store the end of the source-path-alias as start-position
+            ;; for name shrinking
+            (put-text-property 0 (length bucket-name-formated)
+                               'tree-node-shrink-start-pos
+                               (+ (length (nth 0 ecb-bucket-node-display))
+                                  (length best-matching-alias))
+                               bucket-name-formated))
+          (setq bucket-node (if (string= never-bucket-string (car bucket-elem))
                                 (tree-buffer-get-root)
-                              (tree-node-new bucket-name-formatted
+                              (tree-node-new bucket-name-formated
                                              ecb-history-nodetype-bucket
-                                             'ecb-bucket-node
+                                             (car bucket-elem)
                                              nil
                                              (tree-buffer-get-root)
-                                             'beginning))))
-          ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: if bucket only contains
-          ;; one elem, we should maybe not make a bucket but insert this node
-          ;; flat
-          (unless (string= never-bucket-string bucket-name)
+                                             'beginning)))
+          (unless (string= never-bucket-string (car bucket-elem))
             ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we can make
             ;; this even smarter...depending if now a bucket contains more
             ;; items than before - for this we have to store not onlxy the
             ;; expand-state but also the number of children of a bucket
             (setf (tree-node->expanded bucket-node)
-                  (if (assoc bucket-name-formatted
+                  (if (assoc bucket-name-formated
                              curr-bucket-expand-status-alist)
-                      (cdr (assoc bucket-name-formatted
+                      (cdr (assoc bucket-name-formated
                                   curr-bucket-expand-status-alist))
                     t)))
           (dolist (elem (cdr bucket-elem))
@@ -4036,11 +4095,13 @@ the help-text should be printed here."
                (when (or click-force
                          (ecb-show-minibuffer-info node window
                                                    (car ecb-history-show-node-info)))
-                 (case (cdr ecb-history-show-node-info)
-                   (name (tree-node->name node))
-                   (path (ecb-source-get-filename (tree-node->data node)))
-                   (name-path (format "%s (%s)" (tree-node->name node)
-                                      (ecb-source-get-filename (tree-node->data node)))))))))
+                 (if (= (tree-node->type node) ecb-history-nodetype-bucket)
+                     (tree-node->data node)
+                   (case (cdr ecb-history-show-node-info)
+                     (name (tree-node->name node))
+                     (path (ecb-source-get-filename (tree-node->data node)))
+                     (name-path (format "%s (%s)" (tree-node->name node)
+                                        (ecb-source-get-filename (tree-node->data node))))))))))
     (prog1 str
       (unless no-message
         (ecb-nolog-message str)))))
@@ -4470,6 +4531,13 @@ It changes temporaly the option `ecb-history-make-buckets' to the value
 'directory."
   (customize-set-variable 'ecb-history-make-buckets 'directory))
 
+(tree-buffer-defpopup-command ecb-popup-history-bucketize-by-dir-with-sp
+  "Bucketize the history by directory with source-path substitution.
+
+It changes temporaly the option `ecb-history-make-buckets' to the value
+'directory-with-source-path."
+  (customize-set-variable 'ecb-history-make-buckets 'directory-with-source-path))
+
 (tree-buffer-defpopup-command ecb-popup-history-bucketize-by-mode
   "Bucketize the history by major-mode.
 
@@ -4524,6 +4592,7 @@ So you get a better overlooking. There are three choices:
         ("Bucketize"
          (ecb-popup-history-bucketize-never "No bucketizing")
          (ecb-popup-history-bucketize-by-dir "by directory")
+         (ecb-popup-history-bucketize-by-dir-with-sp "by directory with source-path")
          (ecb-popup-history-bucketize-by-mode "by major-mode")
          (ecb-popup-history-bucketize-by-ext "by file-extension")
          (ecb-popup-history-bucketize-by-reg "by reg. expr."))

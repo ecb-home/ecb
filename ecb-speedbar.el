@@ -68,6 +68,7 @@
 (require 'ecb-util)
 (require 'ecb-cedet-wrapper)
 (require 'ecb-common-browser)
+(require 'ecb-layout)
 
 (eval-when-compile
   ;; to avoid compiler grips
@@ -264,13 +265,14 @@ the point was not set by `mouse-set-point'."
     (and (window-live-p (get-buffer-window ecb-speedbar-buffer-name))
          (select-window (get-buffer-window ecb-speedbar-buffer-name)))))
 
-(defun ecb-speedbar-set-buffer()
-  "Set the speedbar buffer within ECB."
+(defecb-window-dedicator-to-ecb-buffer ecb-set-speedbar-buffer ecb-speedbar-buffer-name nil
+  "Display in current window the speedbar-buffer and make window dedicated."
   (ecb-speedbar-activate)
   (set-window-buffer (selected-window)
                      (get-buffer-create ecb-speedbar-buffer-name))
   (unless ecb-running-xemacs
     (set (make-local-variable 'automatic-hscrolling) nil)))
+
 
 
 (defvar ecb-speedbar-verbosity-level-old nil)

@@ -104,15 +104,6 @@
 ;;   `ecb-compilation-buffer-p' returns not nil are handled in the
 ;;   compile-window!
 ;;
-;; IMPORTANT: A note for programming Elisp for packages which work during
-;; activated ECB (for ECB itself too :-): ECB offers three macros for easy
-;; temporally (regardless of the settings in `ecb-advice-window-functions'!)
-;; using all original-functions, all adviced functions or only some adviced
-;; functions:
-;; - `ecb-with-original-functions'
-;; - `ecb-with-adviced-functions'
-;; - `ecb-with-some-adviced-functions'
-;;
 
 ;;; History
 ;;
@@ -126,7 +117,7 @@
 
 (require 'ecb-util)
 (require 'ecb-common-browser)
-(require 'ecb-speedbar)
+;;(require 'ecb-speedbar)
 (require 'ecb-compilation)
 (require 'ecb-create-layout)
 
@@ -957,42 +948,41 @@ Per default this is only enabled for `switch-to-buffer'."
               (const :tag "switch-to-buffer"
                      :value switch-to-buffer)))
 
-(defun ecb-canonical-ecb-windows-list (&optional winlist)
-  "Return a list of all visible ECB-windows.
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: hmm, dows not work. Better
+;; (then in ecb-layout.el):
+;; (case layout-type)
+;; left, right, top: no problem
+;; left-right:
+;; 1. If edges of window CW (s.b.) > ==> left-column, if < ==> right column
+;; better: compare-window CW: choose the first window of that window-list
+;; which contains only windows which are not an ecb-window and also not the
+;; compile-window (this works also if there is no edit window, ie. e.g. if all
+;; other windows are dedicated too, maybe another tool(e.g. ediff) sets all
+;; windows dedicated!) It's not possible that only ecb-windows (and/or a
+;; compile-window) exist in the ecb-frame! therefore the mechanism above works
+;; save! make a function ecb-canonical-rest-windows-list for the windows
+;; described above!.
+;; Build the new leftmost/rightmost-functions so, that a ecb-window-list and a
+;; rest-window-list can be passed as optional args --> performance
+;;
+;; This above is not a general rightmost/leftmost-algorithm! But for our needs
+;; it does its work. If we want a general mechanism for right/leftmost-window
+;; we can steal it from windmove.el!
 
-Such a window must be dedicated to its ecb-buffer and for the related buffer
-a dedicator-function must be defined with `defecb-window-dedicator' so this
-dedicator is registered for that ecb-buffer.
-The list starts from the left-most top-most window in the order `other-window'
-would walk through these windows."
-  (let ((windows-list (or winlist (ecb-canonical-windows-list)))
-        (registered-ecb-buffers (ecb-dedicated-special-buffers))
-        )
-    (delete nil (mapcar (function (lambda (elem)
-                                    (if (and (not (memq elem
-                                                        ecb-layout-temporary-dedicated-windows))
-                                             (window-dedicated-p elem)
-                                             (memq (window-buffer elem) registered-ecb-buffers)
-                                             )
-                                        elem)))
-                        windows-list))))
-
-(defun ecb-canonical-edit-windows-list (&optional winlist)
-  "Return a list of all current edit-windows \(starting from the left-most
-top-most window) in the order `other-window' would walk through these windows.
-These are all windows in the `ecb-frame' which are not identical to the
-compile-window and not identical to one of the visible ECB-windows."
-  (let ((comp-win-state (ecb-compile-window-state))
-        (windows-list (or winlist (ecb-canonical-windows-list))))
-    (delete nil (mapcar (function (lambda (elem)
-                                    (if (and (or (member elem
-                                                         ecb-layout-temporary-dedicated-windows)
-                                                 (not (window-dedicated-p elem)))
-                                             (or (not (equal comp-win-state 'visible))
-                                                 (not (equal elem ecb-compile-window))))
-                                        elem)))
-                        windows-list))))
-
+(defun ecb-get-ecb-window-location (&optional ecb-window winlist)
+  (let* ((windows-list (or winlist (ecb-canonical-windows-list)))
+         (ecb-win (or ecb-window (selected-window)))
+         (layout-type (ecb-get-layout-type))
+         (first-edit-window (car (ecb-canonical-rest-windows-list windows-list))))
+    (case layout-type
+      (left 'left-side)
+      (right 'right-side)
+      (top 'top-side)
+      (left-right (if (> (nth 0 (ecb-window-edges first-edit-window))
+                         (nth 0 (ecb-window-edges ecb-win)))
+                      'left-side
+                    'right-side)))))
+    
 (defcustom ecb-layout-window-sizes nil
   "*Specifies the sizes of the ECB windows for each layout.
 The easiest way \(and also the strongly recommended way) to change this
@@ -1233,7 +1223,8 @@ drawn by the layout-function \(see `ecb-redraw-layout-full').")
 not change this variable!")
 
 (defvar ecb-special-ecb-buffers-of-current-layout nil
-  "The list of special ecb-buffers of current-layout.")
+  "The list of special ecb-buffers of current-layout.
+This variable is only set by `ecb-redraw-layout-full'!")
 
 (defvar ecb-ecb-buffer-name-selected-before-command nil
   "Not nil only if a special ecb-window was selected before most recent
@@ -1241,6 +1232,62 @@ command. If not nil it contains the buffer-name of this special ecb-buffer.")
 
 (defvar ecb-layout-prevent-handle-ecb-window-selection nil
   "If not nil ECB will ignore in the post-command-hook auto. maximizing.")
+
+
+(defun ecb-canonical-ecb-windows-list (&optional winlist)
+  "Return a list of all visible ECB-windows.
+
+Such a window must be dedicated to its ecb-buffer and defined for
+the related buffer with `defecb-window-dedicator-to-ecb-buffer'. The list
+starts from the left-most top-most window in the order
+`other-window' would walk through these windows."
+  (let ((windows-list (or winlist (ecb-canonical-windows-list)))
+        (registered-ecb-buffers (ecb-dedicated-special-buffers))
+        )
+    (delq nil (mapcar (function (lambda (elem)
+                                  (if (and (not (memq elem
+                                                      ecb-layout-temporary-dedicated-windows))
+                                           (window-dedicated-p elem)
+                                           (memq (window-buffer elem) registered-ecb-buffers)
+                                           )
+                                      elem)))
+                      windows-list))))
+
+(defun ecb-canonical-edit-windows-list (&optional winlist)
+  "Return a list of all current edit-windows \(starting from the left-most
+top-most window) in the order `other-window' would walk through these windows.
+These are all windows in the `ecb-frame' which are not identical to the
+compile-window and not identical to one of the visible ECB-windows and which
+are not dedicated."
+  (let ((comp-win-state (ecb-compile-window-state))
+        (windows-list (or winlist (ecb-canonical-windows-list))))
+    (delq nil (mapcar (function (lambda (elem)
+                                  (if (and (or (member elem
+                                                       ecb-layout-temporary-dedicated-windows)
+                                               (not (window-dedicated-p elem)))
+                                           (or (not (equal comp-win-state 'visible))
+                                               (not (equal elem ecb-compile-window))))
+                                      elem)))
+                      windows-list))))
+
+(defun ecb-canonical-rest-windows-list (&optional winlist)
+  "Return a list of all current edit-windows \(starting from the left-most
+top-most window) in the order `other-window' would walk through these windows.
+These are all windows in the `ecb-frame' which are not identical to the
+compile-window and not identical to one of the visible ECB-windows.
+
+Note the difference to `ecb-canonical-edit-windows-list': That function checks
+additionaly if a window is not dedicated."
+  (let ((comp-win-state (ecb-compile-window-state))
+        (windows-list (or winlist (ecb-canonical-windows-list)))
+        (registered-ecb-buffers (ecb-dedicated-special-buffers)))
+    (delq nil (mapcar (function (lambda (elem)
+                                  (if (and (not (memq (window-buffer elem) registered-ecb-buffers))
+                                           (or (not (eq comp-win-state 'visible))
+                                               (not (eq elem ecb-compile-window))))
+                                      elem)))
+                      windows-list))))
+
 
 
 (defvar ecb-last-major-mode nil)
@@ -1263,11 +1310,14 @@ performance-problem!"
            (equal ecb-tree-mouse-action-trigger 'button-press))
       (setq ecb-item-in-tree-buffer-selected nil)
     ;; do nothing if major-mode has not been changed or if a minibuffer is
-    ;; active or if now one of the ecb-buffers is active
+    ;; active or if now one of the ecb-buffers is active or the compile-window
+    ;; is the selected window
     (when (and (not (> (minibuffer-depth) 0))
                (not (equal ecb-last-major-mode major-mode))
-               (not (member (current-buffer)
-                            (ecb-get-current-visible-ecb-buffers))))
+               (not (ecb-point-in-dedicated-special-buffer))
+               (not (equal (selected-window) ecb-compile-window)))
+;;                (not (member (current-buffer)
+;;                             (ecb-get-current-visible-ecb-buffers))))
       (let ((last-mode ecb-last-major-mode))
         (setq ecb-last-major-mode major-mode)
         (ignore-errors
@@ -2341,11 +2391,11 @@ ECB-WIN-NR must be an integer between 1 and length of ECB-WIN-LIST \(rsp.
 
 (defun ecb-point-in-ecb-tree-buffer ()
   "Return not nil if point is in any of the standard tree-buffers \(see
-function `ecb-tree-buffers-name-list') of ECB and if the current buffer is
-displayed in the currently selected window."
+function `ecb-ecb-buffer-registry-name-list') of ECB and if the
+current buffer is displayed in the currently selected window."
   (when (and (equal (selected-frame) ecb-frame)
              (member (buffer-name (current-buffer))
-                     (ecb-tree-buffers-name-list))
+                     (ecb-ecb-buffer-registry-name-list 'only-tree-buffers))
              (eq (selected-window) (get-buffer-window (current-buffer)
                                                       ecb-frame)))
     (current-buffer)))
@@ -2356,7 +2406,7 @@ displayed in the currently selected window."
 ;; slow down XEmacs.
 (defun ecb-point-in-dedicated-special-buffer ()
   "Return not nil if point is in any of the special dedicated buffers which
-are registrated via the macro `defecb-window-dedicator' \(see
+are registrated via the macro `defecb-window-dedicator-to-ecb-buffer' \(see
 `ecb-dedicated-special-buffers') and if the current buffer is displayed in the
 currently selected window."
   (when (equal (selected-frame) ecb-frame)
@@ -4042,38 +4092,23 @@ with the current window-height \(frame-height if USE-FRAME is not nil)."
 ;; straightforward, more customizable by users and slightly more
 ;; convenient.
 
-(defvar ecb-buffer-setfunction-registration nil
-  "An alist where for each `buffer-name' of a special ecb-buffer - displayed
-in a dedicated window - a function must be registered which displays that
-buffer in current window and makes this window dedicated to this buffer. So
-for every ecb-buffer a cons cell must be added to this alist where car is
-`buffer-name' and cdr is the symbol of the setting-function.
-
-The setting function of such a buffer must be defined with the macro
-`defecb-window-dedicator' and do:
-
-1. switch to that buffer in current window
-2. all things necessary for this buffer - e.g. making it read-only
-
-The setting function must ensure that the current window is still current at
-the end and that the related ecb-buffer is displayed in this window at the
-end.
-
-One examples of such a setting function is `ecb-set-history-buffer' for the
-buffer with name `ecb-history-buffer-name'.")
 
 (defun ecb-dedicated-special-buffers ()
-  "Return a list of the special dedicated buffers which are registrated via
-the macro `defecb-window-dedicator' \(these are normally only the standard
-tree-buffers of ECB plus the integrated speedbar-buffer, but in general it can
-be more if there are additional buffers registrated, e.g. by other
-applications). The value returned is independend from the currently *visible*
-special ecb-buffers and therefore also from the current layout. If the
-currently visible ECB-buffers are needed then use the function
-`ecb-get-current-visible-ecb-buffers'. "
+  "Return a list of all registered ecb-buffers.
+
+This are all buffers which are registrated via the macro
+`defecb-window-dedicator-to-ecb-buffer' \(these are mainly the
+standard tree-buffers of ECB plus the integrated speedbar-buffer
+and the symboldef-buffer, but in general it can be more if there
+are additional buffers registrated, e.g. by other applications).
+The value returned is independend from the currently *visible*
+special ecb-buffers and therefore also from the current layout.
+If the currently visible ECB-buffers are needed then use the
+function `ecb-get-current-visible-ecb-buffers'. "
   (delq nil (mapcar (function (lambda (e)
-                                (get-buffer (car e))))
-                    ecb-buffer-setfunction-registration)))
+                                (and (nth 3 e)
+                                     (get-buffer (nth 0 e)))))
+                    ecb-ecb-buffer-registry)))
 
 (defun ecb-get-current-visible-ecb-buffers ()
   "Return a list of all buffer-objects displayed in a currently visible and
@@ -4234,6 +4269,35 @@ buffer of current layout is maximized otherwise nil."
                   (ecb-maximized-ecb-buffer-name)))
     (ecb-maximized-ecb-buffer-name)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
+;; change maximizing:
+;; - throw away the creator-fcn stuff, now we do maximizing via deleting all
+;;   other ecb-windows of the same column (left, right, left-right) or row
+;;   (top)..
+;; - ecb-windows-hidden can now have the following values: nil and t and
+;;   additional left or right (for left-right layouts). CHECK ALL LOCATIONS
+;;   WHERE THIS IS SET OR EVALUATED - adaprt the code!!!!
+;; - we need a mechanism to get the info, if a ecb-window is on the left or on
+;;   the right column
+;; - maximizing can be done in each column
+;; - ecb-maximized-ecb-buffer-name can now hold a list of maximized
+;;   buffer-names!!! CHECK WHERE THIS IS SET OR EVALUATED - adapt the code!!
+;; - maximizing: get the list of ecb-windows of that column (row) the window
+;;   belongs to (the window itself must not be inlcuded in this list). Then
+;;   run the unadviced version of delete-window for each of the windows of
+;;   this list. Then set ecb-maximized-ecb-buffer-name and voila, done!
+;; - undo-maximize can be done for each side separately in left-right-layouts!
+;; - ecb-hide-ecb-windows should handle hidding only one side with left-right
+;;   layouts.
+;; - ecb-toggle-maximize-ecb-window-with-mouse should be checked
+;; - ecb-toggle-ecb-windows should hanlde the new possibilities (hidding left
+;;   --> hidding right too --> displaying all e.g.)
+;; - calling delete-window (C-x 0) in a ecb-window can allow deleting them -
+;;   why not? should be not a problem...maybe this maximizes another one - be
+;;   care of this!
+;; - symboldef mjust be added to create-new-layout and to all menus
+;; 
+
 (defun ecb-maximize-ecb-buffer (ecb-buffer-name &optional preserve-selected-window)
   "Maximize that window which displays the special ECB-buffer ECB-BUFFER-NAME.
 Afterwards ECB-BUFFER-NAME is the only visible special ECB-buffer. If optional
@@ -4252,8 +4316,7 @@ will be selected also after."
       (when (ecb-buffer-is-ecb-buffer-of-current-layout-p ecb-buffer-name)
         (ecb-redraw-layout-full
          t ;; no buffer synchronisation!
-         (cdr (assoc ecb-buffer-name
-                     ecb-buffer-setfunction-registration)))
+         (ecb-ecb-buffer-registry-get-set-fcn ecb-methods-buffer-name))
         (if compwin-hidden (ecb-toggle-compile-window -1))
         (setq ecb-current-maximized-ecb-buffer-name ecb-buffer-name)
         ;; point is now in the edit-buffer so maybe we have to move point to the
@@ -4264,6 +4327,7 @@ will be selected also after."
              (ecb-window-select ecb-buffer-name))
             (compile
              (ecb-window-select ecb-compile-window))))))))
+
 
 (defvar ecb-cycle-ecb-buffer-state nil
   "State of ecb-buffer-cycling. An alist where the car is the list of all
@@ -4348,42 +4412,56 @@ during evaluating BODY the current window is always dedicated at the end!"
          ,@body)
      (set-window-dedicated-p (selected-window) t)))
 
-(defmacro defecb-window-dedicator (creator buffer-name docstring &rest body)
-  "Define a function CREATOR which makes the selected window dedicated to the
-BUFFER-NAME. Do not quote CREATOR. DOCSTRING is the docstring for CREATOR.
-BODY is all the program-code of CREATOR which will be run encapsulated within
-a call to `ecb-with-dedicated-window'.
+(defmacro defecb-window-dedicator-to-ecb-buffer
+  (dedicator buffer-name-symbol tree-buffer-p docstring &rest body)
+  "Dedicates an ecb-window for the buffer hold in BUFFER-NAME-SYMBOL.
+This defines a function DEDICATOR which makes the selected window
+dedicated to that buffer-name hold in BUFFER-NAME-SYMBOL. Do not
+quote DEDICATOR and BUFFER-NAME-SYMBOL. TREE-BUFFER-P has to be not
+nil if the ecb-window displays a tree-buffer created with
+`defecb-tree-buffer-creator' \(in this case BUFFER-NAME-SYMBOL
+muts be equal to the argument TREE-BUFFER-NAME-SYMBOL of that
+macro). DOCSTRING is the docstring for DEDICATOR. BODY is all the
+program-code of DEDICATOR which will be run encapsulated within a
+call to `ecb-with-dedicated-window'.
 
 Example:
 
-\(defecb-window-dedicator ecb-set-history-buffer ecb-history-buffer-name
+\(defecb-window-dedicator-to-ecb-buffer ecb-set-history-buffer
+    ecb-history-buffer-name t
   \"Display the History-buffer in current window and make window
-dedicated.\"
+dedicated to the history buffer.\"
   \(switch-to-buffer ecb-history-buffer-name))
 
-This defines a function `ecb-set-history-buffer' registered as
-\"window-dedicator\" for the buffer with name `ecb-history-buffer-name'. The
-BODY \(in this example only a call to switch-to-buffer) will run within the
-macro `ecb-with-dedicated-window'!"
+This dedicates a window to a buffer with name
+`ecb-history-buffer-name' by defining a function
+`ecb-set-history-buffer' registered as \"window-dedicator\" for
+this buffer. The buffer with name `ecb-history-buffer-name' is of
+type tree-buffer. The BODY \(in this example only a call to
+switch-to-buffer) will run within the macro
+`ecb-with-dedicated-window'!"
   `(eval-and-compile
-     (defun ,creator ()
+     (defun ,dedicator ()
        ,docstring
-       (add-to-list 'ecb-buffer-setfunction-registration
-                    (cons ,buffer-name (quote ,creator)))
+       (ecb-ecb-buffer-registry-add ,buffer-name-symbol
+                                    (quote ,buffer-name-symbol)
+                                    ,tree-buffer-p
+                                    (quote ,dedicator))
        (ecb-with-dedicated-window
         ,@body))))
 
-(put 'defecb-window-dedicator 'lisp-indent-function 2)
+(put 'defecb-window-dedicator-to-ecb-buffer 'lisp-indent-function 3)
 
-(defecb-window-dedicator ecb-set-speedbar-buffer ecb-speedbar-buffer-name
-  "Display in current window the speedbar-buffer and make window dedicated."
-  (ecb-speedbar-set-buffer))
+;;(insert (pp (macroexpand '(defecb-window-dedicator-to-ecb-buffer ccc klausi-sym (check) "doc" (do-something)))))
 
-(defecb-window-dedicator ecb-set-default-ecb-buffer " *ECB-default-buffer*"
+(defvar ecb-default-buffer-name " *ECB-default-buffer*"
+  "Buffer name of a default ecb buffer.")
+
+(defecb-window-dedicator-to-ecb-buffer ecb-set-default-ecb-buffer ecb-default-buffer-name nil
   "Set in the current window the default ecb-buffer which is useless but is
 used if a layout calls within its creation body a non bound
 ecb-buffer-setting-function."
-  (switch-to-buffer (get-buffer-create " *ECB-default-buffer*"))
+  (switch-to-buffer (get-buffer-create ecb-default-buffer-name))
   (when (= (buffer-size) 0)
     (insert " This is the default\n")
     (insert " ecb-buffer which is\n")
@@ -4557,19 +4635,22 @@ Things CREATE-CODE has to do:
    + `ecb-set-methods-buffer'
    + `ecb-set-history-buffer'
    + `ecb-set-speedbar-buffer'
+   + `ecb-set-analyse-buffer'
+   + `ecb-set-symboldef-buffer'
    Each layout can only contain one of each tree-buffer-type!
 
    In addition to these functions there is a general macro:
-   + `defecb-window-dedicator':
+   + `defecb-window-dedicator-to-ecb-buffer':
    This macro defines a so called \"window-dedicator\" which is a function
    registered at ECB and called by ECB to perform any arbitrary code in
    current window and makes the window autom. dedicated at the end. This can
    be used by third party packages like JDEE to create arbitrary ECB-windows
    besides the standard tree-windows.
 
-   To make a special ECB-window a dedicated window either one of the five
-   functions above must be used or a new \"window-dedicator\"-function has to
-   be defined with `defecb-window-dedicator' and must be used within the
+   To make a special ECB-window a dedicated window for an
+   ecb-buffer either one of the seven functions above must be used
+   or a new \"window-dedicator\"-function has to be defined with
+   `defecb-window-dedicator-to-ecb-buffer' and must be used within the
    layout-definition.
 
 3. Every\(!) special ECB-window must be dedicated as described in 2.
@@ -4928,7 +5009,7 @@ If the variable `ecb-redraw-layout-quickly' is not nil then the redraw is done
 by the `ecb-redraw-layout-quickly' function, otherwise by
 `ecb-redraw-layout-full'.
 
-Please not: It's strongly recommended to use the quick redraw only if you have
+Please note: It's strongly recommended to use the quick redraw only if you have
 really slow machines where a full redraw takes several seconds because the
 quick redraw is not really safe and has some annoying drawbacks! On normal
 machines the full redraw should be done in << 1s so there should be no need
@@ -5355,6 +5436,9 @@ his previous layout via \[C-u] `ecb-toggle-layout'."
         (setq ecb-toggle-layout-state next-index)
         (ecb-layout-switch layout-name)))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: allow storin only when all
+;; ecb-windows are visible (nor maximized and also not hidden one side in case
+;; of a left-right layout.
 (defun ecb-store-window-sizes (&optional fix)
   "Stores the sizes of the ECB windows for the current layout.
 The size of the ECB windows will be set to their stored values when
@@ -5479,6 +5563,11 @@ floating-point-numbers. Default referencial width rsp. height are
         (if (and (numberp enlarge-height) (/= enlarge-height 0))
             (ignore-errors (enlarge-window enlarge-height)))))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: change: each element of the
+;; window-sizes option must contain the buffer-name/symbol. Then the master is
+;; the current ecb-window-list (in the dolist below): for each of the current
+;; visible windows get the stored size (getable via buffer-name) and set it -
+;; remove the condition (= (length windows) (length sizes))!
 (defun ecb-set-ecb-window-sizes (window-sizes)
   (unless ecb-windows-hidden
     (ecb-do-with-unfixed-ecb-buffers

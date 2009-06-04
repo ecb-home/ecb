@@ -142,6 +142,7 @@
     semantic-something-to-tag-table
     semantic-tag
     semantic-tag-abstract-p
+    semantic-tag-bounds
     semantic-tag-buffer
     semantic-tag-calculate-parent
     semantic-tag-children-compatibility

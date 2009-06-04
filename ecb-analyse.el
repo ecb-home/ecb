@@ -510,7 +510,7 @@ used as window."
         (when meta-mode
           (ecb-run-with-idle-timer 0.001 nil 'ecb-hide-ecb-windows)))))))
 
-(defecb-window-dedicator ecb-set-analyse-buffer ecb-analyse-buffer-name
+(defecb-window-dedicator-to-ecb-buffer ecb-set-analyse-buffer ecb-analyse-buffer-name t
   "Display the analyse buffer in current window and make window dedicated."
   (ecb-activate-ecb-autocontrol-function ecb-analyse-buffer-sync-delay
                                          'ecb-analyse-buffer-sync)

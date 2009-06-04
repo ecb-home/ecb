@@ -1129,40 +1129,86 @@ and not with `tree-buffer-create'!"
                                         (quote ,creator))
      (defun ,creator ()
        ,docstring
-       (unless (ecb-tree-buffers-get-symbol ,tree-buffer-name-symbol)
-         (ecb-tree-buffers-add ,tree-buffer-name-symbol
-                               (quote ,tree-buffer-name-symbol))
+       (unless (ecb-ecb-buffer-registry-get-symbol ,tree-buffer-name-symbol)
+         (ecb-ecb-buffer-registry-add ,tree-buffer-name-symbol
+                                      (quote ,tree-buffer-name-symbol)
+                                      t)
          ,@body))))
 
 (put 'defecb-tree-buffer-creator 'lisp-indent-function 2)
 
-;; all created tree-buffers 
+;; all created ecb-buffers 
 
-(defvar ecb-tree-buffers nil
-  "The tree-buffers of ECB.
-An alist with a cons for each created \(do not confuse created with visible!)
-tree-buffer where the car is the name of the tree-buffer and the cdr is the
-associated symbol which contains this name.")
+;; KB: `defecb-tree-buffer-creator' calls ecb-ecb-buffer-registry-add. Besides
+;; `defecb-window-dedicator-to-ecb-buffer' this is the only modifier of that
+;; variable!
+(defvar ecb-ecb-buffer-registry nil
+  "The ecb-buffers registry.
 
-(defsubst ecb-tree-buffers-init ()
-  (setq ecb-tree-buffers nil))
+Each special ecb-buffer must be registered at ECB in this registry.
 
-(defsubst ecb-tree-buffers-add (name name-symbol)
-  (unless (ecb-find-assoc name ecb-tree-buffers)
-    (setq ecb-tree-buffers
-          (ecb-add-assoc (cons name name-symbol) ecb-tree-buffers))))
+Do not change this variable! This registration is done completely
+by the macro `defecb-window-dedicator-to-ecb-buffer' and the
+results are stored in this registry. Each item is a 4-element
+list with the following contents:
+1. elem: The buffer-name of the registered ecb-buffer
+2. elem: The symbol which holds this buffer-name
+3. elem: An indicator if the registered ecb-buffer is of type tree-buffer
+   \(i.e. this tree-buffer is created with `defecb-tree-buffer-creator'). Not
+   nil in case of a tree-buffer otherwise nil
+4. elem: A function which displays that buffer in current window
+   when called and makes this window dedicated to this buffer. This is the
+   DEDICATOR-argument of `defecb-window-dedicator-to-ecb-buffer'.
 
-(defsubst ecb-tree-buffers-name-list ()
-  (mapcar (function (lambda (e) (car e))) ecb-tree-buffers))
+The dedicator-function must do:
+1. switch to that buffer in current window
+2. all things necessary for this buffer - e.g. making it read-only
 
-(defsubst ecb-tree-buffers-symbol-list ()
-  (mapcar (function (lambda (e) (cdr e))) ecb-tree-buffers))
+The setting function must ensure that the current window is still
+current at the end and that the related ecb-buffer is displayed
+in this window at the end. One examples of such a setting
+function is `ecb-set-history-buffer' for the buffer with name
+`ecb-history-buffer-name'.
 
-(defsubst ecb-tree-buffers-buffer-list ()
-  (mapcar (function (lambda (e) (get-buffer (car e)))) ecb-tree-buffers))
+See `defecb-window-dedicator-to-ecb-buffer' for more details and an example.")
 
-(defsubst ecb-tree-buffers-get-symbol (name)
-  (ecb-find-assoc-value name ecb-tree-buffers))
+(defun ecb-ecb-buffer-registry-init ()
+  (setq ecb-ecb-buffer-registry nil))
+
+(defun ecb-ecb-buffer-registry-add (name name-symbol tree-buffer-p &optional set-fcn-symbol)
+  (if (assoc name ecb-ecb-buffer-registry)
+      (ecb-set-elt (assoc name ecb-ecb-buffer-registry) 3 set-fcn-symbol)
+    (setq ecb-ecb-buffer-registry
+          (cons (list name name-symbol tree-buffer-p set-fcn-symbol)
+                ecb-ecb-buffer-registry))))
+
+(defsubst ecb-ecb-buffer-registry-name-list (&optional only-tree-buffers)
+  (delq nil (mapcar (function (lambda (e)
+                                (and (or (not only-tree-buffers)
+                                         (nth 2 e))
+                                     (nth 0 e))))
+                    ecb-ecb-buffer-registry)))
+
+(defsubst ecb-ecb-buffer-registry-symbol-list (&optional only-tree-buffers)
+  (delq nil (mapcar (function (lambda (e)
+                                (and (or (not only-tree-buffers)
+                                         (nth 2 e))
+                                     (nth 1 e))))
+                    ecb-ecb-buffer-registry)))
+
+(defsubst ecb-ecb-buffer-registry-buffer-list (&optional only-tree-buffers)
+  (delq nil (mapcar (function (lambda (e)
+                                (and (or (not only-tree-buffers)
+                                         (nth 2 e))
+                                     (get-buffer (nth 0 e)))))
+                    ecb-ecb-buffer-registry)))
+  
+(defsubst ecb-ecb-buffer-registry-get-symbol (name)
+  (nth 1 (assoc name ecb-ecb-buffer-registry)))
+
+(defsubst ecb-ecb-buffer-registry-get-set-fcn (name)
+  (nth 3 (assoc name ecb-ecb-buffer-registry)))
+
 
 (defvar ecb-tree-buffer-callbacks '((expand . nil) (select . nil))
   "All callback-functions for the tree-buffers of ECB.
@@ -1795,16 +1841,27 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
 
 (defun ecb-format-bucket-name (name &optional ignore-prefix-suffix ignore-bucket-face)
   "Format NAME as a bucket-name according to `ecb-bucket-node-display'.
-If optional arg IGNORE-PREFIX-SUFFIX rsp. IGNORE-BUCKET-FACE is not nil then
-these settings of `ecb-bucket-node-display' are ignored."
-  (let ((formatted-name (if ignore-prefix-suffix
+If optional arg IGNORE-PREFIX-SUFFIX is not nil then
+these settings of `ecb-bucket-node-display' are ignored. If IGNORE-BUCKET-FACE
+it t then the face of `ecb-bucket-node-display' is completely ignored, if it
+is 'only-name then the face of `ecb-bucket-node-display' is only ignored for
+NAME but not for a prefix or suffix of `ecb-bucket-node-display' \(if any)."
+  (let ((formated-prefix (unless ignore-prefix-suffix
+                           (if (eq ignore-bucket-face t)
+                               (nth 0 ecb-bucket-node-display)
+                             (ecb-merge-face-into-text
+                              (nth 0 ecb-bucket-node-display)
+                              (nth 2 ecb-bucket-node-display)))))
+        (formated-suffix (unless ignore-prefix-suffix
+                           (if (eq ignore-bucket-face t)
+                               (nth 1 ecb-bucket-node-display)
+                             (ecb-merge-face-into-text
+                              (nth 1 ecb-bucket-node-display)
+                              (nth 2 ecb-bucket-node-display)))))
+        (formatted-name (if ignore-bucket-face
                             name
-                          (concat (nth 0 ecb-bucket-node-display)
-                                  name
-                                  (nth 1 ecb-bucket-node-display)))))
-    (unless ignore-bucket-face
-      (ecb-merge-face-into-text formatted-name (nth 2 ecb-bucket-node-display)))
-    formatted-name))
+                          (ecb-merge-face-into-text name (nth 2 ecb-bucket-node-display)))))
+    (concat formated-prefix formatted-name formated-suffix)))
 
 (defun ecb-toggle-do-not-leave-window-after-select ()
   "Toggles if a node-selection in a tree-buffer leaves the tree-window.
@@ -1822,13 +1879,13 @@ See also the option `ecb-tree-do-not-leave-window-after-select'."
                       ;; and the tree-buffer-name because we do not know what
                       ;; the user has specified in
                       ;; `ecb-tree-do-not-leave-window-after-select'!
-                      (delete (ecb-tree-buffers-get-symbol tree-buf-name)
+                      (delete (ecb-ecb-buffer-registry-get-symbol tree-buf-name)
                               (delete tree-buf-name
                                       ecb-tree-do-not-leave-window-after-select--internal)))
                 (message "Selections leave the tree-window of %s" tree-buf-name))
             (setq ecb-tree-do-not-leave-window-after-select--internal
                   (append ecb-tree-do-not-leave-window-after-select--internal
-                          (list (ecb-tree-buffers-get-symbol tree-buf-name))))
+                          (list (ecb-ecb-buffer-registry-get-symbol tree-buf-name))))
             (message "Selections don't leave the tree-window of %s." tree-buf-name)))
       (message "Point must stay in an ECB tree-buffer!"))))
 

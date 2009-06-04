@@ -43,6 +43,18 @@
    methods-window (e.g. by unhiding the ecb-windows via the command
    `ecb-toggle-ecb-windows' - bound to [C-c . l w]).
 
+** New default value of the option `ecb-history-make-buckets'
+
+   This option offers now an additional choice 'directory-with-source-path:
+   This substituts the best (= deepest) matching source-path of the
+   directory-window in the directory-bucket with the alias of this matching
+   source-path (if an alias is set in the option `ecb-source-path'). A new
+   face is used for this: `ecb-history-bucket-node-dir-soure-path-face'.
+
+** `defecb-window-dedicator-to-ecb-buffer' replaces `defecb-window-dedicator'
+
+   This is only relevant for people who program own special ecb-windows.
+   
 ** Fixed Bugs
 
 *** Fixed a bug which prevents the ecb-windows from being vertically resizeable
@@ -54,6 +66,11 @@
 
 *** Fixed a bug which prevented `ecb-type-tag-display' from taking effect.
 
+*** Killing a buffer failed when history-window is not visible
+    Killing a buffer failed in case the history buffer is not visible (e.g.
+    when currently a layout without a history buffer is used or when another
+    buffer is maximized and the history buffer thus hidden). This is fixed
+    now.
 
 * Changes for ECB version 2.40
 
