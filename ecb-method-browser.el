@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.95 2009/05/25 05:50:42 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.96 2009/06/04 08:38:15 berndl Exp $
 
 ;;; Commentary:
 
@@ -38,6 +38,7 @@
 (require 'ecb-face)
 (require 'ecb-speedbar)
 (require 'ecb-common-browser)
+(require 'ecb-speedbar)
 
 (require 'ecb-cedet-wrapper)
 ;; This loads the semantic-setups for the major-modes.
@@ -1478,7 +1479,7 @@ ECB-methods-window is not visible in current layout."
       (ecb-maximize-window-speedbar)
     (ecb-maximize-ecb-buffer ecb-methods-buffer-name t)))
 
-(defecb-window-dedicator ecb-set-methods-buffer ecb-methods-buffer-name
+(defecb-window-dedicator-to-ecb-buffer ecb-set-methods-buffer ecb-methods-buffer-name t
   "Display in current window the methods-buffer and make window dedicated."
   (let ((set-methods-buffer
          (not (equal ecb-use-speedbar-instead-native-tree-buffer 'method))))
@@ -2846,6 +2847,7 @@ partial reparse and update-mechanism."
                   ;; full-fetch - should not happen but how knows...
                   (progn
                     (ecb-partial-reparse-debug "full-fetch-needed because we didn't found our tag")
+                    (setq taglist nil) ;; it makes no sense to process further tags
                     (setq full-fetch-needed t)
                     )
                 ;; now we apply the tag-related filters to see if the updated tag
@@ -2907,7 +2909,9 @@ partial reparse and update-mechanism."
                                                  data-parent-name tag-ident-parent-name)
                       ;; if there is no node with this id or no node with same id
                       ;; and same parent as the updated tag we need a full-fetch
-                      (setq full-fetch-needed t))))))))
+                      (setq full-fetch-needed t)
+                      (setq taglist nil) ;; it makes no sense to process further tags
+                      )))))))
       
         ;; if we have at least one node updated and no tag has shown that a
         ;; full-fetch is better than a partial update then we updated the
@@ -2933,7 +2937,7 @@ partial reparse and update-mechanism."
           (ecb-set-current-tag-table (ecb-fetch-semantic-tags))
           )))))
 
-
+;; currently not used
 (defun ecb-semantic-active-for-file (filename)
   "Return not nil if FILENAME is already displayed in a buffer and if semantic
 is active for this buffer."
@@ -3547,6 +3551,10 @@ current buffer."
                      (ecb--semantic-tag-class highlight-tag))))
          (type-node nil))
     (or (and curr-tag
+             ;; this is save because ecb-try-highlight-tag runs only within
+             ;; ecb-tag-sync which is defined to do nothing if
+             ;; ecb-methods-buffer-name is not visible in the current layout
+             ;; ==> the return value 'window-not-visible is not possible here!
              (ecb-exec-in-window ecb-methods-buffer-name
                (or (tree-buffer-highlight-node-by-data/name
                     highlight-tag nil nil
@@ -3965,7 +3973,7 @@ This function is for usage with `ecb-find-external-tag-functions.'"
 Return either a positioned semantic-tag for the found
 type-definition or nil if nothing is found. This mechanism uses
 the semantic-analyzer. Therefore it will work at its best if all
-nneded customizations for the semantic analyzer have been done.
+needed customizations for the semantic analyzer have been done.
 \(See the manual of the semantic analyzer for how to customizing
 it).
 

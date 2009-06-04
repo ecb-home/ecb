@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.446 2009/05/10 16:53:19 berndl Exp $
+;; $Id: ecb.el,v 1.447 2009/06/04 08:38:14 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -242,7 +242,7 @@ is loaded or the value of `cedet-version' at ECB-compilation time.")
 command.")
 
 (defun ecb-initialize-all-internals (&optional no-caches)
-  (ecb-tree-buffers-init)
+  (ecb-ecb-buffer-registry-init)
   (setq ecb-major-mode-selected-source nil
         ecb-item-in-tree-buffer-selected nil)
   (ecb-file-browser-initialize no-caches)
@@ -1481,7 +1481,7 @@ If ECB detects a problem it is reported and then an error is thrown."
         (setq ecb-minor-mode t)
 
         ;; now we draw the screen-layout of ECB.
-        (condition-case err-obj
+;;        (condition-case err-obj
             ;; now we draw the layout chosen in `ecb-layout'. This function
             ;; activates at its end also the adviced functions if necessary!
             ;; Here the directories- and history-buffer will be updated.
@@ -1523,9 +1523,10 @@ If ECB detects a problem it is reported and then an error is thrown."
               ;; now update all the ECB-buffer-modelines
               (ecb-mode-line-format)
               )
-          (error
-           (ecb-clean-up-after-activation-failure
-            "Errors during the layout setup of ECB." err-obj)))
+;;           (error
+;;            (ecb-clean-up-after-activation-failure
+;;             "Errors during the layout setup of ECB." err-obj))
+;;           )
         
         (condition-case err-obj
             (let ((edit-window (car (ecb-canonical-edit-windows-list))))
@@ -1759,9 +1760,9 @@ If ECB detects a problem it is reported and then an error is thrown."
       ;; doesn´t matter. We kill these buffers because some customize-options
       ;; takes only effect when deactivating/reactivating ECB, or to be more
       ;; precise when creating the tree-buffers again.
-      (dolist (tb-elem ecb-tree-buffers)
+      (dolist (tb-elem (ecb-ecb-buffer-registry-name-list 'only-tree-buffers))
         (tree-buffer-destroy (car tb-elem)))
-      (ecb-tree-buffers-init)
+      (ecb-ecb-buffer-registry-init)
       
       (setq ecb-activated-window-configuration nil)
 
@@ -1891,8 +1892,15 @@ exist."
                (symbol-name (nth 1 read-lobject)) nil nil
                :user-visible-flag nil
                :documentation (semantic-elisp-do-doc (nth 3 read-lobject))))
-          defecb-tree-buffer-creator
-          defecb-window-dedicator)
+          defecb-tree-buffer-creator)
+        ;; defecb-window-dedicator-to-ecb-buffer
+        (semantic-elisp-setup-form-parser
+            (lambda (read-lobject start end)
+              (semantic-tag-new-function
+               (symbol-name (nth 1 read-lobject)) nil nil
+               :user-visible-flag nil
+               :documentation (semantic-elisp-do-doc (nth 4 read-lobject))))
+          defecb-window-dedicator-to-ecb-buffer)
         ;; defecb-advice
         (semantic-elisp-setup-form-parser
             (lambda (read-lobject start end)
@@ -1956,7 +1964,7 @@ exist."
                  (function-defs '(
                                   "defecb-stealthy"
                                   "defecb-tree-buffer-creator"
-                                  "defecb-window-dedicator"
+                                  "defecb-window-dedicator-to-ecb-buffer"
                                   "defecb-advice"
                                   "defecb-autocontrol/sync-function"
                                   "defecb-tree-buffer-callback"

@@ -22,7 +22,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-examples.el,v 1.26 2009/05/08 14:05:55 berndl Exp $
+;; $Id: ecb-examples.el,v 1.27 2009/06/04 08:38:15 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -277,10 +277,10 @@ also if the ECB-analyse-window is not visible in current layout."
 
 
 ;; The "window-dedicator"-function for the bufferinfo-buffer. See
-;; `defecb-window-dedicator' for an explanation.
+;; `defecb-window-dedicator-to-ecb-buffer' for an explanation.
 
-(defecb-window-dedicator ecb-examples-set-bufferinfo-buffer
-    ecb-examples-bufferinfo-buffer-name
+(defecb-window-dedicator-to-ecb-buffer ecb-examples-set-bufferinfo-buffer
+    ecb-examples-bufferinfo-buffer-name nil
   "Set the buffer in the current window to the bufferinfo-buffer and make this
 window dedicated for this buffer. Makes the buffer read-only."
   ;; activating the synchronization of the bufferinfo-window:
@@ -394,10 +394,10 @@ also if the ECB-analyse-window is not visible in current layout."
 
 
 ;; The "window-dedicator"-function for the action-buffer. See
-;; `defecb-window-dedicator' for an explanation.
+;; `defecb-window-dedicator-to-ecb-buffer' for an explanation.
 
-(defecb-window-dedicator ecb-examples-set-action-buffer
-    (buffer-name (ecb-examples-action-buffer-create))
+(defecb-window-dedicator-to-ecb-buffer ecb-examples-set-action-buffer
+    ecb-examples-action-buffer-name nil
   "Set the buffer in the current window to the action-buffer and make this
 window dedicated for this buffer."
   (switch-to-buffer (buffer-name (ecb-examples-action-buffer-create))))

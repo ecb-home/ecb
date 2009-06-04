@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.25 2009/05/08 14:05:55 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.26 2009/06/04 08:38:15 berndl Exp $
 
 
 ;;; Commentary:
@@ -510,7 +510,7 @@ used as window."
         (when meta-mode
           (ecb-run-with-idle-timer 0.001 nil 'ecb-hide-ecb-windows)))))))
 
-(defecb-window-dedicator ecb-set-analyse-buffer ecb-analyse-buffer-name
+(defecb-window-dedicator-to-ecb-buffer ecb-set-analyse-buffer ecb-analyse-buffer-name t
   "Display the analyse buffer in current window and make window dedicated."
   (ecb-activate-ecb-autocontrol-function ecb-analyse-buffer-sync-delay
                                          'ecb-analyse-buffer-sync)

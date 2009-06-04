@@ -21,7 +21,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-cedet-wrapper.el,v 1.2 2009/05/25 05:50:42 berndl Exp $
+;; $Id: ecb-cedet-wrapper.el,v 1.3 2009/06/04 08:38:15 berndl Exp $
 
 ;;; Commentary:
 
@@ -142,6 +142,7 @@
     semantic-something-to-tag-table
     semantic-tag
     semantic-tag-abstract-p
+    semantic-tag-bounds
     semantic-tag-buffer
     semantic-tag-calculate-parent
     semantic-tag-children-compatibility

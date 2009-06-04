@@ -23,7 +23,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.228 2009/05/25 05:50:42 berndl Exp $
+@c $Id: ecb.texi,v 1.229 2009/06/04 08:38:14 berndl Exp $
 
 @setfilename ecb.info
 
@@ -4728,7 +4728,7 @@ name of the user-defined type you have specified during
 layout-creation.
 
 This function @code{ecb-set-X-buffer} must be defined with the macro
-@code{defecb-window-dedicator} and has to switch to the buffer you
+@code{defecb-window-dedicator-to-ecb-buffer} and has to switch to the buffer you
 want to display in this window. This macro automatically ensures that
 this window is dedicated to that buffer.
 
@@ -4737,7 +4737,7 @@ then you have to define and load a function
 @code{ecb-set-example-buffer} which could be defined like follows:
 
 @example
-(defecb-window-dedicator ecb-set-example-buffer " *ECB example-buf*"
+(defecb-window-dedicator-to-ecb-buffer ecb-set-example-buffer " *ECB example-buf*"
   (switch-to-buffer (get-buffer-create " *ECB example-buf*")))
 @end example
 
@@ -8630,6 +8630,13 @@ displayed flat.
 All entries with related filesources residing in the same
 directory will be contained in a bucket named with that directory.
 
+@item 'directory-with-source-path:
+
+Same as 'directory but the best matching source-path of the directory-window
+(see @code{ecb-source-path}) substituts the matching part of the directory.
+For this a special face is used (see
+@code{ecb-history-bucket-node-dir-soure-path-face}).
+
 @item 'mode:
 
 All entries with related buffers have the same
@@ -9887,6 +9894,17 @@ Changes take first effect after finishing and reactivating ECB!
 Face for not accessible dirs in the directories buffer.
 @end defopt
 
+@defopt history-bucket-node-dir-soure-path-face
+Basic face for displaying the source-path part in a directory bucket.
+This defines the face for the source-path part in a bucket-node of the
+history-buffer if @code{ecb-history-make-buckets} is set to
+'directory-with-source-path. For all other values of
+@code{ecb-history-make-buckets} this option takes no effect.
+
+Changes take first effect after finishing and reactivating ECB!
+@end defopt
+
+
 @defopt history-bucket-node-face
 Basic face for displaying a bucket-node in the ECB-history-buffer.
 This defines the basic face for the bucket-nodes used to bucketize the
@@ -10045,6 +10063,18 @@ buffer.
 
 @item ecb-directory-not-accessible-face
 Define a face for not accessible dirs in the directories buffer.
+
+@item ecb-history-bucket-node-dir-soure-path-face:
+Face used for displaying the source-path part in a directory-bucket.
+
+In GNU Emacs 21.X this face inherits from the face
+@code{ecb-history-bucket-node-face}.
+
+With XEmacs and GNU Emacs 20.X there is no inheritance-feature so if the
+buckets in the ECB-history-buffer should be displayed with the same basic
+attributes set by @code{ecb-history-bucket-node-face} this set of basic
+attributes have to be set in
+@code{ecb-history-bucket-node-dir-soure-path-face} too!
 
 @item ecb-history-bucket-node-face:
 Face used for displaying a bucket-node in the ECB-history-buffer.
@@ -13711,24 +13741,26 @@ one of the following functions:
 @item @code{ecb-set-methods-buffer}
 @item @code{ecb-set-history-buffer}
 @item @code{ecb-set-speedbar-buffer}
+@item @code{ecb-set-analyse-buffer}
+@item @code{ecb-set-symboldef-buffer}
 @end itemize
 Each layout can only contain one of each tree-buffer-type!
 
 In addition to these functions there is a general macro:
-@code{defecb-window-dedicator}: This macro defines a so called
-``window-dedicator'' which is a function registered at ECB and called
-by ECB to perform any arbitrary code in current window and makes the
-window autom. dedicated at the end. This can be used by third party
-packages like JDEE to create arbitrary ECB-windows besides the
-standard tree-windows.
+@code{defecb-window-dedicator-to-ecb-buffer}: This macro defines a so called
+``window-dedicator'' which is a function registered at ECB and called by ECB
+to perform any arbitrary code in current window and makes the window autom.
+dedicated to the special ecb-buffer at the end. This can be used by third
+party packages like JDEE to create arbitrary ECB-windows besides the standard
+special ecb-windows.
 
-To make a special ECB-window a dedicated window either one of the five
+To make a special ECB-window a dedicated window either one of the seven
 functions above must be used or a new ``window-dedicator''-function
-has to be defined with `defecb-window-dedicator' and must be used
+has to be defined with @code{defecb-window-dedicator-to-ecb-buffer} and must be used
 within the layout-definition.
 
 @item
-Every(!) special ECB-window must be dedicated as described in 2.
+Every(!) special ECB-window must be dedicated to a buffer as described in 2.
 
 @item
 @var{CREATE-CODE} must work correctly regardless if there is already a
@@ -14145,8 +14177,8 @@ and registers the new special window/buffer at ECB.
 
 @lisp
 @group
-(defecb-window-dedicator ecb-examples-set-bufferinfo-buffer
-    ecb-examples-bufferinfo-buffer-name
+(defecb-window-dedicator-to-ecb-buffer ecb-examples-set-bufferinfo-buffer
+    ecb-examples-bufferinfo-buffer-name nil
   "Set the buffer in the current window to the bufferinfo-buffer and make this
 window dedicated for this buffer. Makes the buffer read-only."
 
@@ -14169,7 +14201,7 @@ window dedicated for this buffer. Makes the buffer read-only."
 This is all what we need for the special bufferinfo buffer. We have
 demonstrated already three of the important functions/macros of the
 layout-engine API of ECB: @code{ecb-with-readonly-buffer},
-@code{defecb-autocontrol/sync-function} and @code{defecb-window-dedicator}
+@code{defecb-autocontrol/sync-function} and @code{defecb-window-dedicator-to-ecb-buffer}
 (@pxref{The layout-engine API}. Especially the second macro is a MUST for
 programming good synchronizing functions which do not waste CPU-power! We have
 also shown how to start/activate a synchronizing function by
@@ -14263,8 +14295,8 @@ registers it at ECB.
 
 @lisp
 @group
-(defecb-window-dedicator ecb-examples-set-action-buffer
-    (buffer-name (ecb-examples-action-buffer-create))
+(defecb-window-dedicator-to-ecb-buffer ecb-examples-set-action-buffer
+    ecb-examples-action-buffer-name nil
   "Set the buffer in the current window to the action-buffer
 and make this window dedicated for this buffer."
   (switch-to-buffer (buffer-name (ecb-examples-action-buffer-create))))
@@ -14272,9 +14304,7 @@ and make this window dedicated for this buffer."
 @end lisp
 
 We do not need more code for the action buffer. All of the code is
-standard emacs-lisp which would also needed if used without ECB. You
-see that you can use any arbitrary code as second argument for
-@code{defecb-window-dedicator} as long it returns a buffer-name.
+standard emacs-lisp which would also needed if used without ECB.
 
 @subsubsection Adding the bufferinfo- and action-buffer to a new layout
 
@@ -14453,15 +14483,15 @@ windows.
 @group
 ------------------------------------------------------------------
 |                                                                |
-|                 Upper special window                           |
+|                 Upper special window (a tree-buffer)           |
 |                                                                |
 |----------------------------------------------------------------|
 |                                                                |
-|                 Middle special window                          |
+|                 Middle special window (no tree-buffer)         |
 |                                                                |
 |----------------------------------------------------------------|
 |                                                                |
-|                 Lower special window                           |
+|                 Lower special window (a tree-buffer)           |
 |                                                                |
 |================================================================|
 |                                                                |
@@ -14480,15 +14510,18 @@ Here is the code for that top layout (all buffers are dummy-buffers):
 @lisp
 @group
 
-;; The "window dedicator" functions:
+;; The "window dedicator to buffer" functions:
 
-(defecb-window-dedicator ecb-set-usw-buffer "Upper special window"
+(defecb-window-dedicator-to-ecb-buffer ecb-set-usw-buffer
+   upper-special-window-buffer-name t
   (switch-to-buffer (get-buffer-create "Upper special window")))
 
-(defecb-window-dedicator ecb-set-msw-buffer "Middle special window"
+(defecb-window-dedicator-to-ecb-buffer ecb-set-msw-buffer
+   middle-special-window-buffer-name nil
   (switch-to-buffer (get-buffer-create "Middle special window")))
 
-(defecb-window-dedicator ecb-set-lsw-buffer "Lower special window"
+(defecb-window-dedicator-to-ecb-buffer ecb-set-lsw-buffer
+   lower-special-window-buffer-name t
   (switch-to-buffer (get-buffer-create "Lower special window")))
 
 ;; The layout itself:
@@ -14548,14 +14581,18 @@ Here is the code for that left-right layout, again with dummy-buffers
 (depending to your screen-resolution you will need a quite big value
 for @code{ecb-windows-width}, e.g. 0.4):
 
-Here is one of the ``window dedicator''-functions@footnote{The
-``window dedicators'' for all these ecb-windows/buffers are
-not explicitly described - they look all like
-@code{ecb-set-left1-buffer} - of course with different buffer-names!}:
+Here is one of the ``window dedicator for buffer''-functions@footnote{The
+``window dedicators'' for all these ecb-windows/buffers are not explicitly
+described - they look all like @code{ecb-set-left1-buffer} - of course with
+different buffer-names!}:
 
 @lisp
 @group
-(defecb-window-dedicator ecb-set-left1-buffer "Left1"
+(defvar buffer-name-left1 "left1")
+
+;; Note that the third argument muts be not nil if the ecb-window should
+;; display an ecb-buffer of type tree-buffer!
+(defecb-window-dedicator-to-ecb-buffer ecb-set-left1-buffer buffer-name-left1 nil
   (switch-to-buffer (get-buffer-create "Left1")))
 @end group
 @end lisp
@@ -14608,7 +14645,7 @@ detailed description.
 Functions and macros for programming with layouts and special
 ecb-windows:
 @itemize @minus
-@item @code{defecb-window-dedicator}
+@item @code{defecb-window-dedicator-to-ecb-buffer}
 @item @code{ecb-available-layouts-member-p}
 @item @code{ecb-canonical-ecb-windows-list}
 @item @code{ecb-canonical-edit-windows-list}
@@ -14628,7 +14665,7 @@ ecb-windows:
 @item @code{ecb-split-ver}
 @item @code{ecb-where-is-point}
 @item @code{ecb-with-dedicated-window}@footnote{Normally not needed because
-@code{defecb-window-dedicator} does all necessary.}
+@code{defecb-window-dedicator-to-ecb-buffer} does all necessary.}
 @end itemize
 
 Utility functions/macros:

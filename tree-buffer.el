@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.182 2009/05/25 05:50:42 berndl Exp $
+;; $Id: tree-buffer.el,v 1.183 2009/06/04 08:38:14 berndl Exp $
 
 ;;; Commentary:
 
@@ -1692,14 +1692,17 @@ inserted and the TEXT itself"
             (tree-buffer-merge-face-into-text facer p (point))))
       )))
 
-
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: document the feature
+;; 'tree-node-shrink-start-pos appropriately
 (defun tree-buffer-node-display-name (node)
   "Computes that string which is used to display the name of NODE. The
 display-name will be set in the slot DISPLAYED-NAME of NODE and also
 returned."
   (let* ((ww (window-width))
 	 (display-name (tree-node->name node))
-	 (width (+ (tree-node-indentlength node)
+         (name-shrink-start-pos (or (get-text-property 0 'tree-node-shrink-start-pos display-name)
+                                    0))
+         (width (+ (tree-node-indentlength node)
 		   (length display-name)
 		   (if (tree-node->expandable node) 4 0))))
     ;; Truncate name if necessary
@@ -1710,8 +1713,10 @@ returned."
                      3))) ;; there should at least remain 3 visible chars of name
       (if (eq 'beginning (tree-node->shrink-name node))
 	  (setq display-name
-                (concat "..."
-                        (substring display-name (+ (if tree-buffer-running-xemacs 5 4)
+                (concat (substring display-name 0 name-shrink-start-pos)
+                        "..."
+                        (substring display-name (+ name-shrink-start-pos
+                                                   (if tree-buffer-running-xemacs 5 4)
                                                    (- width ww)))))
 	(if (and (not (tree-buffer-spec->expand-symbol-before-p tree-buffer-spec))
 		 (tree-node->expandable node)
