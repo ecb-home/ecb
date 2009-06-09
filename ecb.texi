@@ -7535,12 +7535,6 @@ Show source files in directories buffer.
 Paths where to find code sources. Each path can have an optional alias
 that is used as it's display name. If no alias is set, the path is
 used as display name.
-@end defopt
-
-@defopt source-path
-Paths where to find code sources. Each path can have an optional alias
-that is used as it's display name. If no alias is set, the path is
-used as display name.
 
 Lisp-type of tis option: The value must be a list L whereas each
 element of L is either
@@ -7550,7 +7544,7 @@ a simple string which has to be the full path of a directory (this
 string is displayed in the directory-browser of ECB) or
 
 @item
-a 2-element list whereas the first element is the full path of a
+a 2-elemet list whereas the first element is the full path of a
 directory (string) and the second element is an arbitrary alias
 (string) for this directory which is then displayed instead of the
 underlying directory.
@@ -9247,30 +9241,31 @@ changed the ECB-screen-layout by any action you can always go back to
 this layout with @code{ecb-redraw-layout}
 @end defopt
 
-
 @defopt layout-window-sizes
-Specifies the sizes of the ECB windows for each layout. The easiest
-way (and also the strongly recommended way) to change this variable is
-to change the window sizes by dragging the window borders using the
-mouse and then store the window sizes by calling the command
-@code{ecb-store-window-sizes}. Next time the layout is redrawn the
-values stored in this option will be used.
+Specifies the sizes of the ECB windows for each layout.
+The easiest way (and also the very strongly recommended way) to set this
+option is to change the window sizes by dragging the window borders using
+the mouse and then store the window sizes by calling the command
+@code{ecb-store-window-sizes}. Next time the layout is redrawn the values stored in
+this option will be used.
 
-If @code{ecb-store-window-sizes} is used then the windows sizes are
-stored per default as fractions of current frame-width and -height of
-the ecb-frame, so the stored values will ``work'' for other frame
-sizes too. But if you call @code{ecb-store-window-sizes} with a
-prefix-argument then the fixed values of current width and height are
-stored!
+If @code{ecb-store-window-sizes} is used then the windows sizes are stored per
+default as fractions of current frame-width and -height of the ecb-frame, so
+the stored values will ``work'' for other frame sizes too. But if you call
+@code{ecb-store-window-sizes} with a prefix-argument then the fixed values of
+current width and height are stored!
 
-If this option is set ``by hand'' (i.e. not by
-@code{ecb-store-window-sizes}) then the following is important:
-@itemize @minus
-@item
-It is recommended to use fractions of frame-width and -height!.
-@item
-The order of the sequence of the inserted window sizes must be the same as
-@code{other-window} (the not-adviced version!) would walk!
+If this option is set ``by hand'' (i.e. not by @code{ecb-store-window-sizes}) then
+the following is important:
+@itemize
+@item Use always @code{customize-option}, never @code{setq}!
+@item It is recommended to use fractions of frame-width and -height!.
+@item It is also recommended to use buffer-name-symbols instead of plain
+buffer-names (e.g. ecb-history-buffer-name instead of " *ECB History*'')
+@item There must be an entry for each special ecb-buffer of that layout for which
+the sizes are stored.
+@item The order of the sequence of the inserted window sizes doesn't matter
+because each size-pair is assigned to a buffer-name the sizes belong to.
 @end itemize
 @end defopt
 

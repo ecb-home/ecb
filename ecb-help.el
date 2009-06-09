@@ -440,7 +440,7 @@ could be interesting for support."
                                    ecb-partial-reparse-always-full-fetch
                                    ecb-stealthy-function-list
                                    ecb-stealthy-function-state-alist
-                                   ecb-windows-hidden
+                                   ecb-windows-hidden-state
                                    ecb-toggle-layout-state
                                    ecb-tree-buffer-creators
                                    ecb-ecb-buffer-registry

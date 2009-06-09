@@ -278,6 +278,7 @@
     (ecb-bucket-token-display . (ecb-bucket-node-display identity))
     (ecb-auto-expand-token-tree . (ecb-auto-expand-tag-tree identity))
     (ecb-font-lock-tokens . (ecb-font-lock-tags identity))
+    (ecb-layout-window-sizes . (ecb-layout-window-sizes ecb-upgrade-layout-window-sizes))
     (ecb-token-jump-sets-mark . (ecb-tag-jump-sets-mark identity))
     (ecb-token-display-function . (ecb-tag-display-function ecb-upgrade-token-display-function))
     (ecb-type-token-display . (ecb-type-tag-display ecb-upgrade-type-token-display))
@@ -363,6 +364,9 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   (if (equal old-val t)
       (ecb-option-get-value 'ecb-window-sync 'standard-value)
     nil))
+
+(defun ecb-upgrade-layout-window-sizes (old-val)
+  (ecb-option-get-value 'ecb-layout-window-sizes 'standard-value))
 
 ;; upgrading old layout-numbers (ECB <= 1.80) to new layout-names (ECB
 ;; >= 1.90)

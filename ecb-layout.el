@@ -120,6 +120,7 @@
 ;;(require 'ecb-speedbar)
 (require 'ecb-compilation)
 (require 'ecb-create-layout)
+(require 'ecb-navigate)
 
 ;; XEmacs
 (silentcomp-defvar scrollbars-visible-p)
@@ -222,6 +223,7 @@ hook is not evaluated)."
   "Name of that layout which was current direct before switching to another
 layout.")
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: UPDATE the layout-list in the docstring...
 (defcustom ecb-layout-name "left8"
   "*Select a window layout of ECB.
 Value is any arbitrary string. There are four different types of layouts:
@@ -338,9 +340,9 @@ layout with `ecb-redraw-layout'"
   :group 'ecb-compilation
   :group 'ecb-most-important
   :initialize 'custom-initialize-default
-  ;; we can not use here ' ecb-layout-option-set-function' because here we
+  ;; we can not use here `ecb-layout-option-set-function' because here we
   ;; must call `ecb-redraw-layout-full' with NO-ECB-WINDOWS depending on the
-  ;; value of `ecb-windows-hidden'! Same for `ecb-compile-window-width'. If
+  ;; value of `ecb-windows-hidden-state'! Same for `ecb-compile-window-width'. If
   ;; this is necessary for other options too then we should
   ;; `ecb-layout-option-set-function' to a function with an additional
   ;; parameter which decides if ecb-window-hidden should be used for
@@ -362,7 +364,7 @@ layout with `ecb-redraw-layout'"
                            (progn
                              (select-frame ecb-frame)
                              (ecb-redraw-layout-full nil nil nil
-                                                     ecb-windows-hidden))
+                                                     ecb-windows-hidden-state))
                          (select-frame curr-frame))))))
   :type '(radio (const :tag "No compilation window" nil)
                 (number :tag "Window height" :value 6)))
@@ -426,7 +428,7 @@ This option takes only effect if `ecb-compile-window-height' is not nil!"
                            (progn
                              (select-frame ecb-frame)
                              (ecb-redraw-layout-full nil nil nil
-                                                     ecb-windows-hidden))
+                                                     ecb-windows-hidden-state))
                          (select-frame curr-frame))))))
   :type '(radio (const :tag "Width of ECB-frame" :value frame)
                 (const :tag "Width of edit-window" :value edit-window)))
@@ -948,45 +950,10 @@ Per default this is only enabled for `switch-to-buffer'."
               (const :tag "switch-to-buffer"
                      :value switch-to-buffer)))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: hmm, dows not work. Better
-;; (then in ecb-layout.el):
-;; (case layout-type)
-;; left, right, top: no problem
-;; left-right:
-;; 1. If edges of window CW (s.b.) > ==> left-column, if < ==> right column
-;; better: compare-window CW: choose the first window of that window-list
-;; which contains only windows which are not an ecb-window and also not the
-;; compile-window (this works also if there is no edit window, ie. e.g. if all
-;; other windows are dedicated too, maybe another tool(e.g. ediff) sets all
-;; windows dedicated!) It's not possible that only ecb-windows (and/or a
-;; compile-window) exist in the ecb-frame! therefore the mechanism above works
-;; save! make a function ecb-canonical-rest-windows-list for the windows
-;; described above!.
-;; Build the new leftmost/rightmost-functions so, that a ecb-window-list and a
-;; rest-window-list can be passed as optional args --> performance
-;;
-;; This above is not a general rightmost/leftmost-algorithm! But for our needs
-;; it does its work. If we want a general mechanism for right/leftmost-window
-;; we can steal it from windmove.el!
-
-(defun ecb-get-ecb-window-location (&optional ecb-window winlist)
-  (let* ((windows-list (or winlist (ecb-canonical-windows-list)))
-         (ecb-win (or ecb-window (selected-window)))
-         (layout-type (ecb-get-layout-type))
-         (first-edit-window (car (ecb-canonical-rest-windows-list windows-list))))
-    (case layout-type
-      (left 'left-side)
-      (right 'right-side)
-      (top 'top-side)
-      (left-right (if (> (nth 0 (ecb-window-edges first-edit-window))
-                         (nth 0 (ecb-window-edges ecb-win)))
-                      'left-side
-                    'right-side)))))
-    
 (defcustom ecb-layout-window-sizes nil
   "*Specifies the sizes of the ECB windows for each layout.
-The easiest way \(and also the strongly recommended way) to change this
-variable is to change the window sizes by dragging the window borders using
+The easiest way \(and also the very strongly recommended way) to set this
+option is to change the window sizes by dragging the window borders using
 the mouse and then store the window sizes by calling the command
 `ecb-store-window-sizes'. Next time the layout is redrawn the values stored in
 this option will be used.
@@ -999,26 +966,33 @@ current width and height are stored!
 
 If this option is set \"by hand\" \(i.e. not by `ecb-store-window-sizes') then
 the following is important:
+- Use always `customize-option', never `setq'!
 - It is recommended to use fractions of frame-width and -height!.
-- The order of the sequence of the inserted window sizes must be the same as
-  `other-window' \(the not-adviced version!) would walk!"
+- It is also recommended to use buffer-name-symbols instead of plain
+  buffer-names \(e.g. ecb-history-buffer-name instead of \" *ECB History*\")
+- There must be an entry for each special ecb-buffer of that layout for which
+  the sizes are stored.
+- The order of the sequence of the inserted window sizes doesn't matter
+  because each size-pair is assigned to a buffer-name the sizes belong to."
   :group 'ecb-layout
   :initialize 'custom-initialize-default
   :set ecb-layout-option-set-function
   :type '(repeat (cons :tag "Window layout"
                        (string :tag "Layout name")
                        (repeat :tag "Window sizes"
-                               (cons (choice :tag "Width"
-                                             :menu-tag "Width"
-                                             :value 0.0
-                                             (const :tag "Default value"
-                                                    :value nil)
-                                             (number :tag "Custom size"))
-                                     (choice :tag "Height"
-                                             :menu-tag "Height"
-                                             (const :tag "Default value"
-                                                    :value nil)
-                                             (number :tag "Custom size")))))))
+                               (cons (choice :tag "Buffer-name" :menu-tag "Buffer-name"
+                                             (string :tag "Buffer-name as string")
+                                             (symbol :tag "Symbol containing buffer-name"))
+                                     (cons (choice :tag "Width"
+                                                   :menu-tag "Width"
+                                                   (const :tag "Default value"
+                                                          :value nil)
+                                                   (number :tag "Custom size"))
+                                           (choice :tag "Height"
+                                                   :menu-tag "Height"
+                                                   (const :tag "Default value"
+                                                          :value nil)
+                                                   (number :tag "Custom size"))))))))
 
 (defcustom ecb-redraw-layout-quickly nil
   "If non-nil, we will attempt to redraw the layout quickly.
@@ -1218,9 +1192,85 @@ command.")
   "Contains the the sizes of the ecb-windows of the current layout exactly as
 drawn by the layout-function \(see `ecb-redraw-layout-full').")
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: remove this later - and all usages.
 (defvar ecb-windows-hidden nil
   "Used with `ecb-toggle-ecb-windows'. If true the ECB windows are hidden. Do
 not change this variable!")
+
+(defconst ecb-windows-hidden-all-value 'all)
+(defconst ecb-windows-hidden-none-value 'none)
+
+(defvar ecb-windows-hidden-state ecb-windows-hidden-none-value
+  "Information which ECB windows are hidden.
+The value is either 'all \(means that all ecb-windows of current layout are
+hidden) or 'none \(means all ecb-windows of current
+layout are displayed) or a list which can contain any senseful
+combination of the symbols left-side, right-side or top-side which means
+all ecb-windows on this frame-side are hidden.
+
+\"senseful\" means that for a certain layout-type only certain lists are
+senseful, e.g. for a top-layout the list can only contain one element 'top-side
+whereas for a left-right layout any combination of 'left-side and 'right-side is
+possible and senseful.
+
+Do not evaluate this variable - always use the functions
+`ecb-windows-all-hidden', `ecb-windows-all-displayed' or
+`ecb-windows-hidden-state-list'!")
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add assertion
+;; for state not conflicting with current layout-type (maybe an own function
+;; -- later)
+(defun ecb-windows-all-hidden (&optional hidden-state)
+  "Return not nil if all ecb-windows are hidden.
+If HIDDEN-STATE is not nil then it must be of the same type as
+`ecb-windows-hidden-state'. If nil then the value of
+`ecb-windows-hidden-state' is used.
+This function has a \"binary\" semantic: a return value of nil
+means that some or all ecb-windows of current layout are displayed and a
+return value of not nil means that all ecb-windows are hidden."
+  (let ((state (or hidden-state ecb-windows-hidden-state)))
+    (case state
+      (none nil) ;; no ecb-window is hidden ==> nil
+      (all t)  ;; all ecb-windows are hidden ==> t
+      (otherwise ;; now state is a list
+       (case (ecb-get-layout-type)
+         (left-right (and (memq 'left-side state)
+                          (memq 'right-side state)))
+         (left (memq 'left-side state))
+         (right (memq 'right-side state))
+         (top (memq 'top-side state)))))))
+
+(defun ecb-windows-all-displayed (&optional hidden-state)
+  "Return not nil if all ecb-windows are displayed.
+If HIDDEN-STATE is not nil then it must be of the same type as
+`ecb-windows-hidden-state'. If nil then the value of
+`ecb-windows-hidden-state' is used. This function has a
+\"binary\" semantic: a return value of not nil means that all
+ecb-windows of current layout are displayed and a return value of
+nil means that either no or only some but not all ecb-windows are
+displayed."
+  (let ((state (or hidden-state ecb-windows-hidden-state)))
+    (eq state 'none)))
+
+(defun ecb-windows-hidden-state-list (&optional hidden-state)
+  "Return the hidden-state of the ecb-windows as list.
+If HIDDEN-STATE is not nil then it must be of the same type as
+`ecb-windows-hidden-state'. If nil then the value of
+`ecb-windows-hidden-state' is used.
+
+The return value is either nil if all ecb-windows are displayed
+\(i.e. no ecb-windows are hidden) or a list which sides of the
+ecb-frame are hidden. This list contains an appropriate set of
+symbols of 'left-side, 'right-side or 'top-side."
+  (let ((state (or hidden-state ecb-windows-hidden-state)))
+    (case state
+      (all (case (ecb-get-layout-type)
+             (left-right '(left-side right-side))
+             (left '(left-side))
+             (right '(right-side))
+             (top '(top-side))))
+      (none nil)
+      (otherwise state))))
 
 (defvar ecb-special-ecb-buffers-of-current-layout nil
   "The list of special ecb-buffers of current-layout.
@@ -1270,8 +1320,8 @@ are not dedicated."
                                       elem)))
                       windows-list))))
 
-(defun ecb-canonical-rest-windows-list (&optional winlist)
-  "Return a list of all current edit-windows \(starting from the left-most
+(defun ecb-canonical-residual-windows-list (&optional winlist)
+  "Return a list of all current residual windows \(starting from the left-most
 top-most window) in the order `other-window' would walk through these windows.
 These are all windows in the `ecb-frame' which are not identical to the
 compile-window and not identical to one of the visible ECB-windows.
@@ -1328,7 +1378,7 @@ performance-problem!"
                    (when (or (not (ecb-edit-window-splitted edit-win-list))
                              (equal last-mode 'dired-mode))
                      (and (ecb-point-in-edit-window-number edit-win-list)
-                          ecb-windows-hidden
+                          (ecb-windows-all-hidden)
                           (ecb-show-ecb-windows)))))
                 ((member major-mode (cdr ecb-major-modes-show-or-hide))
                  (let ((edit-win-list (ecb-canonical-edit-windows-list)))
@@ -1337,7 +1387,7 @@ performance-problem!"
                    (when (or (not (ecb-edit-window-splitted edit-win-list))
                              (equal last-mode 'dired-mode))
                      (and (ecb-point-in-edit-window-number edit-win-list)
-                          (not ecb-windows-hidden)
+                          (not (ecb-windows-all-hidden))
                           (ecb-hide-ecb-windows))))))))))
   )
 
@@ -1350,7 +1400,7 @@ performance-problem!"
         ecb-current-maximized-ecb-buffer-name nil
         ecb-cycle-ecb-buffer-state nil
         ecb-special-ecb-buffers-of-current-layout nil
-        ecb-windows-hidden nil
+        ecb-windows-hidden-state ecb-windows-hidden-none-value
         ecb-compile-window nil
         ecb-layout-prevent-handle-compile-window-selection nil
         ecb-layout-prevent-handle-ecb-window-selection nil
@@ -1503,7 +1553,7 @@ details which window will be scrolled."
 ;; the ecb-windows exactly as before this command."
 ;;   (if (and ecb-minor-mode
 ;;            (equal (selected-frame) ecb-frame)
-;;            (not ecb-windows-hidden))
+;;            (not (ecb-windows-all-hidden)))
 ;;       (let ((ecb-sizes-before (ecb-get-ecb-window-sizes t)))
 ;;         ad-do-it
 ;;         ;; this seems to be necessary - otherwise the reszing seems not to
@@ -1518,7 +1568,7 @@ details which window will be scrolled."
 ;; the ecb-windows exactly as before this command."
 ;;   (if (and ecb-minor-mode
 ;;            (equal (selected-frame) ecb-frame)
-;;            (not ecb-windows-hidden))
+;;            (not (ecb-windows-all-hidden)))
 ;;       (let ((ecb-sizes-before (ecb-get-ecb-window-sizes t)))
 ;;         ad-do-it
 ;;         ;; this seems to be necessary - otherwise the reszing seems not to
@@ -1670,7 +1720,7 @@ arguments. Do never set this variable; it is only set by
 for current layout."
    (if (and ecb-minor-mode
             (equal (selected-frame) ecb-frame)
-            (not ecb-windows-hidden)
+            (not (ecb-windows-all-hidden))
             (ecb-get-window-fix-type ecb-layout-name))
        (ecb-do-with-unfixed-ecb-buffers ad-do-it)
      ad-do-it))
@@ -1681,7 +1731,7 @@ for current layout."
 for current layout."
    (if (and ecb-minor-mode
             (equal (selected-frame) ecb-frame)
-            (not ecb-windows-hidden)
+            (not (ecb-windows-all-hidden))
             (ecb-get-window-fix-type ecb-layout-name)
             (member (car (car (cdr (ad-get-arg 0)))) ;; the window of the event
                     (ecb-canonical-ecb-windows-list)))
@@ -1693,7 +1743,7 @@ for current layout."
 for current layout."
    (if (and ecb-minor-mode
             (equal (selected-frame) ecb-frame)
-            (not ecb-windows-hidden)
+            (not (ecb-windows-all-hidden))
             (ecb-get-window-fix-type ecb-layout-name)
             (member (selected-window) (ecb-canonical-ecb-windows-list)))
        (ecb-do-with-unfixed-ecb-buffers ad-do-it)
@@ -1704,7 +1754,7 @@ for current layout."
 for current layout."
    (if (and ecb-minor-mode
             (equal (selected-frame) ecb-frame)
-            (not ecb-windows-hidden)
+            (not (ecb-windows-all-hidden))
             ;; See comment of defecb-advice for mouse-drag-mode-line
             (ecb-get-window-fix-type ecb-layout-name)
             (member (selected-window) (ecb-canonical-ecb-windows-list)))
@@ -2357,10 +2407,23 @@ edit-window-list is computed via `ecb-canonical-edit-windows-list'."
 (defmacro ecb-when-point-in-edit-window-ecb-windows-visible (&rest body)
   "Evaluate BODY if an edit-window is selected and ecb-windows are visible."
   `(when (and ecb-minor-mode
-              (not ecb-windows-hidden)
+              (not (ecb-windows-all-hidden))
               (ecb-point-in-edit-window-number))
      ,@body))
 
+(defun ecb-display-source (source other-edit-window)
+  "Display SOURCE in the correct edit-window.
+What the correct window is depends on the setting in
+`ecb-mouse-click-destination' and the value of OTHER-EDIT-WINDOW
+\(for this see `ecb-combine-ecb-button/edit-win-nr').
+
+SOURCE is either a string, then it is a filename or a cons, then the car is
+the filename and the cdr is the buffer-name, whereas the latter one can be the
+name of an indirect-buffer."
+  (select-window (ecb-get-edit-window other-edit-window))
+  (ecb-nav-save-current)
+  (switch-to-buffer (ecb-source-get-buffer source))
+  (ecb-nav-add-item (ecb-nav-file-history-item-new)))
 
 (defun ecb-get-edit-window-by-number (edit-win-nr &optional edit-win-list)
   "Return that edit-window with number EDIT-WIN-NR. If EDIT-WIN-LIST is set
@@ -2382,6 +2445,43 @@ then get it from that list otherwise from `ecb-canonical-ecb-windows-list'.
 ECB-WIN-NR must be an integer between 1 and length of ECB-WIN-LIST \(rsp.
 `ecb-canonical-ecb-windows-list')."
   (nth (1- ecb-win-nr) (or ecb-win-list (ecb-canonical-ecb-windows-list))))
+
+(defun ecb-combine-ecb-button/edit-win-nr (ecb-button edit-window-nr)
+  "Depending on ECB-BUTTON and EDIT-WINDOW-NR return one value:
+- nil if ECB-BUTTON is 1.
+- t if ECB-BUTTON is 2 and the edit-area of ECB is splitted.
+- EDIT-WINDOW-NR if ECB-BUTTON is 3."
+  (case ecb-button
+    (1 nil)
+    (2 (ecb-edit-window-splitted))
+    (3 edit-window-nr)))
+
+(defun ecb-get-edit-window (other-edit-window)
+  "Get the correct edit-window. Which one is the correct one depends on the
+value of OTHER-EDIT-WINDOW \(which is a value returned by
+`ecb-combine-ecb-button/edit-win-nr') and `ecb-mouse-click-destination'.
+- OTHER-EDIT-WINDOW is nil: Get the edit-window according to the option
+  `ecb-mouse-click-destination'.
+- OTHER-EDIT-WINDOW is t: Get the next edit-window in the cyclic list of
+  current edit-windows starting either from the left-top-most one or from the
+  last edit-window with point (depends on
+  `ecb-mouse-click-destination').
+- OTHER-EDIT-WINDOW is an integer: Get exactly the edit-window with that
+  number > 0."
+  (let ((edit-win-list (ecb-canonical-edit-windows-list)))
+    (typecase other-edit-window
+      (null
+       (if (eq ecb-mouse-click-destination 'left-top)
+           (car edit-win-list)
+         ecb-last-edit-window-with-point))
+      (integer
+       (ecb-get-edit-window-by-number other-edit-window edit-win-list))
+      (otherwise
+       (ecb-next-listelem edit-win-list
+                          (if (eq ecb-mouse-click-destination 'left-top)
+                              (car edit-win-list)
+                            ecb-last-edit-window-with-point))))))
+
 
 (defun ecb-point-in-compile-window ()
   "Return not nil iff point is in the compile-window of ECB"
@@ -2433,7 +2533,7 @@ the window again. This function does nothing if NAME fulfills not the
 described conditions or if the ecb-windows are hidden or ECB is not active. If
 necessary the `ecb-frame' will be first raised."
   (when (and ecb-minor-mode
-             (not ecb-windows-hidden)
+             (not (ecb-windows-all-hidden))
              (or (equal ecb-buffer-name ecb-speedbar-buffer-name)
                  (ecb-buffer-is-ecb-buffer-of-current-layout-p ecb-buffer-name)))
     (raise-frame ecb-frame)
@@ -2619,6 +2719,32 @@ nothing is done."
                               (nth 1 edit-win-list))
                          (car edit-win-list))))
       (select-window edit-win))))
+
+(defun ecb-layout-window-sync (&optional ecb-window-list)
+  "Synchronizes all special ECB-buffers with current buffer.
+Depending on the contents of current buffer this function performs different
+synchronizing tasks but only if ECB is active and point stays in an
+edit-window.
+
+Runs all functions registered in `ecb-autocontrol/sync-fcn-register'.
+Functions registered with a ecb-buffer run only if that buffer is currently
+displayed in an ecb-window.
+
+If ECB-WINDOWS-LIST is not nil then this list of ecb-windows is used otherwise
+it will be computed."
+  (when (and ecb-minor-mode
+             (not (ecb-windows-all-hidden))
+             (ecb-point-in-edit-window-number))
+    ;; look in the sync-register and call all sync-function without a
+    ;; buffer-name and all registered with a buffer-name if that buffer is
+    ;; contained in the list of buffers returned by
+    ;; ecb-get-current-visible-ecb-buffers.
+    (let ((visible-ecb-buffers (ecb-get-current-visible-ecb-buffers ecb-window-list)))
+      (dolist (elem ecb-autocontrol/sync-fcn-register)
+        (when (or (null (cdr elem))
+                  (member (get-buffer (symbol-value (cdr elem)))
+                          visible-ecb-buffers))
+          (funcall (car elem) t))))))
 
 ;; VERY IMPORTANT: pre-command- and the post-command-hook must NOT use any
 ;; function which calls `ecb-window-list' because this would slow-down the
@@ -3025,7 +3151,7 @@ If called for other frames it works like the original version."
                    ;; this (see split-width-threshold and
                    ;; split-height-threshold)... 
                    (when (and (not ecb-running-version-23)
-                              (not ecb-windows-hidden)
+                              (not (ecb-windows-all-hidden))
                               (not (ecb-layout-top-p))
                               pop-up-windows
                               (not pop-up-frames)
@@ -3250,7 +3376,7 @@ If called for other frames it works like the original version."
 ;;                    ;; splits automatically when window-size allows this (see
 ;;                    ;; split-width-threshold and split-height-threshold)...
 ;;                    ;; Test and ev. modify (not a serious problem but not nice)
-;;                    (when (and (not ecb-windows-hidden)
+;;                    (when (and (not (ecb-windows-all-hidden))
 ;;                               (not (ecb-layout-top-p))
 ;;                               pop-up-windows
 ;;                               (not pop-up-frames)
@@ -3642,7 +3768,7 @@ compile-window then it will be hidden and otherwise the behavior depends on
           ;; we are in the ecb-frame but neither a compile-window nor the
           ;; ecb-windows are visible, so we have no windows to protect against
           ;; deletion.
-          (and ecb-windows-hidden
+          (and (ecb-windows-all-hidden)
                (not (ecb-compile-window-live-p)))
           ;; if all windows are dedicated (i.e. there is no edit-window left)
           ;; we allow deletion of all other windows (incl. ecb-windows and
@@ -3674,7 +3800,7 @@ compile-window then it will be hidden and otherwise the behavior depends on
              (t
               (ad-with-originals 'delete-window
                 (when (> (length edit-win-list) 1)
-                  (if ecb-windows-hidden
+                  (if (ecb-windows-all-hidden)
                       (delete-window window)
                     (funcall (intern (format "ecb-delete-window-in-editwindow-%s"
                                              ecb-layout-name))
@@ -3745,7 +3871,7 @@ behavior depends on `ecb-advice-window-functions-signal-error'."
           ;; we are in the ecb-frame but neither a compile-window nor the
           ;; ecb-windows are visible, so we have no windows to protect against
           ;; deletion.
-          (and ecb-windows-hidden
+          (and (ecb-windows-all-hidden)
                (not (ecb-compile-window-live-p)))
           ;; if all windows are dedicated (i.e. there is no edit-window left)
           ;; we allow deletion of all other windows (incl. ecb-windows and
@@ -4034,7 +4160,7 @@ macro `ecb-with-ecb-advice' instead if you need this adviced version of
   "When called in the `ecb-frame' then only the edit-windows are balanced."
   (if (and ecb-minor-mode
            (equal (selected-frame) ecb-frame)
-           (not ecb-windows-hidden))
+           (not (ecb-windows-all-hidden)))
       (if ecb-running-version-22
           ;; Emacs 22 has reimplemented balance-windows so it is not longer based on
           ;; walk-windows but uses a completely new mechanism based on a
@@ -4110,14 +4236,16 @@ function `ecb-get-current-visible-ecb-buffers'. "
                                      (get-buffer (nth 0 e)))))
                     ecb-ecb-buffer-registry)))
 
-(defun ecb-get-current-visible-ecb-buffers ()
+(defun ecb-get-current-visible-ecb-buffers (&optional ecb-window-list)
   "Return a list of all buffer-objects displayed in a currently visible and
 dedicated special ecb-window. The superset of all possible \(because
 registered) special ecb-buffers are available by
-`ecb-dedicated-special-buffers'."
+`ecb-dedicated-special-buffers'.
+If ecb-window-list is not nil then this list is used otherwise it will be
+computed by `ecb-canonical-ecb-windows-list'."
   (mapcar (function (lambda (window)
                       (window-buffer window)))
-          (ecb-canonical-ecb-windows-list)))
+          (or ecb-window-list (ecb-canonical-ecb-windows-list))))
 
 (defun ecb-buffer-is-visible-ecb-buffer-p (buffer-or-name)
   "Return not nil if BUFFER-OR-NAME is a member of
@@ -4143,7 +4271,7 @@ BUFFER-OR-NAME ca be either a buffer-object or a buffer-name."
 
 (defun ecb-set-minor-mode-text ()
   (setq ecb-minor-mode-text
-        (if ecb-windows-hidden
+        (if (ecb-windows-all-hidden)
             (or (ecb-option-get-value 'ecb-minor-mode-text 'saved-value)
                 (ecb-option-get-value 'ecb-minor-mode-text 'standard-value))
           "")))
@@ -4151,7 +4279,7 @@ BUFFER-OR-NAME ca be either a buffer-object or a buffer-name."
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: For left-right-layouts: Not only
 ;; hiding all the ecb-windows but offering to hide only one of the left or the
 ;; right column. Maybe toggling in the sequence "Hide left" --> "Hide all" -->
-;; Hide right" --> "Show all". But i (Klaus) think this is not so easy........
+;; Hide right" --> "Show all". ADAPT!!!!!!!!!!!
 (defun ecb-toggle-ecb-windows (&optional arg)
   "Toggle visibility of the ECB-windows.
 With prefix argument ARG, make visible if positive, otherwise invisible.
@@ -4161,8 +4289,11 @@ visibility of the ECB windows. ECB minor mode remains active!"
   (unless (or (not ecb-minor-mode)
               (not (equal (selected-frame) ecb-frame)))
 
+    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: new-state must be completely
+    ;; new written - this is just an interim solution until we have rewritten
+    ;; the full new feature with left-right layouts!!
     (let ((new-state (if (null arg)
-                         (not ecb-windows-hidden)
+                         (not (ecb-windows-all-hidden))
                        (<= (prefix-numeric-value arg) 0))))
       (if (not new-state)
           (progn
@@ -4180,12 +4311,12 @@ visibility of the ECB windows. ECB minor mode remains active!"
                   (ecb-toggle-compile-window -1)))
             (run-hooks 'ecb-show-ecb-windows-after-hook)
             (message "ECB windows are now visible."))
-        (unless ecb-windows-hidden
+        (unless (ecb-windows-all-hidden)
           (run-hooks 'ecb-hide-ecb-windows-before-hook)
           (tree-buffer-deactivate-follow-mouse)
             (let ((compwin-hidden (equal 'hidden
                                          (ecb-compile-window-state))))
-              (ecb-redraw-layout-full nil nil nil t)
+              (ecb-redraw-layout-full nil nil nil ecb-windows-hidden-all-value)
               (if compwin-hidden
                   (ecb-toggle-compile-window -1)))
           (run-hooks 'ecb-hide-ecb-windows-after-hook)
@@ -4854,7 +4985,7 @@ by ECB."
         (when (equal f ecb-frame)
           (ecb-window-config-cache-add
            (list ad-return-value
-                 (if ecb-windows-hidden
+                 (if (ecb-windows-all-hidden)
                      nil
                    (ecb-get-current-visible-ecb-buffers))
                  (if (ecb-compile-window-live-p)
@@ -4873,7 +5004,7 @@ by ECB."
                        ecb-compile-window-width
                        ecb-windows-width ecb-windows-height)
                  ecb-edit-area-creators
-                 ecb-windows-hidden
+                 ecb-windows-hidden-state
                  (ecb-window-configuration-data)))))
     (error
      (ecb-layout-debug-error "advice of current-window-configuration failed: (error-type: %S, error-data: %S)"
@@ -4895,7 +5026,7 @@ ring-cache as add-on to CONFIGURATION."
             ;; preserved by `current-window-configuration' and
             ;; `set-window-configuration'! At least not with GNU Emacs 21.X,
             ;; In addition we have to reset ecb-compile-window and also to set
-            ;; ecb-windows-hidden correctly
+            ;; ecb-windows-hidden-state correctly
             (and (nth 1 config)
                  (ecb-set-windows-dedicated-state (nth 1 config) t))
             (when (nth 2 config)
@@ -4904,7 +5035,7 @@ ring-cache as add-on to CONFIGURATION."
                      (setq ecb-compile-window (nth (nth 2 config) win-list)))))
             ;; (nth 3 config) is not used and needed within this function!
             (setq ecb-edit-area-creators (nth 4 config))
-            (setq ecb-windows-hidden (nth 5 config))
+            (setq ecb-windows-hidden-state (nth 5 config))
             (ecb-set-minor-mode-text))))
     (error
      (ecb-layout-debug-error "advice of set-window-configuration failed: (error-type: %S, error-data: %S)"
@@ -5027,10 +5158,10 @@ for the quick version!"
               (ecb-redraw-layout-quickly)
             (error (message "ECB: Quick redraw failed...full redraw will be performed!")
                    (ecb-redraw-layout-full nil nil nil (and (not arg)
-                                                            ecb-windows-hidden)
+                                                            ecb-windows-hidden-state)
                                            (equal arg '(16)))))
         (ecb-redraw-layout-full nil nil nil (and (not arg)
-                                                 ecb-windows-hidden)
+                                                 ecb-windows-hidden-state)
                                 (equal arg '(16))))
       
       (if (and (not arg) compwin-hidden)
@@ -5061,7 +5192,7 @@ for the quick version!"
   ;; we get back all ecb-windows of current lyout but preserve the
   ;; edit-windows and also the compile-window (incl. its height).
   (if (and (ecb-compile-window-live-p)
-           (not ecb-windows-hidden)
+           (not (ecb-windows-all-hidden))
            (not (ecb-buffer-is-maximized-p))
            (not (minibuffer-window-active-p (minibuffer-window ecb-frame)))
            (not (equal (mapcar 'buffer-name
@@ -5104,7 +5235,97 @@ for the quick version!"
           nil ;; (ecb-set-window-configuration win-config-before)
           ))))
 
-                        
+
+;; left, right, top: no problem
+;; left-right:
+;; 1. If edges of compare window CW > ecb-window EW ==> left-column, if CW <
+;;    EW ==> right column
+;; compare-window CW: choose the first window of that window-list
+;; which contains only windows which are not an ecb-window and also not the
+;; compile-window (this works also if there is no edit window, ie. e.g. if all
+;; other windows are dedicated too, maybe another tool(e.g. ediff) sets all
+;; windows dedicated!) It's not possible that only ecb-windows (and/or a
+;; compile-window) exist in the ecb-frame! therefore the mechanism above works
+;; save!
+;;
+;; This above is not a general rightmost/leftmost-algorithm! But for our needs
+;; it does its work. If we want a general mechanism for right/leftmost-window
+;; we can steal it from windmove.el!
+
+(defun ecb-get-ecb-window-location (&optional ecb-window residual-window)
+  "Return the location an ecb-window reside in the ecb-frame.
+The location is one of 'left-side, 'right-side or 'top-side, depending on the
+current layout-type only a subset is possible.
+If ECB-WINDOW is nil then the location of the selected window is returned
+otherwise the location of ECB-WINDOW. If RESIDUAL-WINDOW is not nil it must be
+one of the windows `ecb-canonical-residual-windows-list' would compute. If nil
+then it will be computed.
+
+Caution: This function does not check if ECB-WINDOW \(rsp. the selected
+window) is an ecb-window! But only in this case the returned value is reliable!"
+  (let* ((ecb-win (or ecb-window (selected-window)))
+         (layout-type (ecb-get-layout-type))
+         (res-win (or residual-window
+                      (car (ecb-canonical-residual-windows-list)))))
+    (if (and (windowp ecb-win)
+             (equal ecb-frame (window-frame ecb-win))
+             (windowp res-win))
+        (case layout-type
+          (left 'left-side)
+          (right 'right-side)
+          (top 'top-side)
+          (left-right (if (> (nth 0 (ecb-window-edges res-win))
+                             (nth 0 (ecb-window-edges ecb-win)))
+                          'left-side
+                        'right-side)))
+      (error "ECB %s: Serious window layout error for layout-type %s, ecb-win:%s,first-rest-win:%s"
+             ecb-version layout-type ecb-win res-win))))
+
+(defun ecb-delete-ecb-windows (side &optional residual-window except-ecb-window-or-buffer)
+  "Delete all ecb-windows of SIDE.
+SIDE must be one of 'left-side, 'right-side or 'top-side and must
+not conflict with the current layout-type \(e.g. left-side
+conflicts with a top-layout) otherwise an error is reported.
+
+If except-ecb-window-or-buffer is nil all ecb-windows on SIDE will be deleted.
+This argument can be either an ecb-window, an ecb-buffer object or the
+buffer-name of an ecb-buffer: In this case all ecb-windows except this window
+will be deleted on SIDE or with other words: In this case this window will be
+maximized.
+
+If RESIDUAL-WINDOW is not nil it must be
+one of the windows `ecb-canonical-residual-windows-list' would compute. If nil
+then it will be computed."
+  (let ((err-p (or (not (memq side '(left-side right-side top-side)))
+                   (case (ecb-get-layout-type)
+                     (left-right (not (memq side '(left-side right-side))))
+                     (right (not (eq side 'right-side)))
+                     (left (not (eq side 'left-side)))
+                     (top (not (eq side 'top-side)))))))
+    (when err-p
+      (error "ECB %s: ecb-delete-ecb-window called with layout-type %s and SIDE: %s"
+             ecb-version (ecb-get-layout-type) side)))
+  (let* ((ecb-window-not-to-delete (and except-ecb-window-or-buffer
+                                        (typecase except-ecb-window-or-buffer
+                                          (window except-ecb-window-or-buffer)
+                                          (buffer (get-buffer-window
+                                                   except-ecb-window-or-buffer ecb-frame))
+                                          (string (get-buffer-window
+                                                   (get-buffer except-ecb-window-or-buffer))))))
+         (win-list-to-del (delq nil (mapcar (function
+                                             (lambda (w)
+                                               (when (eq (ecb-get-ecb-window-location
+                                                          w residual-window)
+                                                         side)
+                                                 w)))
+                                            (ecb-canonical-ecb-windows-list)))))
+    (ecb-with-original-basic-functions
+     (mapc (function (lambda (w)
+                       (unless (eq ecb-window-not-to-delete w)
+                         (ecb-layout-debug-error "Deleting ecb-window: %s" w)
+                         (delete-window w)))) 
+           win-list-to-del))
+    ))
 
 (defun ecb-draw-compile-window (&optional height)
   "Draws the compile-window during `ecb-redraw-layout-full'. This function
@@ -5130,6 +5351,7 @@ compile-window will drawn with height HEIGHT otherwise
       (select-window ecb-compile-window)
       (enlarge-window (- height ecb-compile-window-height-lines)))))
   
+;; TODO: adapt the callers of this functions suitable
 
 ;; the main layout core-function. This function is the "environment" for a
 ;; special layout function (l.b.)
@@ -5137,15 +5359,19 @@ compile-window will drawn with height HEIGHT otherwise
                                          window-configuration-data
                                          no-ecb-windows emergency)
   "Redraw the ECB screen according to the layout set in `ecb-layout-name'. After
-this function the edit-window is selected which was current before redrawing.
-If NO-BUFFER-SYNC is not nil then the ecb-buffers will not be synchronized. If
-ECB-WINDOWS-CREATOR is not nil then it will be used to draw the layout instead
-of the standard layout. If WINDOW-CONFIGURATION-DATA is not nil it must be an
-object returned by `ecb-window-configuration-data' and will be used for
-restoring the layout. If EMERGENCY is not nil then all other args will be
-ignored and the layout will be redrawn like defined in the current layout and
-the edit-area will be unsplitted and will just contain the buffer before the
-emergency-redraw."
+this function the edit-window is selected which was current
+before redrawing. If NO-BUFFER-SYNC is not nil then the
+ecb-buffers will not be synchronized. If ECB-WINDOWS-CREATOR is
+not nil then it will be used to draw the layout instead of the
+standard layout. If WINDOW-CONFIGURATION-DATA is not nil it must
+be an object returned by `ecb-window-configuration-data' and will
+be used for restoring the layout. If set NO-ECB-WINDOWS must be
+of the same type as `ecb-windows-hidden-state' - see the
+docstring of this variable; if not set it is interpreted as
+'none. If EMERGENCY is not nil then all other args will be
+ignored and the layout will be redrawn like defined in the
+current layout and the edit-area will be unsplitted and will just
+contain the buffer before the emergency-redraw."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
     ;; this functions are only needed at runtime!
@@ -5158,14 +5384,16 @@ emergency-redraw."
            (compile-window-config (nth 3 config))
            (compile-buffer-before-redraw (nth 0 compile-window-config))
            (compile-buffer-pos-before-redraw (nth 1 compile-window-config))
-           (ecb-windows-before-redraw (ecb-get-current-visible-ecb-buffers))
+           (ecb-buffers-before-redraw (ecb-get-current-visible-ecb-buffers))
            (edit-area-size nil)
            (edit-win-list-after-redraw nil))
 
       (ecb-layout-debug-error "ecb-redraw-layout-full: config: %s, hidden-state: %s, curr-buff: %s, last-source-buff: %s"
-                              config ecb-windows-hidden (current-buffer)
+                              config ecb-windows-hidden-state (current-buffer)
                               ecb-last-source-buffer)
-      
+
+      (unless no-ecb-windows
+        (setq no-ecb-windows ecb-windows-hidden-none-value))
       ;; The following code runs with deactivated adviced functions, so the
       ;; layout-functions can use the original function-definitions.
       (ecb-with-original-basic-functions
@@ -5192,8 +5420,8 @@ emergency-redraw."
 
          ;; Now we draw the compile-window and also the ecb-windows - the
          ;; latter ones by calling the layout-function
-         (if (and (not emergency) no-ecb-windows)
-             ;; we want a layout-redraw without ecb-windows
+         (if (and (not emergency) (ecb-windows-all-hidden no-ecb-windows))
+             ;; we want a layout-redraw without any ecb-windows
              (progn
                (when ecb-compile-window-height
                  (ecb-draw-compile-window (and window-configuration-data
@@ -5202,6 +5430,9 @@ emergency-redraw."
                  )
                (setq ecb-edit-window (selected-window)))
 
+           ;; here either emergency is true or at least some ecb-windows
+           ;; should be displayed
+           
            ;; we have to redraw with ecb-windows
            ;; 1. Drawing the compile-window when it has frame-width
            (when (and ecb-compile-window-height
@@ -5221,16 +5452,28 @@ emergency-redraw."
                       (not (equal (ecb-get-layout-type ecb-layout-name) 'top)))
              (ecb-draw-compile-window (and window-configuration-data
                                            compile-window-config
-                                           (nth 2 compile-window-config)))))
+                                           (nth 2 compile-window-config))))
 
-         ;; Now we store the window-sizes of the ecb-windows but only if we
-         ;; have drawn them either without a compile-window or with a
-         ;; compile-window with height as specified in
-         ;; `ecb-compile-window-height'
-         (if (or (not ecb-compile-window-height-lines)
-                 (not (and window-configuration-data
-                           compile-window-config)))
-             (setq ecb-layout-default-window-sizes (ecb-get-ecb-window-sizes)))
+           ;; 4. Delete accordingly to no-ecb-windows some ecb-windows
+           ;;    If emergency is here nil then it is not possible that all
+           ;;    ecb-windows should be hidden, so we must check if all
+           ;;    ecb-windows should be displayed (in this case we do not
+           ;;    delete some ecb-windows)
+           (unless (or emergency (ecb-windows-all-displayed no-ecb-windows))
+             ;; here no-ecb-windows must be a list of side-symbols.
+             (dolist (side (ecb-windows-hidden-state-list no-ecb-windows))
+               (ecb-delete-ecb-windows side ecb-edit-window)))
+           )
+
+         ;; Now we store the window-sizes of the ecb-windows if we have a full
+         ;; layout but only if we have drawn them either without a
+         ;; compile-window or with a compile-window with height as specified
+         ;; in `ecb-compile-window-height'
+         (when (and (or emergency (ecb-windows-all-displayed no-ecb-windows))
+                    (or (not ecb-compile-window-height-lines)
+                        (not (and window-configuration-data
+                                  compile-window-config))))
+           (setq ecb-layout-default-window-sizes (ecb-get-ecb-window-sizes)))
 
          ;; Here all needed windows are created
 
@@ -5243,8 +5486,10 @@ emergency-redraw."
                    ecb-layout-name)))
 
          ;; resetting some states if we have a full layout
+         ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe here is something
+         ;; to adapt?!
          (when (or emergency
-                   (and (null ecb-windows-creator) (not no-ecb-windows)))
+                   (and (null ecb-windows-creator) (ecb-windows-all-displayed no-ecb-windows)))
            (setq ecb-current-maximized-ecb-buffer-name nil)
            (setq ecb-cycle-ecb-buffer-state nil))
 
@@ -5254,9 +5499,15 @@ emergency-redraw."
 
          ) ;; end ecb-do-with-unfixed-ecb-buffers
 
+        ;; !!!! here we set ecb-windows-hidden-state !!!!
         (if emergency
-            (setq ecb-windows-hidden nil)
-          (setq ecb-windows-hidden no-ecb-windows))
+            (progn
+              ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: remove this later
+              (setq ecb-windows-hidden nil)
+              (setq ecb-windows-hidden-state ecb-windows-hidden-none-value))
+          ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: remove this later
+          (setq ecb-windows-hidden no-ecb-windows)
+          (setq ecb-windows-hidden-state no-ecb-windows))
         (ecb-set-minor-mode-text)
 
         ;; Now all the windows must be created and the editing window must not
@@ -5342,50 +5593,67 @@ emergency-redraw."
 
       ;; Restore saved window sizes
       (when (or emergency
-                (and (null ecb-windows-creator) (not no-ecb-windows)))
+                (and (null ecb-windows-creator)
+                     (not (ecb-windows-all-hidden no-ecb-windows))))
         (ecb-restore-window-sizes))
 
       (setq ecb-last-source-buffer (current-buffer))
       (setq ecb-last-edit-window-with-point (selected-window))
 
-      ;; updating and synchronizing of the ecb-windows but only when we have a
-      ;; full redraw incl. the ecb-windows.
-      (when (or emergency (not no-ecb-windows))
-        (let ((current-ecb-buffers (ecb-get-current-visible-ecb-buffers)))
-          (when (or emergency (null ecb-windows-creator))
-            (setq ecb-special-ecb-buffers-of-current-layout
-                  (mapcar 'buffer-name current-ecb-buffers)))
-          ;; fill-up the history new with all buffers if the history buffer was
-          ;; not shown before the redisplay but now (means if the layout has
-          ;; changed)
-          (when (and (not (member (get-buffer ecb-history-buffer-name)
-                                  ecb-windows-before-redraw))
-                     (member (get-buffer ecb-history-buffer-name)
-                             current-ecb-buffers))
-            (ecb-add-buffers-to-history-new))
-          ;; update the directories buffer if the directories buffer was not
-          ;; shown before the redisplay but now (means if the layout has
-          ;; changed)
-          (when (and (not (member (get-buffer ecb-directories-buffer-name)
-                                  ecb-windows-before-redraw))
-                     (member (get-buffer ecb-directories-buffer-name)
-                             current-ecb-buffers))
-            (ecb-update-directories-buffer))
-          ;; deactivate the speedbar stuff if the speedbar-integration-buffer
-          ;; was shown before but not now
-          (when (and (member (get-buffer ecb-speedbar-buffer-name)
-                             ecb-windows-before-redraw)
-                     (not (member (get-buffer ecb-speedbar-buffer-name)
-                                  current-ecb-buffers)))
+      ;; updating and synchronizing of the ecb-windows
+      (let ((current-ecb-buffers (ecb-get-current-visible-ecb-buffers)))
+        ;; ecb-special-ecb-buffers-of-current-layout must no be set if some
+        ;; ecb-windows are hidden!!!
+        (when (or emergency
+                  (and (null ecb-windows-creator)
+                       (ecb-windows-all-displayed no-ecb-windows)))
+          (setq ecb-special-ecb-buffers-of-current-layout
+                (mapcar 'buffer-name current-ecb-buffers)))
+
+        ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: for the following we
+        ;; should add a special after-redraw-layout-actions registry where all
+        ;; browsers like file-browser. methods-brwoser, speedbar-support etc.
+        ;; can register a function which gets the ecb-win-list before the
+        ;; redraw and that one after the redraw and they can do what they
+        ;; want. This would remove the browsing code here in the layout
+        ;; library!!
+        
+        ;; fill-up the history new with all buffers if the history buffer was
+        ;; not shown before the redisplay but now (means if the layout has
+        ;; changed)
+        (when (and (not (member (get-buffer ecb-history-buffer-name)
+                                ecb-buffers-before-redraw))
+                   (member (get-buffer ecb-history-buffer-name)
+                           current-ecb-buffers))
+          (ecb-add-buffers-to-history-new))
+        ;; update the directories buffer if the directories buffer was not
+        ;; shown before the redisplay but now (means if the layout has
+        ;; changed or - in case of left-right layout - another side is
+        ;; visible than before)
+        (when (and (not (member (get-buffer ecb-directories-buffer-name)
+                                ecb-buffers-before-redraw))
+                   (member (get-buffer ecb-directories-buffer-name)
+                           current-ecb-buffers))
+          (ecb-update-directories-buffer))
+        ;; deactivate the speedbar stuff if the speedbar-integration-buffer
+        ;; was shown before but not now - but only if the layout has been
+        ;; changed
+        (when (and (member (get-buffer ecb-speedbar-buffer-name)
+                           ecb-buffers-before-redraw)
+                   (not (member (get-buffer ecb-speedbar-buffer-name)
+                                current-ecb-buffers))
+                   ;; The following conditions are necessary to ensure the
+                   ;; layout has been changed
+                   (null ecb-windows-creator)
+                   (ecb-windows-all-displayed no-ecb-windows))
             (ignore-errors (ecb-speedbar-deactivate)))
-          ;; synchronize the special ecb-buffers if necessary (means if not all
-          ;; ecb-windows of current layout were visible before redraw) and
-          (when (and (not (equal ecb-windows-before-redraw current-ecb-buffers))
-                     (not no-buffer-sync))
-            ;; maybe we have to deal with the other special buffers too but
-            ;; maybe this is not necessary because the idle-stuff runs...
-            (ecb-basic-buffer-sync t))
-          ))
+        
+        ;; synchronize the special ecb-buffers if necessary (means if not all
+        ;; ecb-windows of current redraw were visible before redraw) and
+        (when (and (not (equal ecb-buffers-before-redraw current-ecb-buffers))
+                   (not no-buffer-sync))
+          (ecb-layout-window-sync))
+        )
 
       ;; if the compile-window was selected before redraw we go back to it
       (when (and (ecb-compile-window-live-p)
@@ -5436,9 +5704,6 @@ his previous layout via \[C-u] `ecb-toggle-layout'."
         (setq ecb-toggle-layout-state next-index)
         (ecb-layout-switch layout-name)))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: allow storin only when all
-;; ecb-windows are visible (nor maximized and also not hidden one side in case
-;; of a left-right layout.
 (defun ecb-store-window-sizes (&optional fix)
   "Stores the sizes of the ECB windows for the current layout.
 The size of the ECB windows will be set to their stored values when
@@ -5458,8 +5723,9 @@ is not nil \(means called with a prefix argument) then always the fixed values
 of current width and height are stored!"
   (interactive "P")
   (when (equal (selected-frame) ecb-frame)
-    (if (ecb-buffer-is-maximized-p)
-         (ecb-error "Sizes can not be stored when an ECB-window is maximized!")
+    (if (or (ecb-buffer-is-maximized-p)
+            (not (ecb-windows-all-displayed)))
+         (ecb-error "Sizes can only be stored if the complete layout is visible!")
       (if (or (not (ecb-compile-window-live-p))
               (y-or-n-p "Window-sizes should be stored with hidden compile-window! Proceed? "))
           (let ((a (ecb-find-assoc ecb-layout-name ecb-layout-window-sizes)))
@@ -5518,16 +5784,24 @@ If a permanent compile-window is visible then window-heights will be computed
 as fractions of current \(frame-height minus current visible
 compile-window-height)!
 Uses ECB-WIN-LIST or - if nil - computes it with the function
-`ecb-canonical-ecb-windows-list'."
+`ecb-canonical-ecb-windows-list'.
+
+Result is a list with an element for each visible ecb-window whereas each
+element is a cons where the car is the variable-symbol which holds the
+buffer-name a window displays currently. The cdr is a cons where car is the
+width and the cdr is the height of the window."
   (let ((ref-height (if (ecb-compile-window-live-p)
                         (- (frame-height ecb-frame)
                            (ecb-window-full-height ecb-compile-window))
                       (frame-height ecb-frame)))
         (ref-width (frame-width ecb-frame)))
-    (mapcar (function (lambda (window)
-                        (ecb-get-window-size window
-                                             fix
-                                             (cons ref-width ref-height))))
+    (mapcar (function
+             (lambda (window)
+               ;; here we always store buffer-name-symbols!
+               (cons (ecb-ecb-buffer-registry-get-symbol (buffer-name (window-buffer window)))
+                     (ecb-get-window-size window
+                                          fix
+                                          (cons ref-width ref-height)))))
             (or ecb-win-list (ecb-canonical-ecb-windows-list)))))
 
 ;; Now possible to set fractional sizes; thanks to Geert Ribbers
@@ -5563,15 +5837,21 @@ floating-point-numbers. Default referencial width rsp. height are
         (if (and (numberp enlarge-height) (/= enlarge-height 0))
             (ignore-errors (enlarge-window enlarge-height)))))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: change: each element of the
-;; window-sizes option must contain the buffer-name/symbol. Then the master is
-;; the current ecb-window-list (in the dolist below): for each of the current
-;; visible windows get the stored size (getable via buffer-name) and set it -
-;; remove the condition (= (length windows) (length sizes))!
 (defun ecb-set-ecb-window-sizes (window-sizes)
-  (unless ecb-windows-hidden
+  "Set the sizes of visible ecb-windows to WINDOW-SIZES.
+WINDOW-SIZES is a list where each element is a cons where the car
+is either the buffer-name of an ecb-buffer or the variable-symbol
+which holds the buffer-name of an ecb-buffer \(e.g. the symbol
+`ecb-history-buffer-name'). The cdr is a cons where car is the
+width and the cdr is the height of the window. Width and height can either be
+fractions of current frame sizes or fixed values.
+
+The sizes are even changed if the windows-sizes are fixed, see the
+option `window-size-fixed' \(only available for GNU Emacs)."
+  (unless (ecb-windows-all-hidden)
     (ecb-do-with-unfixed-ecb-buffers
      (let ((sizes (or window-sizes ecb-layout-default-window-sizes))
+           (size-elem nil)
            (windows (ecb-canonical-ecb-windows-list))
            (ref-width (frame-width ecb-frame))
            (ref-height (if (ecb-compile-window-live-p)
@@ -5586,13 +5866,17 @@ floating-point-numbers. Default referencial width rsp. height are
                                        win (window-dedicated-p win)))
              windows)
        (when sizes
-         (if (= (length windows) (length sizes))
-             (dolist (size sizes)
-               (ecb-set-window-size (car windows) size (cons ref-width ref-height))
-               (setq windows (cdr windows)))
-           (when (interactive-p)
-             (ecb-error "Stored sizes of layout %s not applicable for current window layout!"
-                        ecb-layout-name))))))))
+         (dolist (win windows)
+           (setq size-elem
+                 (ecb-member-of-symbol/value-list (buffer-name (window-buffer win))
+                                                  sizes
+                                                  'car
+                                                  'cdr))
+           (ecb-layout-debug-error "ecb-set-ecb-window-sizes: set-size of: window:%s,buffer:%s,size-elem:%s"
+                                   win (window-buffer win) size-elem)
+           ;; we change only width/height for buffers we found stored width/height for
+           (when size-elem
+             (ecb-set-window-size win size-elem (cons ref-width ref-height)))))))))
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: frame-width is smaller than
 ;; ecb-window-full-width for only one window in the frame. But for now this

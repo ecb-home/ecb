@@ -357,6 +357,7 @@ Do nothing if `tree-buffer-debug-mode' is nil!"
   children
   parent
   shrink-name
+  shrink-name-start-pos
   expandable
   expanded
   displayed-name
@@ -364,7 +365,7 @@ Do nothing if `tree-buffer-debug-mode' is nil!"
   id)
 
 (defun tree-node-new (name type data &optional not-expandable parent
-                           shrink-name)
+                           shrink-name shrink-name-start-pos)
   "Create a new tree-node which can be displayed in a tree-buffer.
 A tree-node can have the following slots:
 
@@ -388,6 +389,12 @@ A tree-node can have the following slots:
     name is truncated so that the expand symbol is visible.
   - nil: The NAME is never truncated. In this case DISPLAYED-NAME is equal to
     NAME.
+
+  SHRINK-NAME-START-POS: 0-based starting position in the NAME where shrinking
+  should start if the name has to be shrinked from beginning \(see
+  SHRINK-NAME). Defaults to 0, i.e. shrinking starts at beginning of NAME if
+  SHRINK-NAME is 'beginning. This slot is ignored if SHRINK-NAME is 'end or
+  nil.
 
   CHILDREN: List of children tree-nodes.
 
@@ -413,6 +420,8 @@ See Info node `(ecb)tree-buffer' for all details of using tree-nodes."
                             :expandable (not not-expandable)
                             :parent parent
                             :shrink-name shrink-name
+                            :shrink-name-start-pos (or shrink-name-start-pos
+                                                       0)
                             :children nil
                             :expanded nil
                             :displayed-name nil
@@ -1692,16 +1701,13 @@ inserted and the TEXT itself"
             (tree-buffer-merge-face-into-text facer p (point))))
       )))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: document the feature
-;; 'tree-node-shrink-start-pos appropriately
 (defun tree-buffer-node-display-name (node)
   "Computes that string which is used to display the name of NODE. The
 display-name will be set in the slot DISPLAYED-NAME of NODE and also
 returned."
   (let* ((ww (window-width))
 	 (display-name (tree-node->name node))
-         (name-shrink-start-pos (or (get-text-property 0 'tree-node-shrink-start-pos display-name)
-                                    0))
+         (name-shrink-start-pos (tree-node->shrink-name-start-pos node))
          (width (+ (tree-node-indentlength node)
 		   (length display-name)
 		   (if (tree-node->expandable node) 4 0))))

@@ -251,6 +251,8 @@ Only prints mode and info but does not find any symbol-definition."
   (let ((symbol (intern symbol-name))
         (retval nil)
         (args nil))
+    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: handle the case if a symbol
+    ;; is a var AND a function!
     (when (fboundp symbol)
       (unless ecb-running-xemacs
         ;; With XEmacs the symbol itself is already contained in the

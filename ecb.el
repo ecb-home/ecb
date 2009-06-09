@@ -490,41 +490,24 @@ See also `ecb-before-activate-hook'."
       (ecb-error "Killing an special ECB-buffer is not possible!"))))
 
 
-(defun ecb-window-sync (&optional only-basic-windows)
+(defun ecb-window-sync ()
   "Synchronizes all special ECB-buffers with current buffer.
 Depending on the contents of current buffer this command performs different
 synchronizing tasks but only if ECB is active and point stays in an
 edit-window.
 
 - If current buffer is a file-buffer \(or an indirect-buffer with a
-  file-buffer as base-buffer) then all special ECB-tree-buffers are
+  file-buffer as base-buffer) then all special ECB-buffers are
   synchronized with current buffer.
 
 - If current buffer is a dired-buffer then the directory- and
   the sources-tree-buffer are synchronized if visible
 
-In addition to this the hooks in `ecb-basic-buffer-sync-hook' run.
-
-If optional argument only-basic-windows is not nil then only the basic
-tree-buffer directories, sources, methods and history are synchronized.
-Otherwise all registered special ecb-buffers."
-  (interactive "P")
-  (when (and ecb-minor-mode
-             (not ecb-windows-hidden)
-             (ecb-point-in-edit-window-number))
-    (ecb-basic-buffer-sync t)
-    ;; look in the sync-register and call all sync-function registered with a
-    ;; buffer-name when buffer is contained in the list of buffers returned by
-    ;; ecb-get-current-visible-ecb-buffers.
-    (unless only-basic-windows
-      (let ((visible-ecb-windows (ecb-get-current-visible-ecb-buffers)))
-        (dolist (elem ecb-autocontrol/sync-fcn-register)
-          (when (and (cdr elem)
-                     (member (get-buffer (symbol-value (cdr elem)))
-                             visible-ecb-windows))
-            (funcall (car elem) t)))))
-    ))
-
+In addition to this all the synchronizing hooks \(e.g.
+`ecb-basic-buffer-sync-hook') run if the related ecb-buffers are visible in an
+ecb-window."
+  (interactive)
+  (ecb-layout-window-sync))
 
 (defun ecb-customize ()
   "Open a customize-buffer for all customize-groups of ECB."
@@ -1498,11 +1481,10 @@ If ECB detects a problem it is reported and then an error is thrown."
 
               (ecb-redraw-layout-full 'no-buffer-sync
                                       nil
-                                      (if use-last-win-conf
-                                          (nth 6 ecb-last-window-config-before-deactivation))
-                                      (if use-last-win-conf
-                                          (nth 5 ecb-last-window-config-before-deactivation)
-                                        nil))
+                                      (and use-last-win-conf
+                                           (nth 6 ecb-last-window-config-before-deactivation))
+                                      (and use-last-win-conf
+                                           (nth 5 ecb-last-window-config-before-deactivation)))
 
               ;; if there was no compile-window before deactivation then we have
               ;; to hide the compile-window after activation
@@ -1761,7 +1743,7 @@ If ECB detects a problem it is reported and then an error is thrown."
       ;; takes only effect when deactivating/reactivating ECB, or to be more
       ;; precise when creating the tree-buffers again.
       (dolist (tb-elem (ecb-ecb-buffer-registry-name-list 'only-tree-buffers))
-        (tree-buffer-destroy (car tb-elem)))
+        (tree-buffer-destroy tb-elem))
       (ecb-ecb-buffer-registry-init)
       
       (setq ecb-activated-window-configuration nil)

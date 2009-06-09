@@ -943,43 +943,6 @@ This advice-set can not be enabled by `ecb-enable-advices' but such an
 advice has to be activated 'on demand' by the caller. Such an advice must be
 used with the macro `ecb-with-ecb-advice'.")
 
-;; -- window stuff
-
-(defun ecb-combine-ecb-button/edit-win-nr (ecb-button edit-window-nr)
-  "Depending on ECB-BUTTON and EDIT-WINDOW-NR return one value:
-- nil if ECB-BUTTON is 1.
-- t if ECB-BUTTON is 2 and the edit-area of ECB is splitted.
-- EDIT-WINDOW-NR if ECB-BUTTON is 3."
-  (case ecb-button
-    (1 nil)
-    (2 (ecb-edit-window-splitted))
-    (3 edit-window-nr)))
-
-(defun ecb-get-edit-window (other-edit-window)
-  "Get the correct edit-window. Which one is the correct one depends on the
-value of OTHER-EDIT-WINDOW \(which is a value returned by
-`ecb-combine-ecb-button/edit-win-nr') and `ecb-mouse-click-destination'.
-- OTHER-EDIT-WINDOW is nil: Get the edit-window according to the option
-  `ecb-mouse-click-destination'.
-- OTHER-EDIT-WINDOW is t: Get the next edit-window in the cyclic list of
-  current edit-windows starting either from the left-top-most one or from the
-  last edit-window with point (depends on
-  `ecb-mouse-click-destination').
-- OTHER-EDIT-WINDOW is an integer: Get exactly the edit-window with that
-  number > 0."
-  (let ((edit-win-list (ecb-canonical-edit-windows-list)))
-    (typecase other-edit-window
-      (null
-       (if (eq ecb-mouse-click-destination 'left-top)
-           (car edit-win-list)
-         ecb-last-edit-window-with-point))
-      (integer
-       (ecb-get-edit-window-by-number other-edit-window edit-win-list))
-      (otherwise
-       (ecb-next-listelem edit-win-list
-                          (if (eq ecb-mouse-click-destination 'left-top)
-                              (car edit-win-list)
-                            ecb-last-edit-window-with-point))))))
 
 (defun ecb-source-make (filename &optional buffer)
   "Build a source-object from FILENAME and BUFFER.
@@ -1026,20 +989,6 @@ Note: The buffer is just returned but not displayed."
                       (get-buffer (cdr my-source)))))
     (or buffer
         (find-file-noselect filename))))
-
-(defun ecb-display-source (source other-edit-window)
-  "Display SOURCE in the correct edit-window.
-What the correct window is depends on the setting in
-`ecb-mouse-click-destination' and the value of OTHER-EDIT-WINDOW
-\(for this see `ecb-combine-ecb-button/edit-win-nr').
-
-SOURCE is either a string, then it is a filename or a cons, then the car is
-the filename and the cdr is the buffer-name, whereas the latter one can be the
-name of an indirect-buffer."
-  (select-window (ecb-get-edit-window other-edit-window))
-  (ecb-nav-save-current)
-  (switch-to-buffer (ecb-source-get-buffer source))
-  (ecb-nav-add-item (ecb-nav-file-history-item-new)))
 
 (defvar ecb-path-selected-directory nil
   "Path to currently selected directory.")
@@ -1959,7 +1908,7 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
     ;; 3. Either it is not the ecb-directories-buffer-name or
     ;;    at least `ecb-show-sources-in-directories-buffer-p' is true and the
     ;;    hitted node is a sourcefile
-    (when (and (not ecb-windows-hidden)
+    (when (and (not (ecb-windows-all-hidden))
                (ecb-member-of-symbol/value-list
                 tree-buffer-name
                 ecb-tree-do-not-leave-window-after-select--internal)

@@ -257,7 +257,7 @@ if `scroll-all-mode' is nil return the number of visible windows."
             (progn
               (ecb-toggle-ecb-windows -1)
               (ecb-toggle-compile-window -1))
-          (if (not ecb-windows-hidden)
+          (if (not (ecb-windows-all-hidden))
               (delete-other-windows (car (ecb-canonical-edit-windows-list))))))
     (setq ecb-before-ediff-window-config nil)))
 
