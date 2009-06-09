@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-symboldef.el,v 1.9 2009/06/04 08:38:15 berndl Exp $
+;; $Id: ecb-symboldef.el,v 1.10 2009/06/09 10:39:46 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -251,6 +251,8 @@ Only prints mode and info but does not find any symbol-definition."
   (let ((symbol (intern symbol-name))
         (retval nil)
         (args nil))
+    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: handle the case if a symbol
+    ;; is a var AND a function!
     (when (fboundp symbol)
       (unless ecb-running-xemacs
         ;; With XEmacs the symbol itself is already contained in the

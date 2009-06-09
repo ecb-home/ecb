@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.115 2009/05/15 15:19:53 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.116 2009/06/09 10:39:46 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -278,6 +278,7 @@
     (ecb-bucket-token-display . (ecb-bucket-node-display identity))
     (ecb-auto-expand-token-tree . (ecb-auto-expand-tag-tree identity))
     (ecb-font-lock-tokens . (ecb-font-lock-tags identity))
+    (ecb-layout-window-sizes . (ecb-layout-window-sizes ecb-upgrade-layout-window-sizes))
     (ecb-token-jump-sets-mark . (ecb-tag-jump-sets-mark identity))
     (ecb-token-display-function . (ecb-tag-display-function ecb-upgrade-token-display-function))
     (ecb-type-token-display . (ecb-type-tag-display ecb-upgrade-type-token-display))
@@ -363,6 +364,9 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   (if (equal old-val t)
       (ecb-option-get-value 'ecb-window-sync 'standard-value)
     nil))
+
+(defun ecb-upgrade-layout-window-sizes (old-val)
+  (ecb-option-get-value 'ecb-layout-window-sizes 'standard-value))
 
 ;; upgrading old layout-numbers (ECB <= 1.80) to new layout-names (ECB
 ;; >= 1.90)

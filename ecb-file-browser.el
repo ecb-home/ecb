@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.80 2009/06/04 08:38:15 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.81 2009/06/09 10:39:47 berndl Exp $
 
 ;;; Commentary:
 
@@ -1748,7 +1748,7 @@ Under the following additional conditions some tasks are performed:
 
 At the end the hooks in `ecb-basic-buffer-sync-hook' run."
   (when (and ecb-minor-mode
-             (not ecb-windows-hidden)
+             (not (ecb-windows-all-hidden))
              (ecb-point-in-edit-window-number))
     (let* ((filename (ecb-buffer-file-name (current-buffer))))
       (cond ( ;; synchronizing for real filesource-buffers and indirect
@@ -2162,8 +2162,8 @@ Each element is a cons whereas car is the normed and expanded pathname \(done by
 `ecb-source-path') or - if there is no alias defined - the path itself \(in
 this case car and cdr are equal)."
   (mapcar (function (lambda (elem)
-                      (let* ((path (ecb-fix-filename (if (listp elem) (car elem) elem)))
-                             (alias (if (listp elem) (cdr elem) path)))
+                      (let* ((path (ecb-fix-filename (if (listp elem) (nth 0 elem) elem)))
+                             (alias (if (listp elem) (nth 1 elem) path)))
                         (cons path alias))))
           (append (ecb-get-source-paths-from-functions)
                   ecb-source-path)))
@@ -2173,7 +2173,7 @@ this case car and cdr are equal)."
 SORTED is not nil then the paths are sorted by descending length, means the
 longest path \(which is the best matching) is the first elem and the shortest
 path the last elem. Otherwise the matching paths are returned in that sequence
-they occur in `ecb-source-paths'.
+they occur in `ecb-source-path'.
 Each matching path is a cons in the sense of `ecb-normed-source-paths'."
   (let* ((p-t-m (ecb-fix-filename path-to-match))
          (normed-current-source-paths (ecb-normed-source-paths))
@@ -2579,7 +2579,7 @@ Returns t if the current history filter has been applied otherwise nil."
                ;; we use concat to get a new string to avoid side-effect in
                ;; facing source-paths in the directory-buffer
                (best-matching-path (concat (car best-matching-sp)))
-               (best-matching-alias (concat (cadr best-matching-sp)))
+               (best-matching-alias (concat (cdr best-matching-sp)))
                (bucket-name-formated nil)
                (bucket-node nil))
           (if (or (null best-matching-sp)
@@ -2591,7 +2591,8 @@ Returns t if the current history filter has been applied otherwise nil."
                       (length best-matching-path)))
               (setq bucket-name-formated
                     (ecb-format-bucket-name
-                     (ecb-merge-face-into-text (ecb-format-bucket-name (car bucket-elem))
+                     ;; we use concat only to get a new string-object
+                     (ecb-merge-face-into-text (concat (car bucket-elem))
                                                ecb-history-bucket-node-face)
                      nil 'only-name))
             (setq bucket-name-formated
@@ -2608,13 +2609,7 @@ Returns t if the current history filter has been applied otherwise nil."
                                (length best-matching-path))
                               ecb-history-bucket-node-face)))
                    nil 'only-name))
-            ;; now we store the end of the source-path-alias as start-position
-            ;; for name shrinking
-            (put-text-property 0 (length bucket-name-formated)
-                               'tree-node-shrink-start-pos
-                               (+ (length (nth 0 ecb-bucket-node-display))
-                                  (length best-matching-alias))
-                               bucket-name-formated))
+            )
           (setq bucket-node (if (string= never-bucket-string (car bucket-elem))
                                 (tree-buffer-get-root)
                               (tree-node-new bucket-name-formated
@@ -2622,7 +2617,13 @@ Returns t if the current history filter has been applied otherwise nil."
                                              (car bucket-elem)
                                              nil
                                              (tree-buffer-get-root)
-                                             'beginning)))
+                                             'beginning
+                                             ;; now we store the end of the
+                                             ;; source-path-alias as
+                                             ;; start-position for name
+                                             ;; shrinking
+                                             (+ (length (nth 0 ecb-bucket-node-display))
+                                                (length best-matching-alias)))))
           (unless (string= never-bucket-string (car bucket-elem))
             ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we can make
             ;; this even smarter...depending if now a bucket contains more
@@ -2822,36 +2823,28 @@ Subnodes can be directories or sources."
     (ecb-exec-in-window ecb-directories-buffer-name
       (let* ((node (tree-buffer-get-root))
              (old-children (tree-node->children node))
-             (paths (append (ecb-get-source-paths-from-functions)
-                            ecb-source-path)))
+             (normed-paths (ecb-normed-source-paths)))
         (setf (tree-node->children node) nil)
-        (dolist (dir paths)
-          (let* ((path (if (listp dir) (car dir) dir))
-                 (remote-path (ecb-remote-path path))
-                 (norm-dir nil)
-                 (name nil)
+        (dolist (path normed-paths)
+          (let* ((dir (car path))
+                 (name (cdr path))
+                 (remote-dir (ecb-remote-path dir))
                  (not-accessible nil))
-            (if (or (not remote-path)
-                    (ecb-host-accessible-p (nth 1 remote-path)))
-                (progn
-                  (setq norm-dir (ecb-fix-filename path nil t))
-                  (setq name (if (listp dir) (cadr dir) norm-dir))
-                  (if (ecb-file-accessible-directory-p norm-dir)
-                      (tree-node-add-children
-                       node
-                       (ecb-new-child old-children name
-                                      ecb-directories-nodetype-sourcepath
-                                      norm-dir
-                                      nil
-                                      (if ecb-truncate-long-names
-                                          'beginning)))
-                    (setq not-accessible t)))
+            (if (or (not remote-dir)
+                    (ecb-host-accessible-p (nth 1 remote-dir)))
+                (if (ecb-file-accessible-directory-p dir)
+                    (tree-node-add-children
+                     node
+                     (ecb-new-child old-children name
+                                    ecb-directories-nodetype-sourcepath
+                                    dir
+                                    nil
+                                    (if ecb-truncate-long-names
+                                        'beginning)))
+                  (setq not-accessible t))
               (setq not-accessible t))
             (when not-accessible
-              (if (listp dir)
-                  (ecb-warning "Source-path %s with alias %s is not accessible - ignored!"
-                               (car dir) (cadr dir))
-                (ecb-warning "Source-path %s is not accessible - ignored!" dir)))))
+              (ecb-warning "Source-path element %s is not accessible - ignored!" path))))
         (tree-buffer-update)))
     ))
 
@@ -3954,6 +3947,12 @@ Directory- and sources nodes are handled appropriately."
             ;; contained in current layout then we have to redraw the full
             ;; layout first so the contents of the clicked directory can be
             ;; displayed in the sources-buffer.
+            
+            ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: we should also check
+            ;; if the source-buffer is not visible because in left-right
+            ;; layouts we can maximize 2 buffers or in general: a maximized
+            ;; buffer does not mean that there are no other ecb-buffers visible!!!
+
             (when (and (ecb-buffer-is-maximized-p ecb-directories-buffer-name)
                        (not (ecb-show-sources-in-directories-buffer-p))
                        (ecb-buffer-is-ecb-buffer-of-current-layout-p
@@ -3979,6 +3978,9 @@ Directory- and sources nodes are handled appropriately."
   ;; contained in current layout then we have to redraw the full layout first
   ;; so the contents of the clicked source-file can be displayed in the
   ;; methods-buffer.
+
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: see comment in
+  ;; ecb-directory-or-source-clicked
   (when (and (ecb-buffer-is-maximized-p (buffer-name))
              (ecb-buffer-is-ecb-buffer-of-current-layout-p
               ecb-methods-buffer-name))

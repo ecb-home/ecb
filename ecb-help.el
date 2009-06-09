@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.119 2009/06/04 08:38:15 berndl Exp $
+;; $Id: ecb-help.el,v 1.120 2009/06/09 10:39:47 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -440,7 +440,7 @@ could be interesting for support."
                                    ecb-partial-reparse-always-full-fetch
                                    ecb-stealthy-function-list
                                    ecb-stealthy-function-state-alist
-                                   ecb-windows-hidden
+                                   ecb-windows-hidden-state
                                    ecb-toggle-layout-state
                                    ecb-tree-buffer-creators
                                    ecb-ecb-buffer-registry

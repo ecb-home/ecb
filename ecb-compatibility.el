@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compatibility.el,v 1.14 2009/05/15 15:19:53 berndl Exp $
+;; $Id: ecb-compatibility.el,v 1.15 2009/06/09 10:39:47 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -257,7 +257,7 @@ if `scroll-all-mode' is nil return the number of visible windows."
             (progn
               (ecb-toggle-ecb-windows -1)
               (ecb-toggle-compile-window -1))
-          (if (not ecb-windows-hidden)
+          (if (not (ecb-windows-all-hidden))
               (delete-other-windows (car (ecb-canonical-edit-windows-list))))))
     (setq ecb-before-ediff-window-config nil)))
 

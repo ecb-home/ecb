@@ -26,7 +26,7 @@
 # GNU Emacs; see the file COPYING.  If not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# $Id: Makefile,v 1.114 2009/05/15 15:19:53 berndl Exp $
+# $Id: Makefile,v 1.115 2009/06/09 10:39:47 berndl Exp $
 
 
 # ========================================================================
@@ -118,11 +118,11 @@ INSTALLINFO=/usr/bin/install-info
 # ========================================================================
 
 
-# $Id: Makefile,v 1.114 2009/05/15 15:19:53 berndl Exp $
+# $Id: Makefile,v 1.115 2009/06/09 10:39:47 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
-ecb_VERSION=2.40
+ecb_VERSION=2.41
 #ecb_VERSION=2.32
 
 include ecb-makedef.mk
