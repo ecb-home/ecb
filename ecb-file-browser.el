@@ -2581,6 +2581,7 @@ Returns t if the current history filter has been applied otherwise nil."
                (best-matching-path (concat (car best-matching-sp)))
                (best-matching-alias (concat (cdr best-matching-sp)))
                (bucket-name-formated nil)
+               (bucket-name-formated-shrink-start-pos (length (nth 0 ecb-bucket-node-display)))
                (bucket-node nil))
           (if (or (null best-matching-sp)
                   ;; if the alias is not smaller then the path
@@ -2609,6 +2610,11 @@ Returns t if the current history filter has been applied otherwise nil."
                                (length best-matching-path))
                               ecb-history-bucket-node-face)))
                    nil 'only-name))
+            ;; now we add the length of the source-path-alias as start-position
+            ;; for name shrinking
+            (setq bucket-name-formated-shrink-start-pos
+                  (+ bucket-name-formated-shrink-start-pos
+                     (length best-matching-alias)))
             )
           (setq bucket-node (if (string= never-bucket-string (car bucket-elem))
                                 (tree-buffer-get-root)
@@ -2618,12 +2624,9 @@ Returns t if the current history filter has been applied otherwise nil."
                                              nil
                                              (tree-buffer-get-root)
                                              'beginning
-                                             ;; now we store the end of the
-                                             ;; source-path-alias as
-                                             ;; start-position for name
-                                             ;; shrinking
-                                             (+ (length (nth 0 ecb-bucket-node-display))
-                                                (length best-matching-alias)))))
+                                             (list bucket-name-formated-shrink-start-pos
+                                                   nil
+                                                   5))))
           (unless (string= never-bucket-string (car bucket-elem))
             ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we can make
             ;; this even smarter...depending if now a bucket contains more
@@ -4669,7 +4672,8 @@ So you get a better overlooking. There are three choices:
    :node-mouse-over-fn 'ecb-mouse-over-directory-node
    :mouse-highlight-fn t ;; highlight each node when moving mouse over it
    :node-data-equal-fn 'equal
-   :maybe-empty-node-types (list ecb-directories-nodetype-directory)
+   :maybe-empty-node-types (list ecb-directories-nodetype-directory
+                                 ecb-directories-nodetype-sourcepath)
    ;; Now no longer tree-buffer decides if a node is displayed as leave but
    ;; now the file-browser does it in the function `ecb-tree-node-add-files' -
    ;; Reason: We have now to deal with the VC-support

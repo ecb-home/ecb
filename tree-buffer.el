@@ -357,7 +357,7 @@ Do nothing if `tree-buffer-debug-mode' is nil!"
   children
   parent
   shrink-name
-  shrink-name-start-pos
+  shrink-name-spec
   expandable
   expanded
   displayed-name
@@ -365,7 +365,7 @@ Do nothing if `tree-buffer-debug-mode' is nil!"
   id)
 
 (defun tree-node-new (name type data &optional not-expandable parent
-                           shrink-name shrink-name-start-pos)
+                           shrink-name shrink-name-spec)
   "Create a new tree-node which can be displayed in a tree-buffer.
 A tree-node can have the following slots:
 
@@ -384,17 +384,24 @@ A tree-node can have the following slots:
   SHRINK-NAME: Decides if the NAME can be shortened when displayed in a
   narrow tree buffer window. The following values are valid:
   - beginning: The NAME is truncated at the beginning so the end is always
-    visible.
+    visible. The shrinking can be specified in more detail with
+    SHRINK-NAME-SPEC \(s.b.)
   - end: The NAME is truncated at the end. If the tree-node is EXPANDABLE the
     name is truncated so that the expand symbol is visible.
   - nil: The NAME is never truncated. In this case DISPLAYED-NAME is equal to
     NAME.
 
-  SHRINK-NAME-START-POS: 0-based starting position in the NAME where shrinking
-  should start if the name has to be shrinked from beginning \(see
-  SHRINK-NAME). Defaults to 0, i.e. shrinking starts at beginning of NAME if
-  SHRINK-NAME is 'beginning. This slot is ignored if SHRINK-NAME is 'end or
-  nil.
+  SHRINK-NAME-SPEC: nil or a 3 element-list which defines exactly
+  how to shrink the node-name from beginning. The first element
+  is a 0-based starting position in the NAME where shrinking
+  should start if the name has to be shrinked from beginning
+  \(see SHRINK-NAME) - if nil then 0 is used, i.e. shrinking
+  starts at beginning of NAME. The second element is a string
+  which is used as token to indicate the shrinking \(e.g.
+  \"-->\") - if nil then \"...\" is used. The third element is
+  the number of chars of the node-name which should remain as
+  visible \(counted from the end of node-name) - if nil then 5 is
+  used. This slot is ignored if SHRINK-NAME is 'end or nil.
 
   CHILDREN: List of children tree-nodes.
 
@@ -420,8 +427,8 @@ See Info node `(ecb)tree-buffer' for all details of using tree-nodes."
                             :expandable (not not-expandable)
                             :parent parent
                             :shrink-name shrink-name
-                            :shrink-name-start-pos (or shrink-name-start-pos
-                                                       0)
+                            :shrink-name-spec (or shrink-name-spec
+                                                  '(0 "..." 5))
                             :children nil
                             :expanded nil
                             :displayed-name nil
@@ -1706,32 +1713,66 @@ inserted and the TEXT itself"
 display-name will be set in the slot DISPLAYED-NAME of NODE and also
 returned."
   (let* ((ww (window-width))
-	 (display-name (tree-node->name node))
-         (name-shrink-start-pos (tree-node->shrink-name-start-pos node))
-         (width (+ (tree-node-indentlength node)
-		   (length display-name)
-		   (if (tree-node->expandable node) 4 0))))
+	 (name (concat (tree-node->name node)))
+         (display-name name)
+         (shrink-token (or (nth 1 (tree-node->shrink-name-spec node))
+                           "..."))
+         (shrink-token-length (length shrink-token))
+         (expand-length (if (tree-node->expandable node)
+                            (+ (if (eq (tree-buffer-real-style) 'image)
+                                   1
+                                 tree-buffer-expand-symbol-length)
+                               1)
+                          0))
+         (indent-length (if (eq (tree-buffer-real-style) 'image)
+                            (floor (tree-node-indentlength node)
+                                   (if (tree-buffer-spec->expand-symbol-before-p tree-buffer-spec)
+                                       tree-buffer-indent-w/o-images-before-min
+                                     tree-buffer-indent-w/o-images-after-min))
+                          (tree-node-indentlength node)))
+         (name-shrink-start-pos (or (nth 0 (tree-node->shrink-name-spec node))
+                                    0))
+         (remaining-chars (or (nth 2 (tree-node->shrink-name-spec node))
+                              5))
+         (new-end-of-before-shrink-part name-shrink-start-pos)
+         (width (+ indent-length expand-length (length name))))
+;;     (when (and (equal (buffer-name) ecb-history-buffer-name)
+;;                (= ecb-history-nodetype-bucket (tree-node->type node)))
+;;       (message "node-disp: node:%s,name-l:%d,\nww:%d,ind-l:%d,exp-l:%d,start-p:%d,width:%d"
+;;                name (length name) ww indent-length expand-length name-shrink-start-pos width)
+;;       )
     ;; Truncate name if necessary
-    (when (and (>= width ww)
-               (> (length display-name)
-                  (+ (if tree-buffer-running-xemacs 5 4) ;; for the "..." + space
-                     (- width ww)
-                     3))) ;; there should at least remain 3 visible chars of name
+    (when (and (>= (- ww indent-length expand-length) (+ shrink-token-length
+                                                         remaining-chars))
+               (> width ww)
+               ;; there should at least remain 5 visible chars of name
+               (> (length name) (+ shrink-token-length (- width ww) remaining-chars)))
       (if (eq 'beginning (tree-node->shrink-name node))
-	  (setq display-name
-                (concat (substring display-name 0 name-shrink-start-pos)
-                        "..."
-                        (substring display-name (+ name-shrink-start-pos
-                                                   (if tree-buffer-running-xemacs 5 4)
-                                                   (- width ww)))))
+          (progn
+            (when (> name-shrink-start-pos 0)
+              (when (< (- ww indent-length expand-length name-shrink-start-pos)
+                       (+ shrink-token-length remaining-chars))
+                (setq new-end-of-before-shrink-part
+                      (- ww indent-length expand-length shrink-token-length remaining-chars))
+                ;; now name-shrink-start-pos is exactly set so 3 + 5 chars can
+                ;; be displayed from the rest
+                (when (< new-end-of-before-shrink-part 3)
+                  (setq new-end-of-before-shrink-part 0))))
+            (setq display-name
+                  (concat (substring name 0 new-end-of-before-shrink-part)
+                          shrink-token
+                          (substring name (max name-shrink-start-pos
+                                               (+ (- width ww)
+                                                  new-end-of-before-shrink-part
+                                                  shrink-token-length))))))
 	(if (and (not (tree-buffer-spec->expand-symbol-before-p tree-buffer-spec))
 		 (tree-node->expandable node)
 		 (eq 'end (tree-node->shrink-name node)))
 	    (setq display-name
-                  (concat (substring display-name 0
-                                     (- (+ (if tree-buffer-running-xemacs 5 4)
+                  (concat (substring name 0
+                                     (- (+ shrink-token-length
                                            (- width ww))))
-                          "...")))))
+                          shrink-token)))))
     (setf (tree-node->displayed-name node) display-name)
     display-name))
   
