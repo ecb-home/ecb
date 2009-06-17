@@ -29,6 +29,7 @@
 
 ;; This file contains the code of the file-browser of ECB
 
+
 (require 'ecb-util)
 (require 'tree-buffer)
 (require 'ecb-mode-line)
@@ -1178,7 +1179,8 @@ sources will not be checked - This option takes only effect if
   "Return not nil if the sources of DIR should be checked for VC-state.
 The check is performed according to the settings in the options
 `ecb-vc-enable-support' and `ecb-vc-directory-should-be-checked-p'."
-  (and ecb-vc-needed-vc-package-available-p
+  (and dir
+       ecb-vc-needed-vc-package-available-p
        (or (equal t ecb-vc-enable-support)
            (and (equal 'unless-remote ecb-vc-enable-support)
                 (not (ecb-remote-path dir))))
