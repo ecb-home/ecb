@@ -23,11 +23,12 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.82 2009/06/16 10:30:59 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.83 2009/06/17 12:31:16 berndl Exp $
 
 ;;; Commentary:
 
 ;; This file contains the code of the file-browser of ECB
+
 
 (require 'ecb-util)
 (require 'tree-buffer)
@@ -1178,7 +1179,8 @@ sources will not be checked - This option takes only effect if
   "Return not nil if the sources of DIR should be checked for VC-state.
 The check is performed according to the settings in the options
 `ecb-vc-enable-support' and `ecb-vc-directory-should-be-checked-p'."
-  (and ecb-vc-needed-vc-package-available-p
+  (and dir
+       ecb-vc-needed-vc-package-available-p
        (or (equal t ecb-vc-enable-support)
            (and (equal 'unless-remote ecb-vc-enable-support)
                 (not (ecb-remote-path dir))))
