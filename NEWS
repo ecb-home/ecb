@@ -1,6 +1,6 @@
 * Changes for ECB version 2.40.1
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add this to the texi
+TODO: Klaus Berndl <klaus.berndl@sdm.de>: add this to the texi
 
 ** ECB now uses the partial reparse feature of semantic
 
@@ -71,6 +71,9 @@
     when currently a layout without a history buffer is used or when another
     buffer is maximized and the history buffer thus hidden). This is fixed
     now.
+
+*** All compile-modes (e.g. compile, grep etc.) failed in XEmacs
+    This came from a bug introduced in 2.40 but it is fixed now.
 
 * Changes for ECB version 2.40
 

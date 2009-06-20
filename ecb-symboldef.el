@@ -268,9 +268,7 @@ Only prints mode and info but does not find any symbol-definition."
                    (re-search-forward (regexp-quote symbol-name) nil t))
           (setq beg (match-beginning 0))
           (setq end (match-end 0))
-          ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: make
-          ;; ecb-merge-face-into-text as tree-buffer-merge-face-into-text
-          (tree-buffer-merge-face-into-text
+          (ecb-merge-face
            (if (eq ecb-symboldef-symbol-face 'use-font-lock-face)
                'font-lock-function-name-face
              ecb-symboldef-symbol-face)
@@ -283,12 +281,10 @@ Only prints mode and info but does not find any symbol-definition."
           (goto-char beg)
           (forward-sexp)
           (setq end (point))
-          ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: make
-          ;; ecb-merge-face-into-text as tree-buffer-merge-face-into-text
-          (tree-buffer-merge-face-into-text
+          (ecb-merge-face
            ecb-symboldef-prototype-face
            beg end)
-          (tree-buffer-merge-face-into-text
+          (ecb-merge-face
            (if (eq ecb-symboldef-symbol-face 'use-font-lock-face)
                'font-lock-function-name-face
              ecb-symboldef-symbol-face)
@@ -313,9 +309,7 @@ Only prints mode and info but does not find any symbol-definition."
                    (re-search-forward (regexp-quote symbol-name) nil t))
           (setq beg (match-beginning 0))
           (setq end (match-end 0))
-          ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: make
-          ;; ecb-merge-face-into-text as tree-buffer-merge-face-into-text
-          (tree-buffer-merge-face-into-text
+          (ecb-merge-face
            (if (eq ecb-symboldef-symbol-face 'use-font-lock-face)
                'font-lock-variable-name-face
              ecb-symboldef-symbol-face)

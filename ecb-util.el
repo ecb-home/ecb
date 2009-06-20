@@ -1327,17 +1327,18 @@ should stopped but no debugging is senseful."
 
 ;;; ----- Text and string-stuff ----------------------------
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: adapt to
-;; tree-buffer-merge-face-into-text 
-(defun ecb-merge-face-into-text (text face)
-  "Merge FACE to the already precolored TEXT so the values of all
-face-attributes of FACE take effect and but the values of all face-attributes
-of TEXT which are not set by FACE are preserved.
-If FACE or TEXT is nil then simply TEXT is returned."
-  (if (or (null face) (null text))
+(defun ecb-merge-face (face start end &optional text)
+  "Merge FACE either to a buffer-part or to TEXT.
+In both cases START and END define the region which should be
+faced. The FACE is merged, i.e. the values of all face-attributes
+of FACE take effect and the values of all face-attributes of the
+buffer-part or TEXT which are not set by FACE are preserved.
+
+If always returns TEXT \(if not nil then modified with FACE)."
+  (if (null face)
       text
     (if ecb-running-xemacs
-        (put-text-property 0 (length text) 'face
+        (put-text-property start end 'face
                            (let* ((current-face (get-text-property 0
                                                                    'face
                                                                    text))
@@ -1359,7 +1360,7 @@ If FACE or TEXT is nil then simply TEXT is returned."
                                )
                              )
                            text)
-      (alter-text-property 0 (length text) 'face
+      (alter-text-property start end 'face
                            (lambda (current-face)
                              (let ((cf
                                     (typecase current-face
@@ -1378,6 +1379,15 @@ If FACE or TEXT is nil then simply TEXT is returned."
                                  (append nf cf))))
                            text))
     text))
+
+(defun ecb-merge-face-into-text (text face)
+  "Merge FACE to the already precolored TEXT so the values of all
+face-attributes of FACE take effect and but the values of all face-attributes
+of TEXT which are not set by FACE are preserved.
+If FACE or TEXT is nil then simply original TEXT is returned."
+  (if (or (null face) (null text))
+      text
+    (ecb-merge-face face 0 (length text) text)))
 
 (if (fboundp 'compare-strings)
     (defalias 'ecb-compare-strings 'compare-strings)
@@ -1810,6 +1820,7 @@ means not to count the minibuffer even if it is active."
           (error "Window must be on frame."))
       (let ((current-frame (selected-frame))
             (current-window (selected-window))
+            (current-buf (current-buffer))
             (current-point (point))
             list)
         (unwind-protect
@@ -1829,6 +1840,7 @@ means not to count the minibuffer even if it is active."
               (setq list (cons window list)))
           (select-frame current-frame)
           (select-window current-window)
+          (set-buffer current-buf)
           ;; we must reset the point of the buffer which was current at call-time
           ;; of this function
           (goto-char current-point))))))

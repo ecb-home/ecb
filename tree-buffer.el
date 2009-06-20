@@ -1641,10 +1641,14 @@ tree-node. This is only used with GNU Emacs 21!"
            (funcall (tree-buffer-spec->node-mouse-over-fn tree-buffer-spec)
                     node window 'no-print)))))
 
-(defun tree-buffer-merge-face-into-text (face start end &optional text)
-  "Merge FACE to the already precolored TEXT so the values of all
-face-attributes of FACE take effect and the values of all face-attributes
-of TEXT which are not set by FACE are preserved."
+(defun tree-buffer-merge-face (face start end &optional text)
+  "Merge FACE either to a buffer-part or to TEXT.
+In both cases START and END define the region which should be
+faced. The FACE is merged, i.e. the values of all face-attributes
+of FACE take effect and the values of all face-attributes of the
+buffer-part or TEXT which are not set by FACE are preserved.
+
+If always returns TEXT \(if not nil then modified with FACE)."
   (if (null face)
       text
     (if tree-buffer-running-xemacs
@@ -1687,7 +1691,8 @@ of TEXT which are not set by FACE are preserved."
                                (if (member face cf)
                                    cf
                                  (append nf cf))))
-                           text))))
+                           text))
+    text))
 
 (defun tree-buffer-insert-text (text &optional facer help-echo mouse-highlight)
   "Insert TEXT at point and faces it with FACER. FACER can be a face then the
@@ -1705,7 +1710,7 @@ inserted and the TEXT itself"
       (if facer
           (if (functionp facer)
               (funcall facer p text)
-            (tree-buffer-merge-face-into-text facer p (point))))
+            (tree-buffer-merge-face facer p (point))))
       )))
 
 (defun tree-buffer-node-display-name (node)
