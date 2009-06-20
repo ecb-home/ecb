@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.280 2009/06/09 10:39:46 berndl Exp $
+;; $Id: ecb-layout.el,v 1.281 2009/06/20 05:07:30 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2986,6 +2986,21 @@ So never a dedicated window is returned during activated ECB."
  )
 
 
+(defun ecb-compile-bug-test ()
+  (interactive)
+  (let ((buffer-save (current-buffer))
+        (tempbuf (get-buffer-create "klausimausi"))
+        (win-list nil))
+    (unwind-protect
+        (progn
+          (set-buffer tempbuf)
+          (message "Klausi-1: curr-buf:%s" (current-buffer))
+          (setq win-list (ecb-canonical-windows-list))
+          ;; (setq win-list (ecb-window-list))
+          (message "Klausi-1: curr-buf:%s" (current-buffer))
+          )
+      (set-buffer buffer-save))))
+
 ;; This advice is the heart of the mechanism which displays all buffer in the
 ;; compile-window if they are are "compilation-buffers" in the sense of
 ;; `ecb-compilation-buffer-p'!
@@ -3165,8 +3180,8 @@ If called for other frames it works like the original version."
                    ad-do-it)))
             
               ((not (ecb-buffer-is-dedicated-special-buffer-p (ad-get-arg 0)))
-               (ecb-layout-debug-error "display-buffer for normal buffer: %s"
-                                       (ad-get-arg 0))
+               (ecb-layout-debug-error "display-buffer for normal buffer:%s,current buffer:%s"
+                                       (ad-get-arg 0) (current-buffer))
                (let ((edit-win-list (ecb-canonical-edit-windows-list))
                      (pop-up-frames (if (ecb-ignore-pop-up-frames)
                                         nil
@@ -3206,7 +3221,8 @@ If called for other frames it works like the original version."
                        ;; making the compile-window not dedicated
                        (set-window-dedicated-p ecb-compile-window nil)
                        (setq ecb-layout-temporary-dedicated-windows nil))
-                   ad-do-it)))
+                   ad-do-it)
+                 ))
             
               (t ;; buffer is a special ecb-buffer
                (ecb-layout-debug-error "display-buffer for special ecb-buffer: %s" (ad-get-arg 0))

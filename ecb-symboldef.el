@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-symboldef.el,v 1.10 2009/06/09 10:39:46 berndl Exp $
+;; $Id: ecb-symboldef.el,v 1.11 2009/06/20 05:07:30 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -268,9 +268,7 @@ Only prints mode and info but does not find any symbol-definition."
                    (re-search-forward (regexp-quote symbol-name) nil t))
           (setq beg (match-beginning 0))
           (setq end (match-end 0))
-          ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: make
-          ;; ecb-merge-face-into-text as tree-buffer-merge-face-into-text
-          (tree-buffer-merge-face-into-text
+          (ecb-merge-face
            (if (eq ecb-symboldef-symbol-face 'use-font-lock-face)
                'font-lock-function-name-face
              ecb-symboldef-symbol-face)
@@ -283,12 +281,10 @@ Only prints mode and info but does not find any symbol-definition."
           (goto-char beg)
           (forward-sexp)
           (setq end (point))
-          ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: make
-          ;; ecb-merge-face-into-text as tree-buffer-merge-face-into-text
-          (tree-buffer-merge-face-into-text
+          (ecb-merge-face
            ecb-symboldef-prototype-face
            beg end)
-          (tree-buffer-merge-face-into-text
+          (ecb-merge-face
            (if (eq ecb-symboldef-symbol-face 'use-font-lock-face)
                'font-lock-function-name-face
              ecb-symboldef-symbol-face)
@@ -313,9 +309,7 @@ Only prints mode and info but does not find any symbol-definition."
                    (re-search-forward (regexp-quote symbol-name) nil t))
           (setq beg (match-beginning 0))
           (setq end (match-end 0))
-          ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: make
-          ;; ecb-merge-face-into-text as tree-buffer-merge-face-into-text
-          (tree-buffer-merge-face-into-text
+          (ecb-merge-face
            (if (eq ecb-symboldef-symbol-face 'use-font-lock-face)
                'font-lock-variable-name-face
              ecb-symboldef-symbol-face)
