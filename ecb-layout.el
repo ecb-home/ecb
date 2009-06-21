@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.281 2009/06/20 05:07:30 berndl Exp $
+;; $Id: ecb-layout.el,v 1.282 2009/06/21 08:08:14 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -350,7 +350,7 @@ layout with `ecb-redraw-layout'"
   :set (function (lambda (symbol value)
                    ;; Emacs < 22 has some bugs concerning `windows-size-fixed'
                    ;; so we must disable window-fixing.
-                   (and (not ecb-running-version-22) (ecb-set-window-size-fixed nil))
+                   (and (not ecb-running-gnu-emacs-version-22) (ecb-set-window-size-fixed nil))
                    (set symbol value)
                    ;; we must check this because otherwise the layout would be
                    ;; drawn if we have changed the initial value regardless if
@@ -415,7 +415,7 @@ This option takes only effect if `ecb-compile-window-height' is not nil!"
   :set (function (lambda (symbol value)
                    ;; Emacs < 22 has some bugs concerning `windows-size-fixed'
                    ;; so we must disable window-fixing.
-                   (and (not ecb-running-version-22) (ecb-set-window-size-fixed nil))
+                   (and (not ecb-running-gnu-emacs-version-22) (ecb-set-window-size-fixed nil))
                    (set symbol value)
                    ;; we must check this because otherwise the layout would be
                    ;; drawn if we have changed the initial value regardless if
@@ -779,7 +779,7 @@ then set always nil!"
       (dolist (w l)
         (save-excursion
           (set-buffer (window-buffer w))
-          (setq window-size-fixed (if (and (not ecb-running-version-22)
+          (setq window-size-fixed (if (and (not ecb-running-gnu-emacs-version-22)
                                            ecb-compile-window-height)
                                       nil
                                     fix)))))))
@@ -2843,7 +2843,7 @@ some special tasks:
                ;; In the meanwhile we allow automatic maximizing only when
                ;; `ecb-tree-mouse-action-trigger' is 'button-press!
                (or ecb-running-xemacs
-                   ecb-running-version-22
+                   ecb-running-gnu-emacs-version-22
                    (equal ecb-tree-mouse-action-trigger 'button-press))
                (equal (selected-frame) ecb-frame)
                (= (minibuffer-depth) 0))
@@ -3165,7 +3165,7 @@ If called for other frames it works like the original version."
                    ;; emacs 23 splits automatically when window-size allows
                    ;; this (see split-width-threshold and
                    ;; split-height-threshold)... 
-                   (when (and (not ecb-running-version-23)
+                   (when (and (not ecb-running-gnu-emacs-version-23)
                               (not (ecb-windows-all-hidden))
                               (not (ecb-layout-top-p))
                               pop-up-windows
@@ -4177,7 +4177,7 @@ macro `ecb-with-ecb-advice' instead if you need this adviced version of
   (if (and ecb-minor-mode
            (equal (selected-frame) ecb-frame)
            (not (ecb-windows-all-hidden)))
-      (if ecb-running-version-22
+      (if ecb-running-gnu-emacs-version-22
           ;; Emacs 22 has reimplemented balance-windows so it is not longer based on
           ;; walk-windows but uses a completely new mechanism based on a
           ;; c-level-function `window-tree'! Therefore we have to use another
@@ -4463,7 +4463,7 @@ will be selected also after."
       (when (ecb-buffer-is-ecb-buffer-of-current-layout-p ecb-buffer-name)
         (ecb-redraw-layout-full
          t ;; no buffer synchronisation!
-         (ecb-ecb-buffer-registry-get-set-fcn ecb-methods-buffer-name))
+         (ecb-ecb-buffer-registry-get-set-fcn ecb-buffer-name))
         (if compwin-hidden (ecb-toggle-compile-window -1))
         (setq ecb-current-maximized-ecb-buffer-name ecb-buffer-name)
         ;; point is now in the edit-buffer so maybe we have to move point to the

@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.159 2009/06/20 05:07:30 berndl Exp $
+;; $Id: ecb-util.el,v 1.160 2009/06/21 08:08:14 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -97,21 +97,22 @@
 ;;; ----- Some constants -----------------------------------
 
 ;;;###autoload
-;;(defconst ecb-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
 (defconst ecb-running-xemacs (featurep 'xemacs))
+
+(defconst ecb-running-gnu-emacs (not ecb-running-xemacs))
 
 (defconst ecb-running-unsupported-emacs (condition-case nil
                                             (<= emacs-major-version 20)
                                           (error t))
-  "True if running XEmacs or Emacs < 21.")
+  "True if running XEmacs or Gnu Emacs < 21.")
 
-(defconst ecb-running-version-22 (and (not ecb-running-unsupported-emacs)
-                                      (>= emacs-major-version 22))
-  "True if running \(X)Emacs >= version 22")
+(defconst ecb-running-gnu-emacs-version-22 (and ecb-running-gnu-emacs
+                                                (>= emacs-major-version 22))
+  "True if running Gnu Emacs >= version 22")
 
-(defconst ecb-running-version-23 (and (not ecb-running-unsupported-emacs)
-                                      (>= emacs-major-version 23))
-  "True if running \(X)Emacs >= version 23")
+(defconst ecb-running-gnu-emacs-version-23 (and ecb-running-gnu-emacs
+                                                (>= emacs-major-version 23))
+  "True if running Gnu Emacs >= version 23")
 
 (defconst ecb-temp-dir
   (file-name-as-directory
