@@ -41,6 +41,7 @@
 (require 'ecb-speedbar)
 
 (require 'ecb-cedet-wrapper)
+(require 'ecb-semantic)
 ;; This loads the semantic-setups for the major-modes.
 (require 'semantic-load)
 
@@ -561,8 +562,8 @@ as specified in `ecb-type-tag-expansion'"
 (defcustom ecb-find-external-tag-functions
   (list (cons 'default
               (list (if (fboundp 'semantic-calculate-scope)
-                        'ecb-search-tag-by-semantic-analyzer
-                      'ecb-search-tag-by-semanticdb)))
+                        'ecb-search-type-tag-by-semantic-analyzer
+                      'ecb-search-type-tag-by-semanticdb)))
         (cons 'jde-mode (list 'ecb-jde-show-class-source)))
   "*Functions used for searching external tags clicked in the methods buffer.
 The methods buffer displays for oo-languages the parents of a
@@ -596,8 +597,8 @@ ECB first performs all find-functions defined for current
 the special symbol 'default \(if any).
 
 ECB offers some predefined senseful finding-functions. Currently there are:
-- `ecb-search-tag-by-semantic-analyzer' (most powerful)
-- `ecb-search-tag-by-semanticdb'
+- `ecb-search-type-tag-by-semantic-analyzer' (most powerful)
+- `ecb-search-type-tag-by-semanticdb'
 - `ecb-jde-show-class-source' (for major-mode `jde-mode' when coding in java)
   This function does not only the searching but displays the founded tag.
 See the documentation of these function for details how they work.
@@ -635,10 +636,10 @@ Current point depends on the clicked tag:
   :group 'ecb-methods
   :type '(repeat (cons (symbol :tag "Major-mode or default")
                        (repeat (choice :tag "Find external tag function" :menu-tag "Function list"
-                                       (const :tag "ecb-search-tag-by-semantic-analyzer"
-                                              :value ecb-search-tag-by-semantic-analyzer)
-                                       (const :tag "ecb-search-tag-by-semanticdb"
-                                              :value ecb-search-tag-by-semanticdb)
+                                       (const :tag "ecb-search-type-tag-by-semantic-analyzer"
+                                              :value ecb-search-type-tag-by-semantic-analyzer)
+                                       (const :tag "ecb-search-type-tag-by-semanticdb"
+                                              :value ecb-search-type-tag-by-semanticdb)
                                        (const :tag "ecb-jde-show-class-source"
                                               :value ecb-jde-show-class-source)
                                        (function :tag "Function"))))))
@@ -2261,7 +2262,7 @@ argument INVERSE is ignored here."
                                          (set-buffer source-buffer)
                                          (ecb-get-type-tag-of-tag (ecb-get-real-curr-tag)))))
                                   ((equal (current-buffer)
-                                          (get-buffer ecb-methods-buffer-name))
+                                          (ecb-buffer-obj ecb-methods-buffer-name))
                                    (let ((node (tree-buffer-get-node-at-point)))
                                      (and node
                                           (tree-node->data (ecb-get-type-node-of-node node)))))
@@ -2293,7 +2294,7 @@ argument INVERSE is ignored here."
   (cond ((ecb-point-in-edit-window-number)
          (current-buffer))
         ((equal (current-buffer)
-                (get-buffer ecb-methods-buffer-name))
+                (ecb-buffer-obj ecb-methods-buffer-name))
          (ecb-methods-get-data-store 'source-buffer))
         (t (or (and ecb-last-source-buffer
                     (buffer-live-p ecb-last-source-buffer)
@@ -2528,7 +2529,7 @@ otherwise nil."
 applied to the displayed tags is displayed. This function is only for using by
 the option `ecb-mode-line-prefixes'."
   (let* ((filters (and sel-source
-                       (cdr (assoc (get-buffer (cdr sel-source))
+                       (cdr (assoc (ecb-buffer-obj (cdr sel-source))
                                    ecb-methods-user-filter-alist))))
          (top-filter-spec (ecb-last filters))
          (filter-type-str (nth 3 top-filter-spec))
@@ -3863,112 +3864,9 @@ types which are parsed by imenu or etags \(see
                                     (symbol-name elem))))))
             spec)))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: modify this so it can be used by
-;; ecb-find-external-tag-functions - currently not used
-;; (defun ecb-semantic-tag-external-class-default (tag)
-;;   "Return a list of real tags that faux TAG might represent.
-;; See `semantic-tag-external-class' for details."
-;;   (if (and (fboundp 'semanticdb-minor-mode-p)
-;; 	   (semanticdb-minor-mode-p))
-;;       (let* ((semanticdb-search-system-databases nil)
-;; 	     (m (semanticdb-find-tags-by-class 
-;; 		 (semantic-tag-class tag)
-;; 		 (semanticdb-find-tags-by-name (semantic-tag-name tag)))))
-;; 	(semanticdb-strip-find-results m))
-;;     ;; Presumably, if the tag is faux, it is not local.
-;;     nil
-;;     ))
 
-
-;; ;; semantic 1.X does not have this
-(silentcomp-defvar semanticdb-search-system-databases)
-
-(defun ecb-semanticdb-find-result-nth-with-file (result n)
-  "In RESULT, return the Nth search result.
-This is a 0 based search result, with the first match being element 0. Returns
-a cons cell with car is the searched and found tag and the cdr is the
-associated full filename of this tag. If the search result is not associated
-with a file, then the cdr of the result-cons is nil."
-  (let ((result-nth (ecb--semanticdb-find-result-nth result n)))
-    (if (and (car result-nth)
-             (ecb--semantic-tag-with-position-p (car result-nth))
-             (cdr result-nth))
-        (cons (car result-nth)
-              (ecb--semanticdb-full-filename (cdr result-nth)))
-      (cons (car result-nth) nil))))
-
-(defun ecb-semanticdb-get-type-definition-list (external-tag)
-  "Search for the definition of the type with name of EXTERNAL-TAG.
-The search is performed viy semanticdb.
-`semanticdb-search-system-databases' is taken into account.
-Return-value is either nil \(if no positioned tag can be found
-for external-tag or a positioned semantic-tag for the
-type-definition of EXTERNAL-TAG."
-  (when (and (featurep 'semanticdb) (ecb--semanticdb-minor-mode-p))
-    ;; With semantic 2.X we do a full featured database-search.
-    (let* ((search-result (ecb--semanticdb-find-tags-by-name
-                           (ecb--semantic-tag-name external-tag)))
-           (result-tags (and search-result
-                             (ecb--semanticdb-strip-find-results search-result)))
-           (type-tag-numbers nil))
-      (when (and result-tags
-                 ;; some paranoia
-                 (= (length result-tags)
-                    (ecb--semanticdb-find-result-length search-result)))
-        ;; First we check which tags in the stripped search-result
-        ;; (result-tags) are types with positions (means associated with a
-        ;; file) and collect their sequence-positions in type-tag-numbers.
-        (dotimes (i (length result-tags))
-          (if (and (equal (ecb--semantic-tag-class (nth i result-tags))
-                          'type)
-                   (ecb--semantic-tag-with-position-p (nth i result-tags)))
-              (setq type-tag-numbers
-                    (cons i type-tag-numbers))))
-        (setq type-tag-numbers (nreverse type-tag-numbers))
-        ;; Now we get for each element in type-tag-numbers the related
-        ;; filename (where the tag is defined) and collect them in an alist
-        ;; where each element is a cons-cell where car is the filename and
-        ;; cdr is the tag in this file. Especially with scoped languages
-        ;; like C++ or Java a type with the same name can be defined in more
-        ;; than one file - each of these files belonging to another
-        ;; package/library.
-        (delq nil
-              (mapcar (function (lambda (n)
-                                  (let ((r (ecb-semanticdb-find-result-nth-with-file
-                                            search-result n)))
-                                    (if (and (cdr r)
-                                             (stringp (cdr r))
-                                             (ecb-file-readable-p (cdr r)))
-                                        (cons (cdr r) (car r))))))
-                      type-tag-numbers))))))
-
-(defun ecb-search-tag-by-semanticdb (external-tag)
-  "Uses semanticdb to search for the type-definition of EXTERNAL-TAG.
-Return exactly one semantic tag for the type-definition of
-EXTERNAL-TAG. If more than one definition have been found then
-the user has to make a choice on file-basis.
-
-This function is for usage with `ecb-find-external-tag-functions.'"
-  (let ((type-definition-alist (ecb-semanticdb-get-type-definition-list
-                                external-tag))
-        (result-elem))
-    (when type-definition-alist
-      ;; if we got more than one file for EXTERNAL-TAG then the user has to
-      ;; choose one.
-      (setq result-elem
-            (if (> (length type-definition-alist) 1)
-                (assoc (ecb-offer-choices "Select a definition-file: "
-                                          (mapcar #'car type-definition-alist))
-                       type-definition-alist)
-              (car type-definition-alist)))
-      ;; we add the filename to the tag, then all needed informations are
-      ;; within the tag and afterwards `semantic-tag-buffer can do its work
-      (ecb--semantic--tag-put-property (cdr result-elem)
-                                       :filename
-                                       (car result-elem)))))
-
-(defun ecb-search-tag-by-semantic-analyzer (tag)
-  "Calculate the scope at current point and search for a type with name of TAG.
+(defun ecb-search-type-tag-by-semantic-analyzer (tag)
+  "Calculate scope at point and search for a type with name of TAG.
 
 Return either a positioned semantic-tag for the found
 type-definition or nil if nothing is found. This mechanism uses
@@ -3977,11 +3875,23 @@ needed customizations for the semantic analyzer have been done.
 \(See the manual of the semantic analyzer for how to customizing
 it).
 
-This function is for usage with `ecb-find-external-tag-functions'."
-  (let* ((scope (ecb--semantic-calculate-scope)))
-    (when scope
-      (ecb--semantic-analyze-find-tag (ecb--semantic-tag-name tag)
-                                      'type scope))))
+This function is fully fitting the needs of the option
+`ecb-find-external-tag-functions'."
+  (ecb-search-tag-by-semantic-analyzer (ecb--semantic-tag-name tag) 'type))
+
+(defun ecb-search-type-tag-by-semanticdb (tag)
+  "Uses semanticdb for searching a type with name of TAG.
+
+Return either a positioned semantic-tag for the found
+type-definition or nil if nothing is found. This mechanism uses
+the semantic-analyzer. Therefore it will work at its best if all
+needed customizations for the semantic analyzer have been done.
+\(See the manual of the semantic analyzer for how to customizing
+it).
+
+This function is fully fitting the needs of the option
+`ecb-find-external-tag-functions'."
+  (ecb-search-tag-by-semanticdb (ecb--semantic-tag-name tag) 'type))
 
 (defun ecb-next-tag-parent-node (node)
   "Go upward in the parent-hierarchy of NODE and return next node holding a tag."

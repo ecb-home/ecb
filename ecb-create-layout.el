@@ -344,7 +344,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
 
 (defun ecb-create-layout-insert-file-header ()
   (insert (format ";;; %s --- user defined ECB-layouts" ;;
-                  (file-name-nondirectory ecb-create-layout-file)))
+                  (ecb-file-name-nondirectory ecb-create-layout-file)))
   (insert ecb-create-layout-file-header))
 
 (defun ecb-create-layout-save-layout ()

@@ -123,8 +123,8 @@ BUFFER is displayed in an edit-window!"
   "Ensures that the electric-* commands work well with ECB."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
-    (if (get-buffer "*Buffer List*")
-        (bury-buffer (get-buffer "*Buffer List*")))))
+    (if (ecb-buffer-obj "*Buffer List*")
+        (bury-buffer (ecb-buffer-obj "*Buffer List*")))))
 
 ;; package master.el (only Emacs >= 22.X) ------------------------------------
 
@@ -139,12 +139,12 @@ BUFFER is displayed in an edit-window!"
    (if (or (not ecb-minor-mode)
            (not (equal (selected-frame) ecb-frame)))
        (ecb-with-original-basic-functions ad-do-it)
-     (if (null (buffer-live-p (get-buffer master-of)))
+     (if (null (buffer-live-p (ecb-buffer-obj master-of)))
          (error "Slave buffer has disappeared")
        (let ((window  (selected-window))
              (point-loc (ecb-where-is-point))
              (p (point)))
-         (if (not (eq (window-buffer window) (get-buffer master-of)))
+         (if (not (eq (window-buffer window) (ecb-buffer-obj master-of)))
              (switch-to-buffer-other-window master-of))
          (if (ad-get-arg 0)
              (condition-case nil

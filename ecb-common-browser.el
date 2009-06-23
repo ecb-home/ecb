@@ -985,8 +985,7 @@ existing ans readable file this means the file is loaded into a buffer.
 Note: The buffer is just returned but not displayed."
   (let* ((my-source (if (consp source) source (cons source nil)))
          (filename (car my-source))
-         (buffer (and (cdr my-source)
-                      (get-buffer (cdr my-source)))))
+         (buffer (ecb-buffer-obj (cdr my-source))))
     (or buffer
         (find-file-noselect filename))))
 
@@ -1149,7 +1148,7 @@ See `defecb-window-dedicator-to-ecb-buffer' for more details and an example.")
   (delq nil (mapcar (function (lambda (e)
                                 (and (or (not only-tree-buffers)
                                          (nth 2 e))
-                                     (get-buffer (nth 0 e)))))
+                                     (ecb-buffer-obj (nth 0 e)))))
                     ecb-ecb-buffer-registry)))
   
 (defsubst ecb-ecb-buffer-registry-get-symbol (name)

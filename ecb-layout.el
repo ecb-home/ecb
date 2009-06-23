@@ -1896,6 +1896,7 @@ for current layout."
 ;; properly within `ecb-display-buffer-xemacs' and
 ;; `show-temp-buffer-in-current-frame'; see the comments in both of these
 ;; functions.
+;; !!! This function is not used anymore - but we leave it here !!!!!!!!
 (defun ecb-display-buffer-xemacs (buffer &optional not-this-window-p
                                          override-frame
                                          shrink-to-fit)
@@ -1949,7 +1950,7 @@ Returns the window displaying BUFFER."
          (catch 'done
            (let (window old-frame target-frame explicit-frame shrink-it)
              (setq old-frame (or (last-nonminibuf-frame) (selected-frame)))
-             (setq buffer (get-buffer buffer))
+             (setq buffer (ecb-buffer-obj buffer))
              (check-argument-type 'bufferp buffer)
 
              ;; KB: For pre-display-buffer-function and
@@ -2742,7 +2743,7 @@ it will be computed."
     (let ((visible-ecb-buffers (ecb-get-current-visible-ecb-buffers ecb-window-list)))
       (dolist (elem ecb-autocontrol/sync-fcn-register)
         (when (or (null (cdr elem))
-                  (member (get-buffer (symbol-value (cdr elem)))
+                  (member (ecb-buffer-obj (symbol-value (cdr elem)))
                           visible-ecb-buffers))
           (funcall (car elem) t))))))
 
@@ -2985,21 +2986,6 @@ So never a dedicated window is returned during activated ECB."
         (ad-set-arg 1 nil)))
  )
 
-
-(defun ecb-compile-bug-test ()
-  (interactive)
-  (let ((buffer-save (current-buffer))
-        (tempbuf (get-buffer-create "klausimausi"))
-        (win-list nil))
-    (unwind-protect
-        (progn
-          (set-buffer tempbuf)
-          (message "Klausi-1: curr-buf:%s" (current-buffer))
-          (setq win-list (ecb-canonical-windows-list))
-          ;; (setq win-list (ecb-window-list))
-          (message "Klausi-1: curr-buf:%s" (current-buffer))
-          )
-      (set-buffer buffer-save))))
 
 ;; This advice is the heart of the mechanism which displays all buffer in the
 ;; compile-window if they are are "compilation-buffers" in the sense of
@@ -3656,13 +3642,10 @@ with the following ECB-adjustment: The behavior depends on
   "The ECB-version of `delete-windows-on'. Works exactly like the original
 function with the following ECB-adjustment:
 
-An error is reported if BUFFER is an ECB-tree-buffer. These windows are not
+An error is reported if BUFFER is a special ECB-buffer. These windows are not
 allowed to be deleted."
   (let ((curr-frame (selected-frame))
-        (buf-name (or (and (stringp (ad-get-arg 0))
-                           (ad-get-arg 0))
-                      (and (bufferp (ad-get-arg 0))
-                           (buffer-name (ad-get-arg 0)))))
+        (buf-name (ecb-buffer-name (ad-get-arg 0)))
         (frames (case (ad-get-arg 1)
                   (0 ;; visible or iconified frames
                    (delete nil (mapcar (lambda (f)
@@ -3680,7 +3663,7 @@ allowed to be deleted."
                   (otherwise ;; a certain frame
                        (if (frame-live-p (ad-get-arg 1))
                            (list (ad-get-arg 1)))))))
-    (if (member (get-buffer buf-name) (ecb-get-current-visible-ecb-buffers))
+    (if (member (ecb-buffer-obj buf-name) (ecb-dedicated-special-buffers))
         (if ecb-advice-window-functions-signal-error
             (ecb-error "delete-windows-on is not allowed for the special ECB-buffers!"))
       (dolist (f frames)
@@ -3688,18 +3671,24 @@ allowed to be deleted."
             (progn
               (ad-set-arg 1 f)
               ad-do-it)
-          (when (get-buffer-window buf-name ecb-frame)
-            (select-frame ecb-frame)
-            ;; first we must delete the window
-            (delete-window (get-buffer-window buf-name ecb-frame))
-            ;; to get exactly the same behavior like the original version
-            ;; we must check if the current-buffer in the edit-window is
-            ;; the same as the buffer argument for the current call and if
-            ;; yes we must switch to the buffer returned by `other-buffer'.
-            (if (ecb-string= buf-name
-                             (buffer-name (window-buffer (car (ecb-canonical-edit-windows-list)))))
-                (switch-to-buffer (other-buffer buf-name
-                                                nil ecb-frame)))
+          (unwind-protect
+              (progn
+                (select-frame ecb-frame)
+                (let ((windows-to-delete (delq nil (mapcar (function
+                                                            (lambda (w)
+                                                              (when (string= buf-name
+                                                                             (ecb-buffer-name w))
+                                                                w)))
+                                                           (ecb-canonical-edit-windows-list))))
+;;                       (buffer-to-switch (when (string= buf-name
+;;                                                        (ecb-buffer-name (selected-window)))
+;;                                             (other-buffer buf-name t ecb-frame)))
+                      )
+                  (dolist (w windows-to-delete)
+                    (delete-window w))
+;;                   (when buffer-to-switch
+;;                     (switch-to-buffer buffer-to-switch))
+                  ))
             (select-frame curr-frame)))))))
 
 (defvar ecb-edit-area-creators nil)
@@ -4249,7 +4238,7 @@ If the currently visible ECB-buffers are needed then use the
 function `ecb-get-current-visible-ecb-buffers'. "
   (delq nil (mapcar (function (lambda (e)
                                 (and (nth 3 e)
-                                     (get-buffer (nth 0 e)))))
+                                     (ecb-buffer-obj (nth 0 e)))))
                     ecb-ecb-buffer-registry)))
 
 (defun ecb-get-current-visible-ecb-buffers (&optional ecb-window-list)
@@ -5637,26 +5626,26 @@ contain the buffer before the emergency-redraw."
         ;; fill-up the history new with all buffers if the history buffer was
         ;; not shown before the redisplay but now (means if the layout has
         ;; changed)
-        (when (and (not (member (get-buffer ecb-history-buffer-name)
+        (when (and (not (member (ecb-buffer-obj ecb-history-buffer-name)
                                 ecb-buffers-before-redraw))
-                   (member (get-buffer ecb-history-buffer-name)
+                   (member (ecb-buffer-obj ecb-history-buffer-name)
                            current-ecb-buffers))
           (ecb-add-buffers-to-history-new))
         ;; update the directories buffer if the directories buffer was not
         ;; shown before the redisplay but now (means if the layout has
         ;; changed or - in case of left-right layout - another side is
         ;; visible than before)
-        (when (and (not (member (get-buffer ecb-directories-buffer-name)
+        (when (and (not (member (ecb-buffer-obj ecb-directories-buffer-name)
                                 ecb-buffers-before-redraw))
-                   (member (get-buffer ecb-directories-buffer-name)
+                   (member (ecb-buffer-obj ecb-directories-buffer-name)
                            current-ecb-buffers))
           (ecb-update-directories-buffer))
         ;; deactivate the speedbar stuff if the speedbar-integration-buffer
         ;; was shown before but not now - but only if the layout has been
         ;; changed
-        (when (and (member (get-buffer ecb-speedbar-buffer-name)
+        (when (and (member (ecb-buffer-obj ecb-speedbar-buffer-name)
                            ecb-buffers-before-redraw)
-                   (not (member (get-buffer ecb-speedbar-buffer-name)
+                   (not (member (ecb-buffer-obj ecb-speedbar-buffer-name)
                                 current-ecb-buffers))
                    ;; The following conditions are necessary to ensure the
                    ;; layout has been changed

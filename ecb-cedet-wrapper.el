@@ -1,4 +1,4 @@
-;;; ecb-cedet-wrapper.el -- define wrappers for all semantic funcs/vars
+;;; ecb-cedet-wrapper.el -- define wrappers for all cedet funcs/vars
 
 ;; Copyright (C) 2000 - 2009 Klaus Berndl,
 ;;                           Free Software Foundation, Inc.

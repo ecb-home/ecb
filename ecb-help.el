@@ -311,8 +311,8 @@ a backtrace-buffer and inserts the contents of that."
     (let* ((messages-buffer 
 	    (get-buffer
 	     (if ecb-running-xemacs " *Message-Log*" "*Messages*")))
-	   (backtrace-buffer (get-buffer "*Backtrace*"))
-           (tag-dump-buffer (get-buffer "*ecb-tag-dump*")))
+	   (backtrace-buffer (ecb-buffer-obj "*Backtrace*"))
+           (tag-dump-buffer (ecb-buffer-obj "*ecb-tag-dump*")))
 
       ;;insert the contents of the tag-dump buffer if it is there. 
       (insert "\n\n-----------------------------------------------------\n")

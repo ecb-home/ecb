@@ -2520,13 +2520,13 @@ Returns t if the current history filter has been applied otherwise nil."
                                         ((directory directory-with-source-path)
                                          (ecb-substring-no-properties
                                           (ecb-fix-filename
-                                           (file-name-directory
+                                           (ecb-file-name-directory
                                             (cdr elem)))
                                           (if ecb-running-xemacs 0)))
                                         (mode (symbol-name
-                                               (if (get-buffer (car elem))
+                                               (if (ecb-buffer-obj (car elem))
                                                    (save-excursion
-                                                     (set-buffer (get-buffer (car elem)))
+                                                     (set-buffer (ecb-buffer-obj (car elem)))
                                                      major-mode)
                                                  ;; for dead buffers of the
                                                  ;; history we use auto-mode-alist
@@ -2646,7 +2646,7 @@ Returns t if the current history filter has been applied otherwise nil."
                    ;; `ecb-history-stick-indirect-buffers-to-basebuffer' is not
                    ;; nil --> see above the mechanism how indirect-buffer-base
                    ;; is build
-                   (indirect-buffer-p (buffer-base-buffer (get-buffer buf-name)))
+                   (indirect-buffer-p (buffer-base-buffer (ecb-buffer-obj buf-name)))
                    ;; Note: indirect-buffer elems can not be dead-buffer
                    ;; elems, because indirect-buffer-items are *always*
                    ;; removed immediately from the history-buffer when such a

@@ -281,7 +281,7 @@ case no position saving is done."
   ;; long)?
   (and (ecb-nav-get-file item)
        (or (null (ecb-nav-get-indirect-buffer-name item))
-           (get-buffer (ecb-nav-get-indirect-buffer-name item)))))
+           (ecb-buffer-obj (ecb-nav-get-indirect-buffer-name item)))))
 
 ;;====================================================
 ;; 

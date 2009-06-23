@@ -175,7 +175,7 @@ could slow down dramatically!"
   "Name of the ECB speedbar buffer.")
 
 (defun ecb-speedbar-buffer-selected ()
-  (equal (current-buffer) (get-buffer ecb-speedbar-buffer-name)))
+  (equal (current-buffer) (ecb-buffer-obj ecb-speedbar-buffer-name)))
 
 (defecb-advice speedbar-click around ecb-speedbar-adviced-functions
   "Makes the function compatible with ECB. If ECB is active and the window of
@@ -397,7 +397,7 @@ future this could break."
 
 (defun ecb-speedbar-active-p ()
   "Return not nil if speedbar is active and integrated in the `ecb-frame'."
-  (and (get-buffer ecb-speedbar-buffer-name)
+  (and (ecb-buffer-obj ecb-speedbar-buffer-name)
        (get-buffer-window (get-buffer ecb-speedbar-buffer-name) ecb-frame)))
 
 (defun ecb-speedbar-update-contents ()

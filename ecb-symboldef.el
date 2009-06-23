@@ -112,12 +112,17 @@ cons-cells:
   The function can either return nil or a string which will be integrated in
   the modeline-display of this ecb-window.
 
-There are two prefined functions `ecb-symboldef-find-lisp-doc' and
-`ecb-symboldef-find-definition' whereas the latter on is used a default
+There are two predefined functions `ecb-symboldef-find-lisp-doc' and
+`ecb-symboldef-find-definition' whereas the latter one is used as a default
 find-function."
   :group 'ecb-symboldef
   :type '(repeat (cons (symbol :tag "Major-mode")
                        (function :tag "Find function"))))
+
+(defcustom ecb-symboldef-minimum-symbol-length 3
+  "*Minimum length a symbol must have so its definition or doc is displayed."
+  :group 'ecb-symboldef
+  :type 'integer)
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: This option is an example how the
 ;; user could determine which backends should be used for finding a definition
@@ -225,11 +230,6 @@ Only prints mode and info but does not find any symbol-definition."
     (insert  "*  No symbol definition function for current mode *\n"
              "*  See variable `ecb-symboldef-find-functions' *")))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: check if the folliwng can be
-;; replaced by using semantic-documentation-for-tag (and the elisp overide
-;; semantic-documentation-for-tag-emacs-lisp-mode or semantic-ia-show-doc or a
-;; combination !!
-
 ;; currently not used 
 (defun ecb-symboldef-get-doc-for-fsymbol (fsymbol)
   "Use `describe-function-1' to get the doc-string for FSYMBOL."
@@ -249,11 +249,12 @@ Only prints mode and info but does not find any symbol-definition."
   "Insert the lisp-documentation of symbol with name SYMBOL-NAME."
   (setq truncate-lines nil)
   (let ((symbol (intern symbol-name))
+        (fsymbol-p nil)
+        (begin-vdoc (point-min))
         (retval nil)
         (args nil))
-    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: handle the case if a symbol
-    ;; is a var AND a function!
     (when (fboundp symbol)
+      (setq fsymbol-p t)
       (unless ecb-running-xemacs
         ;; With XEmacs the symbol itself is already contained in the
         ;; docstring describe-function-1 returns - with Emacs we must add it
@@ -289,12 +290,17 @@ Only prints mode and info but does not find any symbol-definition."
                'font-lock-function-name-face
              ecb-symboldef-symbol-face)
            (1+ beg)
-           (match-end 0))))        
+           (match-end 0))))
+      (goto-char (point-max))
+      ;; we needs this later if the symbol is not only a function but a
+      ;; variable too!
+      (setq begin-vdoc (point))
       (setq retval (format "Lisp %s"
                            (if (commandp symbol)
                                "Command"
                              "Function"))))
     (when (boundp symbol)
+      (when fsymbol-p (insert "\n\n___________\n\n"))
       (insert (format "%s is a %s\n\n%s\n\nValue: %s\n\n" symbol
                       (if (user-variable-p symbol)
                           "Option " "Variable")
@@ -304,7 +310,7 @@ Only prints mode and info but does not find any symbol-definition."
                       (symbol-value symbol)))
       (let ((beg nil)
             (end nil))
-        (goto-char (point-min))
+        (goto-char begin-vdoc)
         (when (and ecb-symboldef-symbol-face
                    (re-search-forward (regexp-quote symbol-name) nil t))
           (setq beg (match-beginning 0))
@@ -316,6 +322,7 @@ Only prints mode and info but does not find any symbol-definition."
            beg end)
           (goto-char end)))
       (setq retval "Lisp Variable"))
+    (goto-char (point-min))
     (fill-region (point-min) (point-max) 'left)
     retval))
 
@@ -406,19 +413,12 @@ symbol. Displays the found text in the buffer of
   (save-excursion
     (let ((modeline-display nil)
           (edit-buffer (current-buffer))
-          (current-symbol
-           ;; check if point is not at start, since
-           ;; buggy thingatpt yields error then:
-           ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: i can not believe this
-           (if (> (point) (point-min))
-               (ecb-thing-at-point 'symbol)
-             nil))
+          (current-symbol (ignore-errors (ecb-thing-at-point 'symbol)))
           ;; find tag search function according to mode:
           (find-func (ecb-symboldef-get-find-function)))
-      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: make an option for this
-      ;; min-length 
       ;; only use tags with a minimal length:
-      (setq current-symbol (if (> (length current-symbol) 3)
+      (setq current-symbol (if (>= (length current-symbol)
+                                   ecb-symboldef-minimum-symbol-length)
                                current-symbol))
       ;; buggy thingatpt returns whole buffer if on empty line:
       (setq current-symbol (if (< (length current-symbol) 80)
