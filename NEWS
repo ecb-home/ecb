@@ -1,6 +1,8 @@
 * Changes for ECB version 2.40.1
 
-TODO: Klaus Berndl <klaus.berndl@sdm.de>: add this to the texi
+** The special symboldef ECB-window is now stable and ready for usage
+
+*** TODO
 
 ** ECB now uses the partial reparse feature of semantic
 
@@ -56,6 +58,9 @@ TODO: Klaus Berndl <klaus.berndl@sdm.de>: add this to the texi
    This is only relevant for people who program own special ecb-windows.
    
 ** Fixed Bugs
+
+*** Command `delete-windows-on' has only deleted one window
+    Now this command works also with ECB as expected.
 
 *** Fixed a bug which prevents the ecb-windows from being vertically resizeable
     This bug occured only when using Gnu Emacs.
