@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.160 2009/06/21 08:08:14 berndl Exp $
+;; $Id: ecb-util.el,v 1.161 2009/06/23 11:16:56 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1704,18 +1704,25 @@ or a buffer-object."
     (if (file-exists-p exp-file)
         (delete-file exp-file))))
 
-(defun ecb-buffer-name (buffer-or-name)
-  "Return the buffer-name of BUFFER-OR-NAME."
-  (typecase buffer-or-name
-    (string buffer-or-name)
-    (buffer (buffer-name buffer-or-name))
+(defun ecb-buffer-name (buffer-or-window)
+  "Return the buffer-name of BUFFER-OR-WINDOW.
+BUFFER-OR-WINDOW can be a buffer-name, a buffer or a window. If a
+window then the name of the buffer curently displayed in this
+window is returned."
+  (typecase buffer-or-window
+    (string buffer-or-window)
+    (buffer (buffer-name buffer-or-window))
+    (window (buffer-name (window-buffer buffer-or-window)))
     (otherwise nil)))
 
-(defun ecb-buffer-obj (buffer-or-name)
-  "Return the buffer-object of BUFFER-OR-NAME."
-  (typecase buffer-or-name
-    (string (get-buffer buffer-or-name))
-    (buffer buffer-or-name)
+(defun ecb-buffer-obj (buffer-or-window)
+  "Return the buffer-object of BUFFER-OR-WINDOW.
+BUFFER-OR-WINDOW can be a buffer-name, a buffer or a window.
+If a window then the buffer curently displayed in this window is returned."
+  (typecase buffer-or-window
+    (string (get-buffer buffer-or-window))
+    (buffer buffer-or-window)
+    (window (window-buffer buffer-or-window))
     (otherwise nil)))
 
 (defun ecb-buffer-local-value (sym buffer)

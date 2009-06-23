@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.74 2009/06/04 08:38:15 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.75 2009/06/23 11:16:56 berndl Exp $
 
 ;;; Commentary:
 
@@ -175,7 +175,7 @@ could slow down dramatically!"
   "Name of the ECB speedbar buffer.")
 
 (defun ecb-speedbar-buffer-selected ()
-  (equal (current-buffer) (get-buffer ecb-speedbar-buffer-name)))
+  (equal (current-buffer) (ecb-buffer-obj ecb-speedbar-buffer-name)))
 
 (defecb-advice speedbar-click around ecb-speedbar-adviced-functions
   "Makes the function compatible with ECB. If ECB is active and the window of
@@ -397,7 +397,7 @@ future this could break."
 
 (defun ecb-speedbar-active-p ()
   "Return not nil if speedbar is active and integrated in the `ecb-frame'."
-  (and (get-buffer ecb-speedbar-buffer-name)
+  (and (ecb-buffer-obj ecb-speedbar-buffer-name)
        (get-buffer-window (get-buffer ecb-speedbar-buffer-name) ecb-frame)))
 
 (defun ecb-speedbar-update-contents ()

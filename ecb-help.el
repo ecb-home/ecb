@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.120 2009/06/09 10:39:47 berndl Exp $
+;; $Id: ecb-help.el,v 1.121 2009/06/23 11:16:56 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -311,8 +311,8 @@ a backtrace-buffer and inserts the contents of that."
     (let* ((messages-buffer 
 	    (get-buffer
 	     (if ecb-running-xemacs " *Message-Log*" "*Messages*")))
-	   (backtrace-buffer (get-buffer "*Backtrace*"))
-           (tag-dump-buffer (get-buffer "*ecb-tag-dump*")))
+	   (backtrace-buffer (ecb-buffer-obj "*Backtrace*"))
+           (tag-dump-buffer (ecb-buffer-obj "*ecb-tag-dump*")))
 
       ;;insert the contents of the tag-dump buffer if it is there. 
       (insert "\n\n-----------------------------------------------------\n")

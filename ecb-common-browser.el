@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.41 2009/06/09 10:39:47 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.42 2009/06/23 11:16:56 berndl Exp $
 
 
 ;;; History
@@ -985,8 +985,7 @@ existing ans readable file this means the file is loaded into a buffer.
 Note: The buffer is just returned but not displayed."
   (let* ((my-source (if (consp source) source (cons source nil)))
          (filename (car my-source))
-         (buffer (and (cdr my-source)
-                      (get-buffer (cdr my-source)))))
+         (buffer (ecb-buffer-obj (cdr my-source))))
     (or buffer
         (find-file-noselect filename))))
 
@@ -1149,7 +1148,7 @@ See `defecb-window-dedicator-to-ecb-buffer' for more details and an example.")
   (delq nil (mapcar (function (lambda (e)
                                 (and (or (not only-tree-buffers)
                                          (nth 2 e))
-                                     (get-buffer (nth 0 e)))))
+                                     (ecb-buffer-obj (nth 0 e)))))
                     ecb-ecb-buffer-registry)))
   
 (defsubst ecb-ecb-buffer-registry-get-symbol (name)

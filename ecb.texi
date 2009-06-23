@@ -23,7 +23,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.230 2009/06/09 10:39:46 berndl Exp $
+@c $Id: ecb.texi,v 1.231 2009/06/23 11:16:55 berndl Exp $
 
 @setfilename ecb.info
 
@@ -255,7 +255,7 @@ Working with the keyboard in the ECB-windows
 * Personal tree-keybindings::   Adding personal keybindings to a tree-buffer
 * Using popup-menus::           Using the popup-menus from keyboard.
 
-Using and customizing the ECB-Methods buffer
+Using and customizing the ECB-Methods window
 
 * Visiting tags::               Possible actions after visiting a tag
 * Expanding::                   Explicit and automatic expanding
@@ -305,6 +305,7 @@ All customizable options of ECB
 * ecb-methods::                 Customizing the ECB-methods-window
 * ecb-history::                 Customizing the ECB-history-window
 * ecb-analyse::                 Customizing the ECB-analyse-window
+* ecb-symboldef::               Customizing the ECB-symboldef-window
 * ecb-layout::                  Customizing the ECB-layout
 * ecb-compilation::             Customizing the compile-window
 * ecb-create-layout::           Customizing options for creating layouts
@@ -3632,9 +3633,9 @@ special symbol 'default (if any).
 ECB offers some predefined senseful finding-functions. Currently there are:
 
 @itemize @minus
-@item @code{ecb-search-tag-by-semantic-analyzer}: The most powerfil one, based
+@item @code{ecb-search-type-tag-by-semantic-analyzer}: The most powerfil one, based
 on the semantic-analyzer
-@item @code{ecb-search-tag-by-semanticdb}: A backup for the first one
+@item @code{ecb-search-type-tag-by-semanticdb}: A backup for the first one
 @item @code{ecb-jde-show-class-source}: For major-mode @code{jde-mode} when
 coding in java, uses java-mechanisms - maybe for java the best choice.
 @end itemize
@@ -6302,6 +6303,7 @@ been done for a better readable option index. @xref{Option Index}.
 * ecb-methods::                 Customizing the ECB-methods-window
 * ecb-history::                 Customizing the ECB-history-window
 * ecb-analyse::                 Customizing the ECB-analyse-window
+* ecb-symboldef::               Customizing the ECB-symboldef-window
 * ecb-layout::                  Customizing the ECB-layout
 * ecb-compilation::             Customizing the compile-window
 * ecb-create-layout::           Customizing options for creating layouts
@@ -7966,8 +7968,8 @@ ECB first performs all find-functions defined for current @code{major-mode}
 
 ECB offers some predefined senseful finding-functions. Currently there are:
 @itemize
-@item @code{ecb-search-tag-by-semantic-analyzer} (most powerful)
-@item @code{ecb-search-tag-by-semanticdb}
+@item @code{ecb-search-type-tag-by-semantic-analyzer} (most powerful)
+@item @code{ecb-search-type-tag-by-semanticdb}
 @item @code{ecb-jde-show-class-source} (for major-mode @code{jde-mode} when
 coding in java)
 @end itemize
@@ -8779,7 +8781,7 @@ Asks, if the history-entry should be removed after the kill.
 @end itemize
 @end defopt
 
-@node ecb-analyse, ecb-layout, ecb-history, Customizable options
+@node ecb-analyse, ecb-symboldef, ecb-history, Customizable options
 @subsection Group ecb-analyse
 
 @defopt analyse-bucket-element-face
@@ -9010,7 +9012,116 @@ is echo-area-display.
 See also @code{ecb-analyse-gen-tag-info-fn}.
 @end defopt
 
-@node ecb-layout, ecb-compilation, ecb-analyse, Customizable options
+@node ecb-symboldef, ecb-layout, ecb-analyse, Customizable options
+@subsection Group ecb-analyse
+
+@defopt symboldef-buffer-name
+Name of the ECB-symbol-definition buffer.
+Because it is not a normal buffer for editing you should enclose the name with
+stars, e.g. ``*ECB Symboldefinition*''.
+
+If it is necessary for you you can get emacs-lisp access to the buffer-object
+of the ECB-symbol-definition-buffer by this name, e.g. by a call of
+@code{set-buffer}.
+
+Changes for this option at runtime will take affect only after deactivating and
+then activating ECB again!
+@end defopt
+
+@defopt symboldef-buffer-sync
+Synchronize the symboldef buffer automatically with current edit buffer.
+
+If @code{always} then the synchronization takes place always a buffer changes in the
+edit window, if nil then never. If a list of major-modes then only if the
+@code{major-mode} of the new buffer belongs NOT to this list.
+
+If the special value @code{basic} is set then ECB uses the setting of the option
+@code{ecb-basic-buffer-sync}.
+
+IMPORTANT NOTE: Every time the synchronization is done the hook
+@code{ecb-symboldef-buffer-sync-hook} is evaluated.
+@end defopt
+
+@defopt symboldef-buffer-sync-delay
+Time Emacs must be idle before the symboldef-buffer is synchronized.
+Synchronizing is done with the current source displayed in the edit window. If
+nil then there is no delay, means synchronization takes place immediately. A
+small value of about 0.25 seconds saves CPU resources and you get even though
+almost the same effect as if you set no delay.
+
+If the special value 'basic is set then ECB uses the setting of the option
+@code{ecb-basic-buffer-sync-delay}.
+@end defopt
+
+@defopt symboldef-buffer-sync-hook
+ook run at the end of the function @code{ecb-symboldef-buffer-sync}.
+See documentation of @code{ecb-symboldef-buffer-sync} for conditions when
+synchronization takes place and so in turn these hooks are evaluated.
+
+Preconditions for such a hook:
+
+@itemize
+@item Current buffer is the buffer of the currently selected edit-window.
+@item The symboldef-buffer is displayed in a visible window of the
+ecb-frame (so no check for visibilty of the symboldef-buffer in
+the ecb-frame is necessary in a hook function)
+@end itemize
+
+Postcondition for such a hook:
+Point must stay in the same edit-window as before evaluating the hook.
+
+Important note: If the option @code{ecb-symboldef-buffer-sync} is not
+nil the function @code{ecb-symboldef-buffer-sync} is running either
+every time Emacs is idle or even after every command (see
+@code{ecb-symboldef-buffer-sync-delay}). So if the symboldef-buffer is
+displayed in a window of the ecb-frame (see preconditions above)
+these hooks can be really called very often! Therefore each
+function of this hook should/must check in an efficient way at
+beginning if its task have to be really performed and then do
+them only if really necessary! Otherwise performance of Emacs
+could slow down dramatically!
+@end defopt
+
+@defopt symboldef-find-functions
+Funtions to find the definition for current symbol under point.
+This functionality is set on a major-mode base, i.e. for every major-mode a
+different setting can be used. The value of this option is a list of
+cons-cells:
+
+@itemize
+
+@item
+The car is either a major-mode symbol or the special symbol 'default which
+means if no setting for a certain major-mode is defined then the cdr of
+the 'default cons-cell is used.
+
+@item
+The car is a function intended to find the definition of a certain symbol for
+files of this major-mode. Such a function will be called with two arguments,
+the first is the symbol-name as string for which the definition should be
+displayed and the second the current edit-buffer as buffer-object,
+i.e. the current buffer of the current edit-window. The function will be
+called with the special ecb-symbol-definition-buffer as current buffer
+whereas this buffer is empty. The function has to insert everything
+necessary to display the symbol-definition and is also responsible to format
+the displayed text. The buffer-local variable @code{fill-column is already preset
+to the window-width of the special ecb-window minus 1. The function is
+responsible to set the buffer-local variable `truncate-lines} appropriate.
+The function can either return nil or a string which will be integrated in
+the modeline-display of this ecb-window.
+@end itemize
+
+There are two prefined functions @code{ecb-symboldef-find-lisp-doc} and
+@code{ecb-symboldef-find-definition} whereas the latter on is used a default
+find-function.
+@end defopt
+
+@defopt symboldef-minimum-symbol-length
+Minimum length a symbol must have so its definition or doc is displayed.
+@end defopt
+
+
+@node ecb-layout, ecb-compilation, ecb-symboldef, Customizable options
 @subsection Group ecb-layout
 
 @noindent
@@ -9995,6 +10106,23 @@ Changes take first effect after finishing and reactivating ECB!
 Face for read-only sources.
 @end defopt
 
+@defopt symboldef-prototype-face
+Which face should be used for the symbol prototype in the symboldef-buffer.
+
+The prototype can be the function prototype in case of a function or method or
+- in case of a variable - the type of the variable (in case of a typed
+language).
+@end defopt
+
+@defopt symboldef-symbol-face
+Which face should be used for the symbol itself in the symboldef-buffer.
+
+There are two choices: Either a face or the special symbol 'use-font-lock-face
+whereas the latter one means that ECB uses that face font-lock uses for
+fontifying the symbol (e.g. font-lock-function-name-face for a function
+symbol or font-lock-variable-name-face for a variable symbol).
+@end defopt
+
 @defopt tag-header-face
 Face used for highlighting the tag header after jumping to it by
 clicking onto a node in the methods buffer.
@@ -10128,6 +10256,10 @@ Define face for the data in the mode-line. See
 Define face for the prefix in the mode-line. See
 @code{ecb-mode-line-prefixes}.
 
+@item ecb-mode-line-win-nr-face
+Define face for the window-number in the mode-line. See
+@code{ecb-mode-line-display-window-number}.
+
 @item ecb-source-face:
 Define face used for highlighting current source in the sources
 buffer.
@@ -10141,6 +10273,12 @@ the font-family, the font-size, the basic color etc.
 
 @item ecb-source-read-only-face
 Define a face for read-only sources
+
+@item ecb-symboldef-prototype-face
+Define face used for the prototype of symbol in the symboldef-buffer.
+
+@item ecb-symboldef-symbol-face
+Define a face used for the symbol itself in the symboldef-buffer
 
 @item ecb-tag-header-face:
 Define face used for highlighting the tag header after jumping to it
@@ -10170,10 +10308,6 @@ Define face used with option @code{ecb-type-tag-display}.
 
 @item ecb-type-tag-union-face:
 Define face used with option @code{ecb-type-tag-display}.
-
-@item ecb-mode-line-win-nr-face
-Define face for the window-number in the mode-line. See
-@code{ecb-mode-line-display-window-number}.
 
 @end table
 

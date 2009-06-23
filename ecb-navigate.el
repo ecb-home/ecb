@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-navigate.el,v 1.23 2009/04/15 14:22:35 berndl Exp $
+;; $Id: ecb-navigate.el,v 1.24 2009/06/23 11:16:56 berndl Exp $
 
 ;;; Commentary:
 
@@ -281,7 +281,7 @@ case no position saving is done."
   ;; long)?
   (and (ecb-nav-get-file item)
        (or (null (ecb-nav-get-indirect-buffer-name item))
-           (get-buffer (ecb-nav-get-indirect-buffer-name item)))))
+           (ecb-buffer-obj (ecb-nav-get-indirect-buffer-name item)))))
 
 ;;====================================================
 ;; 

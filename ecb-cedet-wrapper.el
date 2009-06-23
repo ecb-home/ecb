@@ -1,4 +1,4 @@
-;;; ecb-cedet-wrapper.el -- define wrappers for all semantic funcs/vars
+;;; ecb-cedet-wrapper.el -- define wrappers for all cedet funcs/vars
 
 ;; Copyright (C) 2000 - 2009 Klaus Berndl,
 ;;                           Free Software Foundation, Inc.
@@ -21,7 +21,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-cedet-wrapper.el,v 1.3 2009/06/04 08:38:15 berndl Exp $
+;; $Id: ecb-cedet-wrapper.el,v 1.4 2009/06/23 11:16:56 berndl Exp $
 
 ;;; Commentary:
 
