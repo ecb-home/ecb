@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.42 2009/06/23 11:16:56 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.43 2009/06/24 14:13:41 berndl Exp $
 
 
 ;;; History
@@ -936,7 +936,11 @@ Example:
 (put 'ecb-with-original-adviced-function-set 'lisp-indent-function 1)
 
 
-
+;; !!!!!!!!!!!!!!!! Caution !!!!!!!!!!!!!!!!!!!!!!!!!!
+;; when editing that file which defines such an advice and then saving and
+;; byte-compiling this file then this reactivates this advice - just a hint -
+;; should be not a problem for ECB because the users should not edit the
+;; ecb-code ;-) But we should have this in mind!!!!!!!!!!!!!!!!!!!!!!!
 (defecb-advice-set ecb-always-disabled-advices
   "These advices are always disabled.
 This advice-set can not be enabled by `ecb-enable-advices' but such an

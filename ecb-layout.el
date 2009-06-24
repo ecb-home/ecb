@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.283 2009/06/23 11:16:56 berndl Exp $
+;; $Id: ecb-layout.el,v 1.284 2009/06/24 14:13:40 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -4134,6 +4134,7 @@ Otherwise it depends completely on the setting in `ecb-other-window-behavior'."
                                            nil
                                          o-w-s-b)))
       ad-do-it)))
+
 
 (defecb-advice walk-windows around ecb-always-disabled-advices
   "Walk only through the edit-windows of ECB. When ECB is not active or
