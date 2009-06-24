@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-symboldef.el,v 1.14 2009/06/24 17:26:42 berndl Exp $
+;; $Id: ecb-symboldef.el,v 1.15 2009/06/24 17:49:53 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -258,30 +258,13 @@ Only prints mode and info but does not find any symbol-definition."
 ;; doc in a help-window, so we have to redirect the output. Possible but
 ;; there is something to do:
 ;; 0. making edit-buffer (s. arg) current
-;; 1. For Emacs: advicing help-buffer as always disabled advice so it
-;;    returns a buffer which is suitable for us.
-;;    For XEmacs advicing help-buffer-name analogous
+;; 1. For Emacs: redefining help-buffer so it returns a buffer which is
+;;    suitable for us. For XEmacs help-buffer-name analogous
 ;; 2. For (X)Emacs: Setting temp-buffer-show-function temporally to
 ;;    something special which does simply nothing
 ;; 3. setting temp-buffer-setup-hook to nil
 ;; 3. Binding standart-output to a temporally buffer-object
 ;; 4. running describe-function
-
-(when-ecb-running-emacs
- (defecb-advice help-buffer around ecb-always-disabled-advices
-   "When adviced it always returns `ecb-symboldef-temp-buffer-name'."
-   (setq ad-return-value ecb-symboldef-temp-buffer-name))
-
- (defecb-advice print-help-return-message around ecb-always-disabled-advices
-   "When adviced it simply does nothing."
-   nil)
-)
-
-(when-ecb-running-xemacs
- (defecb-advice help-buffer-name around ecb-always-disabled-advices
-   "When adviced it always returns `ecb-symboldef-temp-buffer-name'."
-   (setq ad-return-value ecb-symboldef-temp-buffer-name))
- )
 
 (defun ecb-symboldef-get-doc-for-vsymbol (vsymbol edit-buffer)
   "Returns the full output of `describe-variable' as string."
@@ -289,17 +272,17 @@ Only prints mode and info but does not find any symbol-definition."
     (set-buffer edit-buffer)
     (let ((standard-output (get-buffer-create ecb-symboldef-temp-buffer-name))
           (temp-buffer-setup-hook nil)
+          ;; this does not call temp-buffer-show-hook!!!
           (temp-buffer-show-function (function (lambda (b) nil))))
-      (if ecb-running-xemacs
-          (ecb-with-ecb-advice 'help-buffer-name 'around
-            (describe-variable vsymbol))
-        (ecb-with-ecb-advice 'help-buffer 'around
-          (ecb-with-ecb-advice 'print-help-return-message 'around
-            (describe-variable vsymbol))))))
+      (flet ((help-buffer () ecb-symboldef-temp-buffer-name)
+             (print-help-return-message (&optional function) nil)
+             ;; for XEmacs
+             (help-buffer-name () ecb-symboldef-temp-buffer-name))
+        (describe-variable vsymbol))
+      ))
   (save-excursion
     (set-buffer ecb-symboldef-temp-buffer-name)
-    (when (member 'eieio-help-mode-augmentation-maybee
-                  temp-buffer-show-hook)
+    (when (member 'eieio-help-mode-augmentation-maybee temp-buffer-show-hook)
       (let ((major-mode 'help-mode))
         (eieio-help-mode-augmentation-maybee)))
     (buffer-string))
