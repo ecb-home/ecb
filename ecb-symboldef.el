@@ -298,6 +298,10 @@ Only prints mode and info but does not find any symbol-definition."
             (describe-variable vsymbol))))))
   (save-excursion
     (set-buffer ecb-symboldef-temp-buffer-name)
+    (when (member 'eieio-help-mode-augmentation-maybee
+                  temp-buffer-show-hook)
+      (let ((major-mode 'help-mode))
+        (eieio-help-mode-augmentation-maybee)))
     (buffer-string))
   )
     
