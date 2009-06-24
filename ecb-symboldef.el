@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-symboldef.el,v 1.13 2009/06/24 14:13:40 berndl Exp $
+;; $Id: ecb-symboldef.el,v 1.14 2009/06/24 17:26:42 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -298,6 +298,10 @@ Only prints mode and info but does not find any symbol-definition."
             (describe-variable vsymbol))))))
   (save-excursion
     (set-buffer ecb-symboldef-temp-buffer-name)
+    (when (member 'eieio-help-mode-augmentation-maybee
+                  temp-buffer-show-hook)
+      (let ((major-mode 'help-mode))
+        (eieio-help-mode-augmentation-maybee)))
     (buffer-string))
   )
     
