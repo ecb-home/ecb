@@ -75,7 +75,7 @@ edit-window. Does nothing if called in another frame as the `ecb-frame'."
 
 
 (defecb-advice one-window-p around ecb-always-disabled-advices
-  "If called for the `ecb-frame' is only returns not nil if there is exactly
+  "If called for the `ecb-frame' it only returns not nil if there is exactly
 one edit-window. Neither the ecb-windows nor the compile-window nor the
 minibuffer-window are considered. This adviced version of `one-window-p' is
 not for direct usage therefore it's added to `ecb-always-disabled-advices' and
@@ -166,22 +166,6 @@ BUFFER is displayed in an edit-window!"
 
 ;; package scroll-all.el --------------------------------------------------
 
-
-(defecb-advice count-windows around ecb-always-disabled-advices
-  "If the selected frame is the ecb-frame and `scroll-all-mode' is not nil
-then return the current number of edit-windows if point is in an edit-window
-and always return 1 if point is not in an edit-window. In any other frame or
-if `scroll-all-mode' is nil return the number of visible windows."
-  (if (and (equal (selected-frame) ecb-frame)
-           ecb-minor-mode
-           (boundp 'scroll-all-mode)
-           scroll-all-mode)
-      (setq ad-return-value (if (ecb-point-in-edit-window-number)
-                                (length (ecb-canonical-edit-windows-list))
-                              1))
-    (ecb-with-original-basic-functions
-     ad-do-it)))
-
 (defecb-advice scroll-all-function-all around ecb-compatibility-advices
   "Make it compatible with ECB."
   (if (or (not ecb-minor-mode)
@@ -189,7 +173,12 @@ if `scroll-all-mode' is nil return the number of visible windows."
       (ecb-with-original-basic-functions ad-do-it)
     (let (;; This runs the `other-window'-calls in the body in the right mode
           (ecb-other-window-behavior 'only-edit))
-      (ecb-with-ecb-advice 'count-windows 'around
+      ;; return the current number of edit-windows if point is in an edit-window
+      ;; and always return 1 if point is not in an edit-window.
+      (flet ((count-windows (&optional minibuf)
+                            (if (ecb-point-in-edit-window-number)
+                                (length (ecb-canonical-edit-windows-list))
+                              1)))
         ad-do-it))))
 
 
