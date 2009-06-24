@@ -4135,6 +4135,7 @@ Otherwise it depends completely on the setting in `ecb-other-window-behavior'."
                                          o-w-s-b)))
       ad-do-it)))
 
+
 (defecb-advice walk-windows around ecb-always-disabled-advices
   "Walk only through the edit-windows of ECB. When ECB is not active or
 called for other frames than for the `ecb-frame' then act like the original.

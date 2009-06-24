@@ -1,4 +1,4 @@
-;;; ecb-symboldef.el --- ECB window for symbol-definitions
+;;; ecb-symboldef.el --- ECB window for symbol-definition or documentation
 
 ;;; Copyright (C) 2005 Hauke Jans
 
@@ -26,15 +26,16 @@
 
 ;;; Commentary:
 ;;
-;; Define an ecb-buffer which shows in a special ecb buffer the semantic
-;; context of the definition of a current symbol under point.
+;; Define an ecb-buffer which shows in a special ecb window either the
+;; documentation or the context of the definition of the current symbol
+;; under point.
 ;;
 
 ;;; Usage
 ;;
 ;; Either use the layout "left-symboldef" (e.g. via [C-c . l c]) or create a
 ;; new ecb-layout via the command `ecb-create-new-layout' and add a buffer of
-;; type "other" and name "symboldef" into this new layout.
+;; type "symboldef" into this new layout.
 
 ;;; History
 ;;
@@ -53,8 +54,6 @@
   (require 'silentcomp))
 
 ;; XEmacs-stuff
-(silentcomp-defun function-arglist)
-(silentcomp-defun function-documentation)
 (silentcomp-defun find-tag-internal)
 ;; Emacs stuff
 (silentcomp-defun find-tag-noselect)
@@ -91,26 +90,30 @@ then activating ECB again!"
     (lisp-mode . ecb-symboldef-find-lisp-doc)
     (emacs-lisp-mode . ecb-symboldef-find-lisp-doc)
     (default . ecb-symboldef-find-definition))
-    "*Funtions to find the definition for current symbol under point.
+  "*Funtions to find the definition or docu for symbol under point.
 This functionality is set on a major-mode base, i.e. for every major-mode a
 different setting can be used. The value of this option is a list of
 cons-cells:
 - The car is either a major-mode symbol or the special symbol 'default which
   means if no setting for a certain major-mode is defined then the cdr of
   the 'default cons-cell is used.
-- The car is a function intended to find the definition of a certain symbol
-  for files of this major-mode. Such a function will be called with two
-  arguments, the first is the symbol-name as string for which the definition
-  should be displayed and the second the current edit-buffer as buffer-object,
-  i.e. the current buffer of the current edit-window. The function will be
-  called with the special ecb-symbol-definition-buffer as current buffer
-  whereas this buffer is empty. The function has to insert everything
-  necessary to display the symbol-definition and is also responsible to format
-  the displayed text. The buffer-local variable `fill-column is already preset
-  to the window-width of the special ecb-window minus 1. The function is
-  responsible to set the buffer-local variable `truncate-lines' appropriate.
-  The function can either return nil or a string which will be integrated in
-  the modeline-display of this ecb-window.
+- The car is a function intended to find the definition of a
+  certain symbol for files of this major-mode. Such a function
+  will be called with two arguments, the first is the symbol-name
+  as string for which the definition or documentation should be
+  displayed and the second the current edit-buffer as
+  buffer-object, i.e. the current buffer of the current
+  edit-window. The function will be called with the special
+  ecb-symbol-definition-buffer as current buffer whereas this
+  buffer is empty. The function has to insert everything
+  necessary to display the symbol-definition or -documentation
+  and is also responsible to format the displayed text. The
+  buffer-local variable `fill-column is already preset to the
+  window-width of the special ecb-window minus 1. The function is
+  responsible to set the buffer-local variable `truncate-lines'
+  appropriate. The function can either return nil or a \(small) string
+  which will be integrated in the modeline-display of this
+  ecb-window.
 
 There are two predefined functions `ecb-symboldef-find-lisp-doc' and
 `ecb-symboldef-find-definition' whereas the latter one is used as a default
@@ -230,12 +233,16 @@ Only prints mode and info but does not find any symbol-definition."
     (insert  "*  No symbol definition function for current mode *\n"
              "*  See variable `ecb-symboldef-find-functions' *")))
 
+;; --------------- code for finding the elisp docu -----------------------------
+
+(defconst ecb-symboldef-temp-buffer-name " *ecb-symboldef-temp-buffer")
+
 ;; currently not used 
-(defun ecb-symboldef-get-doc-for-fsymbol (fsymbol)
+(defun ecb-symboldef-get-doc-for-fsymbol (fsymbol edit-buffer)
   "Use `describe-function-1' to get the doc-string for FSYMBOL."
   ;; by binding standard-output to a special buffer we can force
   ;; describe-function-1 to print all its output to this buffer. 
-  (let ((standard-output (get-buffer-create " *ECB-tmp-descr-function*"))
+  (let ((standard-output (get-buffer-create ecb-symboldef-temp-buffer-name))
         (doc-string nil))
     (save-excursion
       (set-buffer standard-output)
@@ -245,6 +252,55 @@ Only prints mode and info but does not find any symbol-definition."
     (kill-buffer standard-output)
     doc-string))
 
+
+;; Klaus Berndl <klaus.berndl@sdm.de>: It would be good if we could
+;; use the describe-variable output. Problem: This function displays the
+;; doc in a help-window, so we have to redirect the output. Possible but
+;; there is something to do:
+;; 0. making edit-buffer (s. arg) current
+;; 1. For Emacs: advicing help-buffer as always disabled advice so it
+;;    returns a buffer which is suitable for us.
+;;    For XEmacs advicing help-buffer-name analogous
+;; 2. For (X)Emacs: Setting temp-buffer-show-function temporally to
+;;    something special which does simply nothing
+;; 3. setting temp-buffer-setup-hook to nil
+;; 3. Binding standart-output to a temporally buffer-object
+;; 4. running describe-function
+
+(when-ecb-running-emacs
+ (defecb-advice help-buffer around ecb-always-disabled-advices
+   "When adviced it always returns `ecb-symboldef-temp-buffer-name'."
+   (setq ad-return-value ecb-symboldef-temp-buffer-name))
+
+ (defecb-advice print-help-return-message around ecb-always-disabled-advices
+   "When adviced it simply does nothing."
+   nil)
+)
+
+(when-ecb-running-xemacs
+ (defecb-advice help-buffer-name around ecb-always-disabled-advices
+   "When adviced it always returns `ecb-symboldef-temp-buffer-name'."
+   (setq ad-return-value ecb-symboldef-temp-buffer-name))
+ )
+
+(defun ecb-symboldef-get-doc-for-vsymbol (vsymbol edit-buffer)
+  "Returns the full output of `describe-variable' as string."
+  (save-excursion
+    (set-buffer edit-buffer)
+    (let ((standard-output (get-buffer-create ecb-symboldef-temp-buffer-name))
+          (temp-buffer-setup-hook nil)
+          (temp-buffer-show-function (function (lambda (b) nil))))
+      (if ecb-running-xemacs
+          (ecb-with-ecb-advice 'help-buffer-name 'around
+            (describe-variable vsymbol))
+        (ecb-with-ecb-advice 'help-buffer 'around
+          (ecb-with-ecb-advice 'print-help-return-message 'around
+            (describe-variable vsymbol))))))
+  (save-excursion
+    (set-buffer ecb-symboldef-temp-buffer-name)
+    (buffer-string))
+  )
+    
 (defun ecb-symboldef-find-lisp-doc (symbol-name edit-buffer)
   "Insert the lisp-documentation of symbol with name SYMBOL-NAME."
   (setq truncate-lines nil)
@@ -301,13 +357,14 @@ Only prints mode and info but does not find any symbol-definition."
                              "Function"))))
     (when (boundp symbol)
       (when fsymbol-p (insert "\n\n___________\n\n"))
-      (insert (format "%s is a %s\n\n%s\n\nValue: %s\n\n" symbol
-                      (if (user-variable-p symbol)
-                          "Option " "Variable")
-                      (or (documentation-property
-                           symbol 'variable-documentation)
-                          "not documented")
-                      (symbol-value symbol)))
+;;       (insert (format "%s is a %s\n\n%s\n\nValue: %s\n\n" symbol
+;;                       (if (user-variable-p symbol)
+;;                           "Option " "Variable")
+;;                       (or (documentation-property
+;;                            symbol 'variable-documentation)
+;;                           "not documented")
+;;                       (symbol-value symbol)))
+      (insert (ecb-symboldef-get-doc-for-vsymbol symbol edit-buffer))
       (let ((beg nil)
             (end nil))
         (goto-char begin-vdoc)
@@ -325,6 +382,87 @@ Only prints mode and info but does not find any symbol-definition."
     (goto-char (point-min))
     (fill-region (point-min) (point-max) 'left)
     retval))
+
+;; --------------- end of code for finding the elisp docu ----------------------
+
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: use the following mechanisms to
+;; display the stuff - for elisp check if symbol is a tag of class 'type and
+;; then display the parts below the docstring
+;; (defun semantic-ia-show-doc (point)
+;;   "Display the code-level documentation for the symbol at POINT."
+;;   (interactive "d")
+;;   (let* ((ctxt (semantic-analyze-current-context point))
+;; 	 (pf (reverse (oref ctxt prefix)))
+;; 	 )
+;;     ;; If PF, the prefix is non-nil, then the last element is either
+;;     ;; a string (incomplete type), or a semantic TAG.  If it is a TAG
+;;     ;; then we should be able to find DOC for it.
+;;     (cond 
+;;      ((stringp (car pf))
+;;       (message "Incomplete symbol name."))
+;;      ((semantic-tag-p (car pf))
+;;       ;; The `semantic-documentation-for-tag' fcn is language
+;;       ;; specific.  If it doesn't return what you expect, you may
+;;       ;; need to implement something for your language.
+;;       ;;
+;;       ;; The default tries to find a comment in front of the tag
+;;       ;; and then strings off comment prefixes.
+;;       (let ((doc (semantic-documentation-for-tag (car pf))))
+;; 	(with-output-to-temp-buffer "*TAG DOCUMENTATION*"
+;; 	  (princ "Tag: ")
+;; 	  (princ (semantic-format-tag-prototype (car pf)))
+;; 	  (princ "\n")
+;; 	  (princ "\n")
+;; 	  (princ "Snarfed Documentation: ")
+;; 	  (princ "\n")
+;; 	  (princ "\n")
+;; 	  (if doc
+;; 	      (princ doc)
+;; 	    (princ "  Documentation unavailable."))
+;; 	  )))
+;;      (t
+;;       (message "Unknown tag.")))
+;;     ))
+
+;; (defun semantic-ia-describe-class (typename)
+;;   "Display all known parts for the datatype TYPENAME.
+;; If the type in question is a class, all methods and other accessible
+;; parts of the parent classes are displayed."
+;;   ;; @todo - use a fancy completing reader.
+;;   (interactive "sType Name: ")
+
+;;   ;; When looking for a tag of any name there are a couple ways to do
+;;   ;; it.  The simple `semanticdb-find-tag-by-...' are simple, and
+;;   ;; you need to pass it the exact name you want.
+;;   ;; 
+;;   ;; The analyzer function `semantic-analyze-tag-name' will take
+;;   ;; more complex names, such as the cpp symbol foo::bar::baz,
+;;   ;; and break it up, and dive through the namespaces.
+;;   (let ((class (semantic-analyze-find-tag typename)))
+
+;;     (when (not (semantic-tag-p class))
+;;       (error "Cannot find class %s" class))
+;;     (with-output-to-temp-buffer "*TAG DOCUMENTATION*"
+;;       ;; There are many semantic-format-tag-* fcns.
+;;       ;; The summarize routine is a fairly generic one.
+;;       (princ (semantic-format-tag-summarize class))
+;;       (princ "\n")
+;;       (princ "  Type Members:\n")
+;;       ;; The type tag contains all the parts of the type.
+;;       ;; In complex languages with inheritance, not all the
+;;       ;; parts are in the tag.  This analyzer fcn will traverse
+;;       ;; the inheritance tree, and find all the pieces that
+;;       ;; are inherited.
+;;       (let ((parts (semantic-analyze-scoped-type-parts class)))
+;; 	(while parts
+;; 	  (princ "    ")
+;; 	  (princ (semantic-format-tag-summarize (car parts)))
+;; 	  (princ "\n")
+;; 	  (setq parts (cdr parts)))
+;; 	)
+;;       )))
+
 
 (defun ecb-symboldef-find-tag-by-semanticdb (symbol-name edit-buffer)
   "Function to find a semantic-tag by SYMBOL-NAME.
