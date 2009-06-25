@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.448 2009/06/09 10:39:46 berndl Exp $
+;; $Id: ecb.el,v 1.449 2009/06/25 16:36:42 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -507,6 +507,7 @@ In addition to this all the synchronizing hooks \(e.g.
 `ecb-basic-buffer-sync-hook') run if the related ecb-buffers are visible in an
 ecb-window."
   (interactive)
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXXXXXXXX remove the args!!!
   (ecb-layout-window-sync))
 
 (defun ecb-customize ()
@@ -1173,12 +1174,13 @@ always the ECB-frame if called from another frame."
 (defun ecb-clean-up-after-activation-failure (msg err)
   "Complete cleanup of all ECB-setups and report an error with message MSG."
   (let ((ecb-minor-mode t))
-    (ecb-deactivate-internal t)
-    (if ecb-running-xemacs
-        (redraw-modeline t)
-      (force-mode-line-update t))
-    (error "ECB %s: %s (error-type: %S, error-data: %S)" ecb-version msg
-           (car err) (cdr err))))
+    (ecb-deactivate-internal t))
+  (setq ecb-minor-mode nil)
+  (if ecb-running-xemacs
+      (redraw-modeline t)
+    (force-mode-line-update t))
+  (error "ECB %s: %s (error-type: %S, error-data: %S)" ecb-version msg
+         (car err) (cdr err)))
 
 (defvar ecb-last-window-config-before-deactivation nil
   "Contains the last `ecb-current-window-configuration' directly before
@@ -1464,7 +1466,7 @@ If ECB detects a problem it is reported and then an error is thrown."
         (setq ecb-minor-mode t)
 
         ;; now we draw the screen-layout of ECB.
-;;        (condition-case err-obj
+        (condition-case err-obj
             ;; now we draw the layout chosen in `ecb-layout'. This function
             ;; activates at its end also the adviced functions if necessary!
             ;; Here the directories- and history-buffer will be updated.
@@ -1505,11 +1507,11 @@ If ECB detects a problem it is reported and then an error is thrown."
               ;; now update all the ECB-buffer-modelines
               (ecb-mode-line-format)
               )
-;;           (error
-;;            (ecb-clean-up-after-activation-failure
-;;             "Errors during the layout setup of ECB." err-obj))
-;;           )
-        
+          (error
+           (ecb-clean-up-after-activation-failure
+            "Errors during the layout setup of ECB." err-obj))
+          )
+       
         (condition-case err-obj
             (let ((edit-window (car (ecb-canonical-edit-windows-list))))
               (when (and ecb-display-default-dir-after-start
@@ -1522,14 +1524,14 @@ If ECB detects a problem it is reported and then an error is thrown."
           (error
            (ecb-clean-up-after-activation-failure
             "Errors during setting the default directory." err-obj)))
-
+        
         (condition-case err-obj
             ;; we run any personal hooks
             (run-hooks 'ecb-activate-hook)
           (error
            (ecb-clean-up-after-activation-failure
             "Errors during the hooks of ecb-activate-hook." err-obj)))
-
+        
         (condition-case err-obj
             ;; enable mouse-tracking for the ecb-tree-buffers; we do this after
             ;; running the personal hooks because if a user put´s activation of
