@@ -239,7 +239,10 @@ Only prints mode and info but does not find any symbol-definition."
 
 ;; currently not used 
 (defun ecb-symboldef-get-doc-for-fsymbol (fsymbol edit-buffer)
-  "Use `describe-function-1' to get the doc-string for FSYMBOL."
+  "Returns the full output of `describe-function' as string without any
+sideeffect to the help-system of Emacs.
+FSYMBOL is the symbol for which the doc-string should be returned and
+EDIT-BUFFER is that buffer FSYMBOL is used."
   ;; by binding standard-output to a special buffer we can force
   ;; describe-function-1 to print all its output to this buffer. 
   (let ((standard-output (get-buffer-create ecb-symboldef-temp-buffer-name))
@@ -253,21 +256,23 @@ Only prints mode and info but does not find any symbol-definition."
     doc-string))
 
 
-;; Klaus Berndl <klaus.berndl@sdm.de>: It would be good if we could
-;; use the describe-variable output. Problem: This function displays the
-;; doc in a help-window, so we have to redirect the output. Possible but
-;; there is something to do:
-;; 0. making edit-buffer (s. arg) current
-;; 1. For Emacs: redefining help-buffer so it returns a buffer which is
-;;    suitable for us. For XEmacs help-buffer-name analogous
-;; 2. For (X)Emacs: Setting temp-buffer-show-function temporally to
-;;    something special which does simply nothing
-;; 3. setting temp-buffer-setup-hook to nil
-;; 3. Binding standart-output to a temporally buffer-object
-;; 4. running describe-function
-
 (defun ecb-symboldef-get-doc-for-vsymbol (vsymbol edit-buffer)
-  "Returns the full output of `describe-variable' as string."
+  "Returns the full output of `describe-variable' as string without any
+sideeffect to the help-system of Emacs.
+VSYMBOL is the symbol for which the doc-string should be returned and
+EDIT-BUFFER is that buffer VSYMBOL is used."
+  ;; Klaus Berndl <klaus.berndl@sdm.de>: It would be good if we could
+  ;; use the describe-variable output. Problem: This function displays the
+  ;; doc in a help-window, so we have to redirect the output. Possible but
+  ;; there is something to do:
+  ;; 0. making edit-buffer (s. arg) current
+  ;; 1. For Emacs: redefining help-buffer so it returns a buffer which is
+  ;;    suitable for us. For XEmacs help-buffer-name analogous
+  ;; 2. For (X)Emacs: Setting temp-buffer-show-function temporally to
+  ;;    something special which does simply nothing
+  ;; 3. setting temp-buffer-setup-hook to nil
+  ;; 3. Binding standart-output to a temporally buffer-object
+  ;; 4. running describe-variable
   (save-excursion
     (set-buffer edit-buffer)
     (let ((standard-output (get-buffer-create ecb-symboldef-temp-buffer-name))
@@ -287,29 +292,45 @@ Only prints mode and info but does not find any symbol-definition."
         (eieio-help-mode-augmentation-maybee)))
     (buffer-string))
   )
+
+(silentcomp-defun function-at-point)
+(silentcomp-defun function-called-at-point)
+
+(defun ecb-symboldef-function-at-point ()
+  "Returns the function around point or nil if there is no function around."
+  (if ecb-running-xemacs
+      (function-at-point)
+    (function-called-at-point)))
     
 (defun ecb-symboldef-find-lisp-doc (symbol-name edit-buffer)
   "Insert the lisp-documentation of symbol with name SYMBOL-NAME."
   (setq truncate-lines nil)
   (let ((symbol (intern symbol-name))
-        (fsymbol-p nil)
+        (fsymbol nil)
         (begin-vdoc (point-min))
         (retval nil)
         (args nil))
-    (when (fboundp symbol)
-      (setq fsymbol-p t)
+    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: make an option how to deal
+    ;; with function-symbols:
+    ;; - always display only if symbol under point is a function
+    ;; - display function around
+    ;; - display conditions for function symbols (length, regexp to match)
+    (when (setq fsymbol
+                (save-excursion
+                  (set-buffer edit-buffer)
+                  (ecb-symboldef-function-at-point)))
       (unless ecb-running-xemacs
         ;; With XEmacs the symbol itself is already contained in the
         ;; docstring describe-function-1 returns - with Emacs we must add it
         ;; for ourself.
-        (insert (format "%s is " symbol)))
+        (insert (format "%s is " fsymbol)))
       (let ((standard-output (current-buffer)))
-        (describe-function-1 symbol))
+        (describe-function-1 fsymbol))
       (let ((beg nil)
             (end nil))
         (goto-char (point-min))
         (when (and ecb-symboldef-symbol-face
-                   (re-search-forward (regexp-quote symbol-name) nil t))
+                   (re-search-forward (regexp-quote (symbol-name fsymbol)) nil t))
           (setq beg (match-beginning 0))
           (setq end (match-end 0))
           (ecb-merge-face
@@ -320,7 +341,7 @@ Only prints mode and info but does not find any symbol-definition."
           (goto-char end))
         
         (when (and ecb-symboldef-prototype-face
-                   (re-search-forward  (regexp-quote (concat "(" symbol-name)) nil t))
+                   (re-search-forward  (regexp-quote (concat "(" (symbol-name fsymbol))) nil t))
           (setq beg (match-beginning 0))
           (goto-char beg)
           (forward-sexp)
@@ -339,11 +360,11 @@ Only prints mode and info but does not find any symbol-definition."
       ;; variable too!
       (setq begin-vdoc (point))
       (setq retval (format "Lisp %s"
-                           (if (commandp symbol)
+                           (if (commandp fsymbol)
                                "Command"
                              "Function"))))
     (when (boundp symbol)
-      (when fsymbol-p (insert "\n\n___________\n\n"))
+      (and fsymbol (insert "\n\n___________\n\n"))
 ;;       (insert (format "%s is a %s\n\n%s\n\nValue: %s\n\n" symbol
 ;;                       (if (user-variable-p symbol)
 ;;                           "Option " "Variable")
@@ -367,7 +388,7 @@ Only prints mode and info but does not find any symbol-definition."
           (goto-char end)))
       (setq retval "Lisp Variable"))
     (goto-char (point-min))
-    (fill-region (point-min) (point-max) 'left)
+    (fill-region (point-min) (point-max) 'left t)
     retval))
 
 ;; --------------- end of code for finding the elisp docu ----------------------
