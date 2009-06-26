@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.161 2009/06/23 11:16:56 berndl Exp $
+;; $Id: ecb-util.el,v 1.162 2009/06/26 11:30:57 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -174,10 +174,24 @@ want the BODY being parsed by semantic!. If not use the variable
      ,@body))
 
 (defmacro when-ecb-running-emacs (&rest body)
-  "Evaluates BODY when `ecb-running-xemacs' is false. Use this macro when you
-want the BODY being parsed by semantic!. If not use the form
-\(unless ecb-running-xemacs)."
-  `(unless ecb-running-xemacs
+  "Evaluates BODY when `ecb-running-gnu-emacs' is false. Use this
+macro when you want the BODY being parsed by semantic!. If not
+use the form \(unless ecb-running-xemacs)."
+  `(when ecb-running-gnu-emacs
+     ,@body))
+
+(defmacro when-ecb-running-emacs-22 (&rest body)
+  "Evaluates BODY when `ecb-running-gnu-emacs-version-22' is
+true. Use this macro when you want the BODY being parsed by
+semantic!. If not use the form \(when ecb-running-gnu-emacs-version-22)."
+  `(when ecb-running-gnu-emacs-version-22
+     ,@body))
+
+(defmacro when-ecb-running-emacs-23 (&rest body)
+  "Evaluates BODY when `ecb-running-gnu-emacs-version-23' is
+true. Use this macro when you want the BODY being parsed by
+semantic!. If not use the form \(when ecb-running-gnu-emacs-version-23)."
+  `(when ecb-running-gnu-emacs-version-23
      ,@body))
 
 ;; I do not want all this compatibitly stuff being parsed by semantic,

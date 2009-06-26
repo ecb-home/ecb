@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.449 2009/06/25 16:36:42 berndl Exp $
+;; $Id: ecb.el,v 1.450 2009/06/26 11:30:56 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1928,6 +1928,8 @@ exist."
         ;; when-ecb-running-... macros
         (semantic-elisp-reuse-form-parser eval-and-compile
                                           when-ecb-running-xemacs
+                                          when-ecb-running-emacs-22
+                                          when-ecb-running-emacs-23
                                           when-ecb-running-emacs)
         )
     (error
@@ -1968,6 +1970,8 @@ exist."
                                    "ecb-layout-define"
                                    "when-ecb-running-xemacs"
                                    "when-ecb-running-emacs"
+                                   "when-ecb-running-emacs-22"
+                                   "when-ecb-running-emacs-23"
                                    "ecb-exit-on-input"
                                    ))
                  (v-regexp (regexp-opt variable-defs t))

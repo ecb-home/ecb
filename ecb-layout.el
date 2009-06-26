@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.284 2009/06/24 14:13:40 berndl Exp $
+;; $Id: ecb-layout.el,v 1.285 2009/06/26 11:30:57 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2955,9 +2955,9 @@ Only set by the adviced `display-buffer' and only evaluated by
 `ecb-canonical-edit-windows-list' and `ecb-canonical-ecb-windows-list'. This
 variable is strictly only for internal usage!")
 
-;; The XEmacs-versions never choose dedicated windows (so the function don't
-;; have a DEDICATED argument and so we don't need advice....
-(when-ecb-running-emacs
+;; The XEmacs- and Emacs 21 versions never choose dedicated windows (so the
+;; function don't have a DEDICATED argument and so we don't need advice....
+(when-ecb-running-emacs-22
  (defecb-advice get-largest-window before ecb-layout-basic-adviced-functions
    "When called from within the `ecb-frame' then DEDICATED is always set to nil.
 So never a dedicated window is returned during activated ECB."
