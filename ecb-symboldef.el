@@ -296,6 +296,31 @@ EDIT-BUFFER is that buffer VSYMBOL is used."
 (silentcomp-defun function-at-point)
 (silentcomp-defun function-called-at-point)
 
+(defun ecb-function-at-point ()
+  "Return the function whose name is around point.
+If that gives no function, return the function which is called by the
+list containing point.  If that doesn't give a function, return nil."
+  (or (ignore-errors
+	(with-syntax-table emacs-lisp-mode-syntax-table
+	  (save-excursion
+	    (or (not (zerop (skip-syntax-backward "_w")))
+		(eq (char-syntax (char-after (point))) ?w)
+		(eq (char-syntax (char-after (point))) ?_)
+		(forward-sexp -1))
+	    (skip-chars-forward "`'")
+	    (let ((obj (read (current-buffer))))
+	      (and (symbolp obj) (fboundp obj) obj)))))
+      (ignore-errors
+	(save-excursion
+	  (save-restriction
+	    (narrow-to-region (max (point-min) (- (point) 1000))
+			      (point-max))
+	    (backward-up-list 1)
+	    (forward-char 1)
+	    (let (obj)
+	      (setq obj (read (current-buffer)))
+	      (and (symbolp obj) (fboundp obj) obj)))))))
+
 (defun ecb-symboldef-function-at-point ()
   "Returns the function around point or nil if there is no function around."
   (if ecb-running-xemacs

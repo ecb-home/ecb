@@ -174,10 +174,24 @@ want the BODY being parsed by semantic!. If not use the variable
      ,@body))
 
 (defmacro when-ecb-running-emacs (&rest body)
-  "Evaluates BODY when `ecb-running-xemacs' is false. Use this macro when you
-want the BODY being parsed by semantic!. If not use the form
-\(unless ecb-running-xemacs)."
-  `(unless ecb-running-xemacs
+  "Evaluates BODY when `ecb-running-gnu-emacs' is false. Use this
+macro when you want the BODY being parsed by semantic!. If not
+use the form \(unless ecb-running-xemacs)."
+  `(when ecb-running-gnu-emacs
+     ,@body))
+
+(defmacro when-ecb-running-emacs-22 (&rest body)
+  "Evaluates BODY when `ecb-running-gnu-emacs-version-22' is
+true. Use this macro when you want the BODY being parsed by
+semantic!. If not use the form \(when ecb-running-gnu-emacs-version-22)."
+  `(when ecb-running-gnu-emacs-version-22
+     ,@body))
+
+(defmacro when-ecb-running-emacs-23 (&rest body)
+  "Evaluates BODY when `ecb-running-gnu-emacs-version-23' is
+true. Use this macro when you want the BODY being parsed by
+semantic!. If not use the form \(when ecb-running-gnu-emacs-version-23)."
+  `(when ecb-running-gnu-emacs-version-23
      ,@body))
 
 ;; I do not want all this compatibitly stuff being parsed by semantic,
