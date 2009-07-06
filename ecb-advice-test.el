@@ -21,7 +21,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-advice-test.el,v 1.2 2009/05/15 15:19:53 berndl Exp $
+;; $Id: ecb-advice-test.el,v 1.3 2009/07/06 07:45:33 berndl Exp $
 
 ;;; Commentary:
 ;;
