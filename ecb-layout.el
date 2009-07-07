@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.285 2009/06/26 11:30:57 berndl Exp $
+;; $Id: ecb-layout.el,v 1.286 2009/07/07 11:59:52 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -3898,8 +3898,10 @@ behavior depends on `ecb-advice-window-functions-signal-error'."
                 (ecb-point-in-compile-window))
        (ecb-select-edit-window))
      
-     (let ((edit-win-list (ecb-canonical-edit-windows-list))
-           (window (or (ad-get-arg 0) (selected-window))))
+     (let* ((edit-win-list (ecb-canonical-edit-windows-list))
+            (window (or (ad-get-arg 0) (selected-window)))
+            (top-most-window-top (nth 1 (ecb-window-edges (car edit-win-list))))
+            (window-top (nth 1 (ecb-window-edges window))))
        (cond ((equal window ecb-compile-window)
               (if ecb-advice-window-functions-signal-error
                   (ecb-error "The compile window can not be maximized!")))
@@ -3909,7 +3911,20 @@ behavior depends on `ecb-advice-window-functions-signal-error'."
               (if (= (length edit-win-list) 1)
                   (ecb-toggle-compile-window -1)
                 (dolist (ew (delete window edit-win-list))
-                  (delete-window ew))))
+                  (delete-window ew))
+                ;; now we try to avoid display jumps
+                (ignore-errors
+                  (when (not (= top-most-window-top window-top))
+                    (set-window-start
+                     window
+                     (ecb-line-beginning-pos
+                      (* -1
+                         ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: hmm,
+                         ;; needs some fine adjustment: works well but not
+                         ;; perfect... 
+                         (+ (if (ecb-bolp) -1 -2);; some fine adjustment 
+                            (count-lines (window-start) (point))
+                            (- window-top top-most-window-top)))))))))
              (t ;; must be one of the special ecb-windows
               (ecb-maximize-ecb-buffer (buffer-name (window-buffer window)) t)))))))
             
