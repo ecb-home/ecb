@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.75 2009/06/23 11:16:56 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.76 2009/11/20 10:15:04 berndl Exp $
 
 ;;; Commentary:
 
@@ -64,9 +64,9 @@
 (eval-when-compile
   (require 'silentcomp))
 
-(require 'speedbar)
 (require 'ecb-util)
 (require 'ecb-cedet-wrapper)
+(ecb-cedet-require 'speedbar)
 (require 'ecb-common-browser)
 (require 'ecb-layout)
 
@@ -265,7 +265,8 @@ the point was not set by `mouse-set-point'."
     (and (window-live-p (get-buffer-window ecb-speedbar-buffer-name))
          (select-window (get-buffer-window ecb-speedbar-buffer-name)))))
 
-(defecb-window-dedicator-to-ecb-buffer ecb-set-speedbar-buffer ecb-speedbar-buffer-name nil
+(defecb-window-dedicator-to-ecb-buffer ecb-set-speedbar-buffer
+    ecb-speedbar-buffer-name nil
   "Display in current window the speedbar-buffer and make window dedicated."
   (ecb-speedbar-activate)
   (set-window-buffer (selected-window)

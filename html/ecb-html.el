@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.80 2009/05/18 16:04:34 berndl Exp $
+;; $Id: ecb-html.el,v 1.81 2009/11/20 10:15:07 berndl Exp $
 
 ;;; Code:
 
@@ -381,7 +381,8 @@
 	 ("NEWS.html" "History")
 	 ("downloads.html" "Downloads")
 	 ("http://lists.sourceforge.net/lists/listinfo/ecb-list" "Mailing List")
-	 ("http://ecb.cvs.sourceforge.net/ecb/ecb/" "CVS")
+	 ;; ("http://ecb.cvs.sourceforge.net/ecb/ecb/" "CVS")
+	 ("cvs.html" "CVS")
 	 ("screenshots/index.html" "Screenshots")
 	 ("links.html" "Links")
 	 )
@@ -461,6 +462,30 @@
      (h-link "main.html" "Back") " to main section")     
      )))
 
+(defun ecb-html-cvs()
+  (h-doc
+   "cvs.html"
+   "ECB CVS Area"
+   (h-section
+    "ECB CVS Area"
+    (list
+     h-br
+     (h-sub-section
+      "Browse the CVS repository"
+      "Go to the "
+      (h-link "http://ecb.cvs.sourceforge.net/ecb/ecb/"
+              "ECB CVS browser") " at SourceForge.")
+     (h-line)
+     (h-sub-section
+      "Anonymous checkout of the full ECB CVS repository"
+      "Perform the following command:"
+      h-br
+      h-br
+      (h-i "cvs -z3 -d:pserver:anonymous@ecb.cvs.sourceforge.net:/cvsroot/ecb co -P ecb"))
+     (h-line)
+     (h-link "main.html" "Back") " to main section")     
+    )))
+
      
 (defun ecb-html-top()
   (h-doc
@@ -489,3 +514,4 @@
 (ecb-html-old)
 (ecb-html-all-news)
 (ecb-html-downloads)
+(ecb-html-cvs)

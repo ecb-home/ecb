@@ -23,7 +23,7 @@
 # GNU Emacs; see the file COPYING.  If not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# $Id: Makefile,v 1.24 2009/05/18 16:04:35 berndl Exp $
+# $Id: Makefile,v 1.25 2009/11/20 10:15:07 berndl Exp $
 
 
 # Just type "make upload" to upload a complete new build of the whole
@@ -32,7 +32,7 @@
 # Or type "make all" or "make upload-build" to generate the whole website
 # and build an uploadable ecb-website.tar.gz file.
 
-# $Id: Makefile,v 1.24 2009/05/18 16:04:35 berndl Exp $
+# $Id: Makefile,v 1.25 2009/11/20 10:15:07 berndl Exp $
 
 EMACS=emacs
 
@@ -55,7 +55,7 @@ MAKEINFO=/usr/bin/makeinfo
 
 ecb_HTMLSOURCE=ecb-html.el
 ecb_HTML_GEN=logo.html javabrowser.html main.html menu.html links.html \
-             top.html all-news.html downloads.html
+             top.html all-news.html downloads.html cvs.html
 ecb_HTMLDOCU_DIR=./docs
 ecb_TEXI_FILE=../ecb.texi
 

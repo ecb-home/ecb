@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.84 2009/06/23 11:16:56 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.85 2009/11/20 10:15:01 berndl Exp $
 
 ;;; Commentary:
 
@@ -1288,6 +1288,7 @@ Emacs) and `vc-cvs-status' \(Xemacs) to the ECB-VC-state-values."
                 (ecb-vc-dir-managed-by-SCCS . ecb-vc-state)
                 (ecb-vc-dir-managed-by-SVN . ecb-vc-state)
                 (ecb-vc-dir-managed-by-GIT . ecb-vc-state)
+                (ecb-vc-dir-managed-by-BZR . ecb-vc-state)
                 (ecb-vc-dir-managed-by-MTN . ecb-vc-state))
   "*Define how to to identify the VC-backend and how to check the state.
 The value of this option is a list containing cons-cells where the car is a
@@ -1319,11 +1320,13 @@ possible performance.
 To prepend ECB from checking the VC-state for any file set
 `ecb-vc-enable-support' to nil.
 
-Default value: Support for CVS, RCS, SCCS, Subversion, Git and
-Monotone. To identify the VC-backend the functions
-`ecb-vc-managed-by-CVS', `ecb-vc-managed-by-RCS' rsp.
-`ecb-vc-managed-by-SCCS' rsp. `ecb-vc-managed-by-SVN' rsp.
-`ecb-vc-managed-by-GIT' rsp. `ecb-vc-managed-by-MTN'are used.
+Default value: Support for CVS, RCS, SCCS, Subversion, Git,
+Bazaar and Monotone. To identify the VC-backend the functions
+`ecb-vc-dir-managed-by-CVS', `ecb-vc-dir-managed-by-RCS' rsp.
+`ecb-vc-dir-managed-by-SCCS' rsp. `ecb-vc-dir-managed-by-SVN'
+rsp. `ecb-vc--dir-managed-by-GIT' rsp.
+`ecb-vc-dir-managed-by-BZR' rsp. `ecb-vc-dir-managed-by-MTN' are
+used.
 
 For all six backends the function `ecb-vc-state' of the
 VC-package is used by default \(which uses a heuristic and
@@ -1356,6 +1359,8 @@ beginning of this option."
                                       :value ecb-vc-dir-managed-by-SVN)
                                (const :tag "ecb-vc-dir-managed-by-GIT"
                                       :value ecb-vc-dir-managed-by-GIT)
+                               (const :tag "ecb-vc-dir-managed-by-BZR"
+                                      :value ecb-vc-dir-managed-by-BZR)
                                (const :tag "ecb-vc-dir-managed-by-MTN"
                                       :value ecb-vc-dir-managed-by-MTN)
                                (function :tag "Any function"))
@@ -1683,7 +1688,8 @@ ECB-history-window is not visible in current layout."
   (interactive)
   (ecb-maximize-ecb-buffer ecb-history-buffer-name t))
 
-(defecb-window-dedicator-to-ecb-buffer ecb-set-directories-buffer ecb-directories-buffer-name t
+(defecb-window-dedicator-to-ecb-buffer ecb-set-directories-buffer
+    ecb-directories-buffer-name t
   "Display the Directories-buffer in current window and make window dedicated."
   (let ((set-directories-buffer
          (not (equal ecb-use-speedbar-instead-native-tree-buffer 'dir))))
@@ -1704,7 +1710,8 @@ ECB-history-window is not visible in current layout."
           (ignore-errors (ecb-speedbar-deactivate)))
       (switch-to-buffer ecb-directories-buffer-name))))
 
-(defecb-window-dedicator-to-ecb-buffer ecb-set-sources-buffer ecb-sources-buffer-name t
+(defecb-window-dedicator-to-ecb-buffer ecb-set-sources-buffer
+    ecb-sources-buffer-name t
   "Display the Sources-buffer in current window and make window dedicated."
   (let ((set-sources-buffer
          (not (equal ecb-use-speedbar-instead-native-tree-buffer 'source))))
@@ -3218,7 +3225,8 @@ new state."
                         ;; vc-cvs-state seems to change the window-config
                         ;; (opens a new small window) if it fails...so maybe
                         ;; we have to save the window-config before this call
-                        ;; and restore it when the call fails - later... ;-)
+                        ;; and restore it when the call fails - hmm, prio 3,
+                        ;; therefore later... ;-)
 
                         ;; we must ignore errors here because it could be that
                         ;; a user has a certain VC-system not installed onto
@@ -3334,6 +3342,15 @@ the SOURCES-cache."
        (require 'vc-sccs)
        'SCCS))
        
+;; Bazaar support
+
+(defun ecb-vc-dir-managed-by-BZR (directory) 
+  "Return 'BZR if DIRECTORY is managed by Bazaar. nil if not." 
+  (and (locate-library "vc-bzr")
+       (ecb-file-exists-p (concat directory "/" ".bzr"))
+       (require 'vc)
+       (require 'vc-bzr)
+       'BZR))
 
 ;; Git support
 

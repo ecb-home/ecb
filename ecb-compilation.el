@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compilation.el,v 1.39 2009/04/15 14:22:35 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.40 2009/11/20 10:15:01 berndl Exp $
 
 ;;; Commentary:
 
@@ -296,8 +296,9 @@ compilation buffers see `ecb-compilation-buffer-p'."
                                                     ,(car buffer))
                                           :active t)))))
             
-            ;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: Seems not to work with
-            ;;Emacs 20.X
+            ;;Klaus Berndl <klaus.berndl@sdm.de>: Seems not to work with
+            ;;Emacs 20.X, but who cares, 20.x is outdated and not supported
+            ;;anymore by ECB
             (easy-menu-change (list ecb-menu-name)
                               "Compilation Buffers"
                               submenu

@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.186 2009/06/20 05:07:30 berndl Exp $
+;; $Id: tree-buffer.el,v 1.187 2009/11/20 10:15:04 berndl Exp $
 
 ;;; Commentary:
 
@@ -1557,6 +1557,8 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
       ;; maybe there are empty lines in the window after the last non-empty
       ;; line. If they are we scroll until the whole window is filled with
       ;; non-empty lines.
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: can we reactivate this?
+      ;; test it!
       (if nil; (not (tree-node->expandable node))
           (let ((w-height (tree-buffer-window-display-height window))
                 (full-lines-in-window (count-lines (window-start window)
@@ -1834,15 +1836,15 @@ tree-buffer: \(guide-str-handle guide-str-no-handle guide-end-str no-guide-str)"
       (make-list 4 (make-string (tree-buffer-spec->tree-indent
                                  tree-buffer-spec) ? ))
     (let* ((indent-fill-up (make-string
-                          (- (tree-buffer-spec->tree-indent tree-buffer-spec)
-                             (cond ((equal 'image (tree-buffer-real-style))
-                                    tree-buffer-indent-with-images)
-                                   ((tree-buffer-spec->expand-symbol-before-p
-                                     tree-buffer-spec)
-                                    tree-buffer-indent-w/o-images-before-min)
-                                   (t
-                                    tree-buffer-indent-w/o-images-after-min)))
-                          ? ))
+                            (- (tree-buffer-spec->tree-indent tree-buffer-spec)
+                               (cond ((equal 'image (tree-buffer-real-style))
+                                      tree-buffer-indent-with-images)
+                                     ((tree-buffer-spec->expand-symbol-before-p
+                                       tree-buffer-spec)
+                                      tree-buffer-indent-w/o-images-before-min)
+                                     (t
+                                      tree-buffer-indent-w/o-images-after-min)))
+                            ? ))
            (guide-str-handle (concat (tree-buffer-ascii-symbol-4-image-name
                                       "guide")
                                      (tree-buffer-ascii-symbol-4-image-name
@@ -1893,63 +1895,63 @@ end-guide."
   
   ;; compute the indentation-strings for the children and run recursive for
   ;; each child
-  (if (tree-node->expanded node)
-      (let* ((number-of-childs (length (tree-node->children node)))
-             (counter 0)
-             (guide-strings (tree-buffer-gen-guide-strings))
-             (guide-str (if (and (equal 'image (tree-buffer-real-style))
-                                 tree-buffer-enable-xemacs-image-bug-hack)
-                            (nth 0 guide-strings)
-                          (nth 1 guide-strings)))
-             (guide-end-str (nth 2 guide-strings))
-             (no-guide-str (nth 3 guide-strings))
-             (indent-str-last-seg-copy (copy-sequence indent-str-last-seg))
-             (next-indent-str-first-segs
-              (if (= 0 (length indent-str-last-seg-copy))
-                  ""
-                (concat indent-str-first-segs
-                        (if last-children
-                            (tree-buffer-add-image-icon-maybe
-                             2 1
-                             (tree-buffer-add-image-icon-maybe
-                              0 2 no-guide-str
-                              (tree-buffer-find-image "no-guide"))
-                             (tree-buffer-find-image "no-handle"))
+  (when (tree-node->expanded node)
+    (let* ((number-of-childs (length (tree-node->children node)))
+           (counter 0)
+           (guide-strings (tree-buffer-gen-guide-strings))
+           (guide-str (if (and (equal 'image (tree-buffer-real-style))
+                               tree-buffer-enable-xemacs-image-bug-hack)
+                          (nth 0 guide-strings)
+                        (nth 1 guide-strings)))
+           (guide-end-str (nth 2 guide-strings))
+           (no-guide-str (nth 3 guide-strings))
+           (indent-str-last-seg-copy (copy-sequence indent-str-last-seg))
+           (next-indent-str-first-segs
+            (if (= 0 (length indent-str-last-seg-copy))
+                ""
+              (concat indent-str-first-segs
+                      (if last-children
                           (tree-buffer-add-image-icon-maybe
                            2 1
-                           (tree-buffer-aset
-                            indent-str-last-seg-copy
-                            (1- (cond ((equal 'image (tree-buffer-real-style))
-                                       tree-buffer-indent-with-images)
-                                      ((tree-buffer-spec->expand-symbol-before-p
-                                        tree-buffer-spec)
-                                       tree-buffer-indent-w/o-images-before-min)
-                                      (t
-                                       tree-buffer-indent-w/o-images-after-min)))
-                            ? )
-                           (tree-buffer-find-image "no-handle"))))))
-             (next-indent-str-last-seg-std
-              (tree-buffer-add-image-icon-maybe
-               2 1
-               (tree-buffer-add-image-icon-maybe
-                0 2 guide-str
-                (tree-buffer-find-image "guide"))
-               (tree-buffer-find-image "handle")))
-             (next-indent-str-last-seg-end
-              (tree-buffer-add-image-icon-maybe
-               2 1
-               (tree-buffer-add-image-icon-maybe
-                0 2 guide-end-str
-                (tree-buffer-find-image "end-guide"))
-               (tree-buffer-find-image "handle"))))
-        (dolist (node (tree-node->children node))
-          (setq counter (1+ counter))
-          (tree-buffer-add-node node
-                                next-indent-str-first-segs
-                                (if (= counter number-of-childs )
-                                    next-indent-str-last-seg-end
-                                  next-indent-str-last-seg-std)
-                                (= counter number-of-childs ))))))
+                           (tree-buffer-add-image-icon-maybe
+                            0 2 no-guide-str
+                            (tree-buffer-find-image "no-guide"))
+                           (tree-buffer-find-image "no-handle"))
+                        (tree-buffer-add-image-icon-maybe
+                         2 1
+                         (tree-buffer-aset
+                          indent-str-last-seg-copy
+                          (1- (cond ((equal 'image (tree-buffer-real-style))
+                                     tree-buffer-indent-with-images)
+                                    ((tree-buffer-spec->expand-symbol-before-p
+                                      tree-buffer-spec)
+                                     tree-buffer-indent-w/o-images-before-min)
+                                    (t
+                                     tree-buffer-indent-w/o-images-after-min)))
+                          ? )
+                         (tree-buffer-find-image "no-handle"))))))
+           (next-indent-str-last-seg-std
+            (tree-buffer-add-image-icon-maybe
+             2 1
+             (tree-buffer-add-image-icon-maybe
+              0 2 guide-str
+              (tree-buffer-find-image "guide"))
+             (tree-buffer-find-image "handle")))
+           (next-indent-str-last-seg-end
+            (tree-buffer-add-image-icon-maybe
+             2 1
+             (tree-buffer-add-image-icon-maybe
+              0 2 guide-end-str
+              (tree-buffer-find-image "end-guide"))
+             (tree-buffer-find-image "handle"))))
+      (dolist (node (tree-node->children node))
+        (setq counter (1+ counter))
+        (tree-buffer-add-node node
+                              next-indent-str-first-segs
+                              (if (= counter number-of-childs )
+                                  next-indent-str-last-seg-end
+                                next-indent-str-last-seg-std)
+                              (= counter number-of-childs ))))))
 
 (defun tree-buffer-update-node (node name shrink-name type data expandable
                                      &optional redisplay)

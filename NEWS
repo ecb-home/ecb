@@ -45,6 +45,10 @@
    methods-window (e.g. by unhiding the ecb-windows via the command
    `ecb-toggle-ecb-windows' - bound to [C-c . l w]).
 
+** New support for Bazaar as version-control system
+   If Bazaar is supported by VC (means vc-bzr.el is distributed with Emacs)
+   then ECB supports it out of the box.
+
 ** New default value of the option `ecb-history-make-buckets'
 
    This option offers now an additional choice 'directory-with-source-path:

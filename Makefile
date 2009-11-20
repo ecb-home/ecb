@@ -26,7 +26,7 @@
 # GNU Emacs; see the file COPYING.  If not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# $Id: Makefile,v 1.115 2009/06/09 10:39:47 berndl Exp $
+# $Id: Makefile,v 1.116 2009/11/20 10:15:00 berndl Exp $
 
 
 # ========================================================================
@@ -48,7 +48,7 @@ EMACS=emacs
 # cedet >= 1.0 (contains a.o. semantic >= 2.0, eieio >= 0.18 and speedbar
 # >= 0.15). Set here the full path to the cedet-installation directory.
 
-CEDET=c:/Programme/emacs-22.3/site-lisp/package-development/cedet
+CEDET=c:/Programme/emacs-23.1/site-lisp/package-development/cedet
 
 # You can set here more load-paths to arbitrary packages if you want. But
 # this is really not necessary!
@@ -118,7 +118,7 @@ INSTALLINFO=/usr/bin/install-info
 # ========================================================================
 
 
-# $Id: Makefile,v 1.115 2009/06/09 10:39:47 berndl Exp $
+# $Id: Makefile,v 1.116 2009/11/20 10:15:00 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!

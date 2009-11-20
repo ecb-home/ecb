@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-symboldef.el,v 1.17 2009/06/26 11:30:57 berndl Exp $
+;; $Id: ecb-symboldef.el,v 1.18 2009/11/20 10:15:04 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -62,6 +62,9 @@
 ;; maximize menu of ECB when reworked ecb-symboldef.el! and also to
 ;; some other menues...
 
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add to ecb-modeline the W-1 stuff
+;; for the symboldef-modeline.
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
 ;; 1. Add all necessary documentation to the info-manual (texi)
@@ -617,7 +620,8 @@ symbol. Displays the found text in the buffer of
   (run-hooks 'ecb-symboldef-buffer-sync-hook))
 
 
-(defecb-window-dedicator-to-ecb-buffer ecb-set-symboldef-buffer ecb-symboldef-buffer-name nil
+(defecb-window-dedicator-to-ecb-buffer ecb-set-symboldef-buffer
+    ecb-symboldef-buffer-name nil
   "Set the buffer in the current window to the tag-definition-buffer and make
 this window dedicated for this buffer."
   (switch-to-buffer (get-buffer-create ecb-symboldef-buffer-name))

@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.286 2009/07/07 11:59:52 berndl Exp $
+;; $Id: ecb-layout.el,v 1.287 2009/11/20 10:15:02 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2844,6 +2844,8 @@ some special tasks:
                ;; In the meanwhile we allow automatic maximizing only when
                ;; `ecb-tree-mouse-action-trigger' is 'button-press!
                (or ecb-running-xemacs
+                   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: rename this so
+                   ;; the name reflects the logic >=22!!!
                    ecb-running-gnu-emacs-version-22
                    (equal ecb-tree-mouse-action-trigger 'button-press))
                (equal (selected-frame) ecb-frame)
@@ -4569,8 +4571,8 @@ during evaluating BODY the current window is always dedicated at the end!"
   "Dedicates an ecb-window for the buffer hold in BUFFER-NAME-SYMBOL.
 This defines a function DEDICATOR which makes the selected window
 dedicated to that buffer-name hold in BUFFER-NAME-SYMBOL. Do not
-quote DEDICATOR and BUFFER-NAME-SYMBOL. TREE-BUFFER-P has to be not
-nil if the ecb-window displays a tree-buffer created with
+quote DEDICATOR and BUFFER-NAME-SYMBOL. TREE-BUFFER-P has to be
+not nil if the ecb-window displays a tree-buffer created with
 `defecb-tree-buffer-creator' \(in this case BUFFER-NAME-SYMBOL
 muts be equal to the argument TREE-BUFFER-NAME-SYMBOL of that
 macro). DOCSTRING is the docstring for DEDICATOR. BODY is all the
@@ -4604,7 +4606,8 @@ switch-to-buffer) will run within the macro
 
 (put 'defecb-window-dedicator-to-ecb-buffer 'lisp-indent-function 3)
 
-;;(insert (pp (macroexpand '(defecb-window-dedicator-to-ecb-buffer ccc klausi-sym (check) "doc" (do-something)))))
+;; (insert (pp (macroexpand '(defecb-window-dedicator-to-ecb-buffer ccc
+;;                               klausi-sym (check) "doc" (do-something)))))
 
 (defvar ecb-default-buffer-name " *ECB-default-buffer*"
   "Buffer name of a default ecb buffer.")
@@ -5317,6 +5320,7 @@ maximized.
 If RESIDUAL-WINDOW is not nil it must be
 one of the windows `ecb-canonical-residual-windows-list' would compute. If nil
 then it will be computed."
+  (message "Klausi - del ecb-windows: side: %s" side)
   (let ((err-p (or (not (memq side '(left-side right-side top-side)))
                    (case (ecb-get-layout-type)
                      (left-right (not (memq side '(left-side right-side))))
@@ -5681,6 +5685,11 @@ contain the buffer before the emergency-redraw."
                  compile-buffer-pos-before-redraw)
         (select-window ecb-compile-window)
         (goto-char compile-buffer-pos-before-redraw))
+
+;;       (when ecb-hide-fringe
+;;         (mapc (function (lambda (w)
+;;                           (set-window-fringes w 0 0)))
+;;               (ecb-canonical-ecb-windows-list)))
 
       ;; after a full redraw the stored window-configuration for a quick
       ;; redraw should be actualized

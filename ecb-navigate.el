@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-navigate.el,v 1.24 2009/06/23 11:16:56 berndl Exp $
+;; $Id: ecb-navigate.el,v 1.25 2009/11/20 10:15:04 berndl Exp $
 
 ;;; Commentary:
 
@@ -39,7 +39,7 @@
 (eval-when-compile
   (require 'silentcomp))
 
-(require 'eieio)
+(require 'ecb-cedet-wrapper)
 (require 'ecb-util)
 
 

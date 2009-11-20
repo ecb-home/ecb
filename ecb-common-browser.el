@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.43 2009/06/24 14:13:41 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.44 2009/11/20 10:15:01 berndl Exp $
 
 
 ;;; History
@@ -307,6 +307,7 @@ ECB-etc data-directory \(the directory returned by \(locate-data-directory
                                      buffer-name"))                             
                              (directory :tag "Full image-path for this tree-buffer")))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: rename this to ecb-truncate-lines.
 (defcustom ecb-tree-truncate-lines '(ecb-directories-buffer-name
                                      ecb-sources-buffer-name
                                      ecb-methods-buffer-name
