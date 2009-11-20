@@ -307,6 +307,7 @@ ECB-etc data-directory \(the directory returned by \(locate-data-directory
                                      buffer-name"))                             
                              (directory :tag "Full image-path for this tree-buffer")))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: rename this to ecb-truncate-lines.
 (defcustom ecb-tree-truncate-lines '(ecb-directories-buffer-name
                                      ecb-sources-buffer-name
                                      ecb-methods-buffer-name

@@ -36,21 +36,47 @@
 ;; ecb-cedet-wrapper.el!
 
 
-(require 'semantic)
-(require 'semantic-ctxt)
-(require 'semantic-analyze)
-(require 'semanticdb)
-(require 'semanticdb-find)
-(require 'semanticdb-mode)
-
-(defconst ecb-semantic-2-loaded (string-match "^2" semantic-version))
-
 (eval-when-compile
   (require 'silentcomp))
 
 (eval-when-compile
   ;; to avoid compiler grips
   (require 'cl))
+
+;; Add new cedet libraries needed by ecb!!
+(defconst ecb-cedet-lib-registry '((semantic . semantic)
+                                   (semantic-ctxt . semantic/ctxt)
+                                   (semantic-analyze . semantic/analyze)
+                                   (semanticdb . semantic/db)
+                                   (semanticdb-find . semantic/db-find)
+                                   (semanticdb-mode . semantic/db-mode)
+                                   (eieio . eieio)
+                                   (speedbar . speedbar))
+  "Maps the cvs-library of cedet to the equivalent lib of Emacs >= 32.2
+The elemant is an assoc list where the car is the lib-symbol of a
+cedet-library and the cdr is the corresponding lib-symbol of the cedet-suite
+integrated into Emacs >= 23.2
+
+ALL CEDET-LIBRARIES NEEDED BY ECB MUST BE REGISTERED HERE!")
+
+(defun ecb-cedet-require (cvs-lib)
+  "Loads a cedet-library into Emacs.
+All cedet libaryies needed by ECB must be loaded with this function! Do not
+use `require' for looading a cedet-library into Emacs!"
+  (if (featurep 'cedet)
+      (require cvs-lib)
+    (require (cdr (assoc cvs-lib ecb-cedet-lib-registry)))))
+
+
+(ecb-cedet-require 'semantic)
+(ecb-cedet-require 'semantic-ctxt)
+(ecb-cedet-require 'semantic-analyze)
+(ecb-cedet-require 'semanticdb)
+(ecb-cedet-require 'semanticdb-find)
+(ecb-cedet-require 'semanticdb-mode)
+(ecb-cedet-require 'eieio)
+
+(defconst ecb-semantic-2-loaded (string-match "^2" semantic-version))
 
 ;; -- getter functions for all variables of cedet currently used by ECB ---
 

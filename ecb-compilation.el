@@ -296,8 +296,9 @@ compilation buffers see `ecb-compilation-buffer-p'."
                                                     ,(car buffer))
                                           :active t)))))
             
-            ;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: Seems not to work with
-            ;;Emacs 20.X
+            ;;Klaus Berndl <klaus.berndl@sdm.de>: Seems not to work with
+            ;;Emacs 20.X, but who cares, 20.x is outdated and not supported
+            ;;anymore by ECB
             (easy-menu-change (list ecb-menu-name)
                               "Compilation Buffers"
                               submenu

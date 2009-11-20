@@ -55,7 +55,7 @@ MAKEINFO=/usr/bin/makeinfo
 
 ecb_HTMLSOURCE=ecb-html.el
 ecb_HTML_GEN=logo.html javabrowser.html main.html menu.html links.html \
-             top.html all-news.html downloads.html
+             top.html all-news.html downloads.html cvs.html
 ecb_HTMLDOCU_DIR=./docs
 ecb_TEXI_FILE=../ecb.texi
 

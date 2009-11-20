@@ -43,7 +43,7 @@
 (require 'ecb-cedet-wrapper)
 (require 'ecb-semantic)
 ;; This loads the semantic-setups for the major-modes.
-(require 'semantic-load)
+;; (require 'semantic-load)
 
 ;; various loads
 (require 'assoc)

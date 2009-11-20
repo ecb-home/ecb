@@ -64,9 +64,9 @@
 (eval-when-compile
   (require 'silentcomp))
 
-(require 'speedbar)
 (require 'ecb-util)
 (require 'ecb-cedet-wrapper)
+(ecb-cedet-require 'speedbar)
 (require 'ecb-common-browser)
 (require 'ecb-layout)
 
@@ -265,7 +265,8 @@ the point was not set by `mouse-set-point'."
     (and (window-live-p (get-buffer-window ecb-speedbar-buffer-name))
          (select-window (get-buffer-window ecb-speedbar-buffer-name)))))
 
-(defecb-window-dedicator-to-ecb-buffer ecb-set-speedbar-buffer ecb-speedbar-buffer-name nil
+(defecb-window-dedicator-to-ecb-buffer ecb-set-speedbar-buffer
+    ecb-speedbar-buffer-name nil
   "Display in current window the speedbar-buffer and make window dedicated."
   (ecb-speedbar-activate)
   (set-window-buffer (selected-window)

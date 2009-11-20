@@ -63,6 +63,9 @@
 ;; some other menues...
 
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add to ecb-modeline the W-1 stuff
+;; for the symboldef-modeline.
+
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
 ;; 1. Add all necessary documentation to the info-manual (texi)
 ;; 2. Add this preferences group to the menu in ecb.el
@@ -617,7 +620,8 @@ symbol. Displays the found text in the buffer of
   (run-hooks 'ecb-symboldef-buffer-sync-hook))
 
 
-(defecb-window-dedicator-to-ecb-buffer ecb-set-symboldef-buffer ecb-symboldef-buffer-name nil
+(defecb-window-dedicator-to-ecb-buffer ecb-set-symboldef-buffer
+    ecb-symboldef-buffer-name nil
   "Set the buffer in the current window to the tag-definition-buffer and make
 this window dedicated for this buffer."
   (switch-to-buffer (get-buffer-create ecb-symboldef-buffer-name))

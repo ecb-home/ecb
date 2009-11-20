@@ -31,10 +31,10 @@
 
 ;;; Code:
 
-(require 'semantic-analyze)
 (require 'ecb-layout)
 (require 'ecb-common-browser)
 (require 'ecb-method-browser)
+(require 'ecb-cedet-wrapper)
 
 (eval-when-compile
   (require 'silentcomp))

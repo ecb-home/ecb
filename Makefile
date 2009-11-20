@@ -48,7 +48,7 @@ EMACS=emacs
 # cedet >= 1.0 (contains a.o. semantic >= 2.0, eieio >= 0.18 and speedbar
 # >= 0.15). Set here the full path to the cedet-installation directory.
 
-CEDET=c:/Programme/emacs-22.3/site-lisp/package-development/cedet
+CEDET=c:/Programme/emacs-23.1/site-lisp/package-development/cedet
 
 # You can set here more load-paths to arbitrary packages if you want. But
 # this is really not necessary!

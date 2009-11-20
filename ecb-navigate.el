@@ -39,7 +39,7 @@
 (eval-when-compile
   (require 'silentcomp))
 
-(require 'eieio)
+(require 'ecb-cedet-wrapper)
 (require 'ecb-util)
 
 
