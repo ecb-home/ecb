@@ -26,7 +26,7 @@
 # GNU Emacs; see the file COPYING.  If not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# $Id: Makefile,v 1.116 2009/11/20 10:15:00 berndl Exp $
+# $Id: Makefile,v 1.117 2009/11/23 09:56:56 berndl Exp $
 
 
 # ========================================================================
@@ -45,8 +45,11 @@ EMACS=emacs
 
 # -------- Compiling ECB with the cedet-library 1.0 ----------------------
 
-# cedet >= 1.0 (contains a.o. semantic >= 2.0, eieio >= 0.18 and speedbar
-# >= 0.15). Set here the full path to the cedet-installation directory.
+# cedet >= 1.0preX (contains a.o. semantic >= 2.0, eieio >= 0.18 and
+# speedbar >= 0.15). Set here the full path to the cedet-installation
+# directory. Set this to empty if you want to use that cedet which is
+# integrated into Emacs >= 23.2. For Emacs-versions < 23.2 you MUST set
+# this path!
 
 CEDET=c:/Programme/emacs-23.1/site-lisp/package-development/cedet
 
@@ -58,11 +61,7 @@ LOADPATH=
 # - Call "make" to byte-compile the ECB. You can savely ignore the messages.
 # - Or call
 #
-#      make EMACS="path/to/emacs"
-#
-#      or
-#
-#      make CEDET="path/to/cedet"
+#      make [EMACS="path/to/emacs"] [CEDET="path/to/cedet"]
 #
 #   if you want to set either different load-paths or Emacs-binary and
 #   you do not want edit the Makefile. Do not forget quoting the arguments
@@ -118,7 +117,7 @@ INSTALLINFO=/usr/bin/install-info
 # ========================================================================
 
 
-# $Id: Makefile,v 1.116 2009/11/20 10:15:00 berndl Exp $
+# $Id: Makefile,v 1.117 2009/11/23 09:56:56 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!

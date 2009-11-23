@@ -60,6 +60,12 @@
 ** `defecb-window-dedicator-to-ecb-buffer' replaces `defecb-window-dedicator'
 
    This is only relevant for people who program own special ecb-windows.
+
+** Better compatibility with forthcoming Gnu Emacs 23.2
+
+*** Works with emacs-integrated cedet-suite
+    TODO: Makefile überarbeiten!
+          Installationsanweisung überarbeiten
    
 ** Fixed Bugs
 
