@@ -52,7 +52,7 @@
                                    (semanticdb-mode . semantic/db-mode)
                                    (eieio . eieio)
                                    (speedbar . speedbar))
-  "Maps the cvs-library of cedet to the equivalent lib of Emacs >= 32.2
+  "Maps the cvs-library of cedet to the equivalent lib of Emacs >= 23.2
 The elemant is an assoc list where the car is the lib-symbol of a
 cedet-library and the cdr is the corresponding lib-symbol of the cedet-suite
 integrated into Emacs >= 23.2
@@ -60,12 +60,13 @@ integrated into Emacs >= 23.2
 ALL CEDET-LIBRARIES NEEDED BY ECB MUST BE REGISTERED HERE!")
 
 (defun ecb-cedet-require (cvs-lib)
-  "Loads a cedet-library into Emacs.
+  "Loads a cedet-library CVS-LIB into Emacs.
+CVS-LIB is the symbol-name of the cedet-library in the cvs-version of cedet.
 All cedet libaryies needed by ECB must be loaded with this function! Do not
 use `require' for looading a cedet-library into Emacs!"
-  (if (featurep 'cedet)
-      (require cvs-lib)
-    (require (cdr (assoc cvs-lib ecb-cedet-lib-registry)))))
+  (require (if (featurep 'cedet)
+               cvs-lib
+             (cdr (assoc cvs-lib ecb-cedet-lib-registry)))))
 
 
 (ecb-cedet-require 'semantic)
