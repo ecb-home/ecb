@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.450 2009/06/26 11:30:56 berndl Exp $
+;; $Id: ecb.el,v 1.451 2010/02/21 13:10:13 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -141,25 +141,15 @@
 (require 'ecb-upgrade)
 (require 'ecb-util)
 
+;; now we load all the cedet stuff
+(require 'ecb-cedet-wrapper)
+
 ;; if we miss some of the requirements we report an error.
-
-(defconst ecb-cedet-load-ok (featurep 'cedet))
-
-(defconst ecb-compiled-in-semantic-version
-  (eval-when-compile (ignore-errors semantic-version))
-  "Semantic-version used for byte-compiling ECB. Either nil when no semantic
-is loaded or the value of `semantic-version' at ECB-compilation time.")
-
-(defconst ecb-compiled-in-cedet-version
-  (eval-when-compile (ignore-errors cedet-version))
-  "Cedet-version used for byte-compiling ECB. Either nil when no semantic
-is loaded or the value of `cedet-version' at ECB-compilation time.")
-
-(when (not ecb-cedet-load-ok)
+(when ecb-cedet-missing-libraries
   (if (ecb-noninteractive)
-      (ecb-error "ECB is missing CEDET - check your CEDET-installation/setup!")
+      (ecb-error "ECB is missing the libs %s of CEDET - check your CEDET-installation/setup!"
+                 ecb-cedet-missing-libraries)
     (ecb-check-requirements)))
-
 
 ;; If we are here we can load ECB because at least we have installed and
 ;; loaded all required packages. The correct version will be checked
@@ -1212,77 +1202,6 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
          (setq ecb-temporary-changed-emacs-variables-alist
                (ecb-remove-assoc var ecb-temporary-changed-emacs-variables-alist)))))))
 
-(defun ecb-check-semantic-load ()
-  "Checks if cedet is correctly loaded if semantic 2.X is used and if the same
-semantic-version has been used for byte-compiling ECB and loading into Emacs.
-If ECB detects a problem it is reported and then an error is thrown."
-  (when (boundp 'semantic-version)
-    (let ((err-msg
-           (cond ;; Different semantic-version used for byte-compiling ECB and
-                 ;; loading into Emacs.
-                 ((not (string= semantic-version ecb-compiled-in-semantic-version))
-                  (concat "ECB has been byte-compiled with another semantic-version than currently\n"
-                          "loaded into Emacs:\n"
-                          (format "  + Semantic used for byte-compiling ECB: %s\n"
-                                  ecb-compiled-in-semantic-version)
-                          (format "  + Semantic currently loaded into Emacs: %s\n"
-                                  semantic-version)
-                          "Please ensure that ECB is byte-compiled with the same semantic-version as you\n"
-                          "you load into your Emacs. Check if you have byte-compiled ECB with the cedet-\n"
-                          "suite but loaded old semantic 1.X into Emacs or vice versa.\n\n"
-                          "In general it is recommended to start ECB first-time not byte-compiled\n"
-                          "and then call the command `ecb-byte-compile'. This ensures you byte-compile ECB\n"
-                          "with the same library-versions \(semantic etc.) as you load into Emacs.\n"
-                          "If you use the Makefile check the variables CEDET before compiling!\n"
-                          ))
-                 (t ""))))
-      (unless (= 0 (length err-msg)) 
-        (with-output-to-temp-buffer "*ECB semantic-load problems*"
-          (princ "Currently ECB can not be activated cause of the following reason:\n\n")
-          (princ err-msg)
-          (princ "\n\nPlease fix the reported problem and restart Emacs\n"))
-        (ecb-error "Please fix the reported problem and restart Emacs!")))))
-
-(defun ecb-check-cedet-load ()
-  "Checks if cedet is correctly loaded if semantic 2.X is used and if the same
-semantic-version has been used for byte-compiling ECB and loading into Emacs.
-If ECB detects a problem it is reported and then an error is thrown."
-  (when (boundp 'cedet-version)
-    (let ((err-msg
-           (cond ;; cedet was not compiled into ECB
-                 ((null ecb-compiled-in-cedet-version)
-                  (concat (format "Currently CEDET %s is loaded but ECB has been byte-compiled without\n"
-                                  cedet-version)
-                          "any CEDET. Please either use ECB un-byte-compiled \(remove all *.elc\n"
-                          "files from the ECB-directory) or byte-compile ECB correctly with CEDET!\n"
-                          "In the later case it is recommended to start ECB first-time not byte-compiled\n"
-                          "and then call the command `ecb-byte-compile'. This ensures you byte-compile ECB\n"
-                          "with the same CEDET-library-version as you load into Emacs.\n"
-                          "If you use the Makefile check the variable CEDET before compiling!\n"
-                          ))
-                 ;; Different cedet-version used for byte-compiling ECB and
-                 ;; loading into Emacs.
-                 ((not (string= cedet-version ecb-compiled-in-cedet-version))
-                  (concat "ECB has been byte-compiled with another cedet-version than currently\n"
-                          "loaded into Emacs:\n"
-                          (format "  + CECET used for byte-compiling ECB: %s\n"
-                                  ecb-compiled-in-cedet-version)
-                          (format "  + CEDET currently loaded into Emacs: %s\n"
-                                  cedet-version)
-                          "Please ensure that ECB is byte-compiled with the same cedet-version as you\n"
-                          "you load into your Emacs.\n\n"
-                          "In general it is recommended to start ECB first-time not byte-compiled\n"
-                          "and then call the command `ecb-byte-compile'. This ensures you byte-compile ECB\n"
-                          "with the same CEDET-library-version as you load into Emacs.\n"
-                          "If you use the Makefile check the variable CEDET before compiling!\n"))
-                 (t ""))))
-      (unless (= 0 (length err-msg)) 
-        (with-output-to-temp-buffer "*ECB cedet-load problems*"
-          (princ "Currently ECB can not be activated cause of the following reason:\n\n")
-          (princ err-msg)
-          (princ "\n\nPlease fix the reported problem and restart Emacs\n"))
-        (ecb-error "Please fix the reported problem and restart Emacs!")))))
-
 
 (defun ecb-activate--impl ()
   "See `ecb-activate'.  This is the implementation of ECB activation."
@@ -1803,19 +1722,7 @@ lisp-file FILE.el which is either newer than FILE.elc or if FILE.elc doesn't
 exist."
   (interactive "P")
   (ecb-check-requirements)
-  (let ((load-path
-	 (append (list (ecb-file-name-directory
-			(or (locate-library "semantic")
-			    (ecb-error "Semantic is not in the load-path!")))
-                       (ecb-file-name-directory
-			(or (locate-library "eieio")
-			    (ecb-error "Eieio is not in the load-path!")))
-                       (ecb-file-name-directory
-			(or (locate-library "speedbar")
-			    (ecb-error "Speedbar is not in the load-path!")))
-		       (ecb-file-name-directory (locate-library "ecb")))
-		 load-path))
-	(files (ecb-directory-files (ecb-file-name-directory (locate-library "ecb"))
+  (let ((files (ecb-directory-files (ecb-file-name-directory (locate-library "ecb"))
                                     t)))
     (save-excursion
       (dolist (file files)
@@ -1853,7 +1760,9 @@ exist."
 
 ;; parsing of our ecb-macros
 
-(eval-after-load "semantic-el"
+(eval-after-load (if (locate-library "semantic/bovine/el")
+                     "el"
+                   "semantic-el")
   (condition-case oops
       (when (fboundp 'semantic-elisp-setup-form-parser)
         ;; defecb-multicache

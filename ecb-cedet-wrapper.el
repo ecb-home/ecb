@@ -21,7 +21,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-cedet-wrapper.el,v 1.6 2009/11/23 09:56:57 berndl Exp $
+;; $Id: ecb-cedet-wrapper.el,v 1.7 2010/02/21 13:10:12 berndl Exp $
 
 ;;; Commentary:
 
@@ -34,6 +34,8 @@
 ;; always point to the correct variable or function of cedet independent
 ;; which cedet version is loaded. ECB only uses the functions exported from
 ;; ecb-cedet-wrapper.el!
+;;
+;; In addition this file defines all requirements ECB needs of CEDET.
 
 
 (eval-when-compile
@@ -43,41 +45,175 @@
   ;; to avoid compiler grips
   (require 'cl))
 
-;; Add new cedet libraries needed by ecb!!
-(defconst ecb-cedet-lib-registry '((semantic . semantic)
+(require 'ecb-util)
+
+(defconst ecb-cedet-old-sourcetree-structure-detected-p
+  (locate-library "semantic-ctxt")
+  "Not nil if old cedet sourcetree-structure is detected.")
+
+;; Additonal cedet libraries needed by ecb must be added here!!
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We have to pay attention if there
+;; are changes when Eric marriages the two styles for his CVS-repository
+(defconst ecb-cedet-lib-registry '((cedet . cedet)
+                                   (semantic . semantic)
                                    (semantic-ctxt . semantic/ctxt)
                                    (semantic-analyze . semantic/analyze)
                                    (semanticdb . semantic/db)
                                    (semanticdb-find . semantic/db-find)
                                    (semanticdb-mode . semantic/db-mode)
+                                   (semantic-el . semantic/bovine/el)
                                    (eieio . eieio)
                                    (speedbar . speedbar))
-  "Maps the cvs-library of cedet to the equivalent lib of Emacs >= 23.2
-The elemant is an assoc list where the car is the lib-symbol of a
-cedet-library and the cdr is the corresponding lib-symbol of the cedet-suite
-integrated into Emacs >= 23.2
+  "Maps the old library-structure of cedet to the equivalent libs
+of Emacs >= 23.2. The value is an assoc list where the car is the
+lib-symbol of an old-style cedet-library and the cdr is the
+corresponding lib-symbol of the new style library \(as with the
+cedet-suite integrated into Emacs >= 23.2).
 
 ALL CEDET-LIBRARIES NEEDED BY ECB MUST BE REGISTERED HERE!")
 
-(defun ecb-cedet-require (cvs-lib)
+(defconst ecb-cedet-required-version-min '(1 0 2 6)
+  "Minimum version of cedet needed by ECB.
+The meaning is as follows:
+1. Major-version
+2. Minor-version
+3. 0 = alpha, 1 = beta, 2 = pre, 3 = nothing \(e.g. \"1.4\"), 4 = . \(e.g. \"1.4.3\"
+4. Subversion after the alpha, beta, pre or .")
+
+(defconst ecb-cedet-required-version-max '(1 0 4 9)
+  "Maximum version of CEDET currently accepted by ECB.
+See `ecb-required-cedet-version-min' for an explanation.")
+
+(defun ecb-cedet-missing-libs ()
+  "Return a list of names of missing cedet-libs.
+If no cedet libs are missing nil is returned."
+  (let ((missing-libs-list nil)
+        (lib nil))
+    (dolist (l-elem ecb-cedet-lib-registry)
+      (setq lib (symbol-name (if ecb-cedet-old-sourcetree-structure-detected-p
+                                 (car l-elem)
+                               (cdr l-elem))))
+      (when (not (locate-library lib))
+        (push lib missing-libs-list)))
+    missing-libs-list))
+
+(defun ecb-cedet-require (old-style-lib)
   "Loads a cedet-library CVS-LIB into Emacs.
-CVS-LIB is the symbol-name of the cedet-library in the cvs-version of cedet.
+OLD-STYLE-LIB is the symbol-name of the cedet-library as in the cvs-version of
+cedet in feb 2010 \(ie. there is a lib semantic-ctxt instead of semantic/ctxt).
 All cedet libaryies needed by ECB must be loaded with this function! Do not
 use `require' for looading a cedet-library into Emacs!"
-  (require (if (featurep 'cedet)
-               cvs-lib
-             (cdr (assoc cvs-lib ecb-cedet-lib-registry)))))
+  (require (if ecb-cedet-old-sourcetree-structure-detected-p
+               old-style-lib
+             (cdr (assoc old-style-lib ecb-cedet-lib-registry)))))
 
+;; With old style CEDET-load-mechanism cedet.el must be loaded "by
+;; hand" to setup load-path correctly for cedet.
+;; + Old-style CEDET-loader: The following require for 'cedet fails if
+;;   cedet.el is either not loaded or cedet/common is not contained in the
+;;   load-path. For these cases we encapsulate it with ignore-errors.
+;; + New-style CEDET-loader (as in Emacs >= 23.2): cedet.el is not needed to
+;;   setup the load-path but it contains the costant `cedet-version' which is
+;;   needed by ECB.
+(ignore-errors (ecb-cedet-require 'cedet))
 
-(ecb-cedet-require 'semantic)
-(ecb-cedet-require 'semantic-ctxt)
-(ecb-cedet-require 'semantic-analyze)
-(ecb-cedet-require 'semanticdb)
-(ecb-cedet-require 'semanticdb-find)
-(ecb-cedet-require 'semanticdb-mode)
-(ecb-cedet-require 'eieio)
+(defconst ecb-cedet-missing-libraries
+  (ecb-cedet-missing-libs)
+  "List of library-names of CEDET missed by ECB.
+Nil if all libs needed by ECB are found.")
 
-(defconst ecb-semantic-2-loaded (string-match "^2" semantic-version))
+(unless ecb-cedet-missing-libraries
+  (ecb-cedet-require 'semantic)
+  (ecb-cedet-require 'semantic-ctxt)
+  (ecb-cedet-require 'semantic-analyze)
+  (ecb-cedet-require 'semanticdb)
+  (ecb-cedet-require 'semanticdb-find)
+  (ecb-cedet-require 'semanticdb-mode)
+  (ecb-cedet-require 'eieio))
+
+(defconst ecb-compiled-in-semantic-version
+  (eval-when-compile (ignore-errors semantic-version))
+  "Semantic-version used for byte-compiling ECB. Either nil when no semantic
+is loaded or the value of `semantic-version' at ECB-compilation time.")
+
+(defconst ecb-compiled-in-cedet-version
+  (eval-when-compile (ignore-errors cedet-version))
+  "Cedet-version used for byte-compiling ECB. Either nil when no semantic
+is loaded or the value of `cedet-version' at ECB-compilation time.")
+
+(defun ecb-check-semantic-load ()
+  "Checks if cedet is correctly loaded if semantic 2.X is used and if the same
+semantic-version has been used for byte-compiling ECB and loading into Emacs.
+If ECB detects a problem it is reported and then an error is thrown."
+  (when (boundp 'semantic-version)
+    (let ((err-msg
+           (cond ;; Different semantic-version used for byte-compiling ECB and
+            ;; loading into Emacs.
+            ((not (string= semantic-version ecb-compiled-in-semantic-version))
+             (concat "ECB has been byte-compiled with another semantic-version than currently\n"
+                     "loaded into Emacs:\n"
+                     (format "  + Semantic used for byte-compiling ECB: %s\n"
+                             ecb-compiled-in-semantic-version)
+                     (format "  + Semantic currently loaded into Emacs: %s\n"
+                             semantic-version)
+                     "Please ensure that ECB is byte-compiled with the same semantic-version as you\n"
+                     "you load into your Emacs. Check if you have byte-compiled ECB with the cedet-\n"
+                     "suite but loaded old semantic 1.X into Emacs or vice versa.\n\n"
+                     "In general it is recommended to start ECB first-time not byte-compiled\n"
+                     "and then call the command `ecb-byte-compile'. This ensures you byte-compile ECB\n"
+                     "with the same library-versions \(semantic etc.) as you load into Emacs.\n"
+                     "If you use the Makefile check the variables CEDET before compiling!\n"
+                     ))
+            (t ""))))
+      (unless (= 0 (length err-msg)) 
+        (with-output-to-temp-buffer "*ECB semantic-load problems*"
+          (princ "Currently ECB can not be activated cause of the following reason:\n\n")
+          (princ err-msg)
+          (princ "\n\nPlease fix the reported problem and restart Emacs\n"))
+        (ecb-error "Please fix the reported problem and restart Emacs!")))))
+
+(defun ecb-check-cedet-load ()
+  "Checks if cedet is correctly loaded if semantic 2.X is used and if the same
+semantic-version has been used for byte-compiling ECB and loading into Emacs.
+If ECB detects a problem it is reported and then an error is thrown."
+  (when (boundp 'cedet-version)
+    (let ((err-msg
+           (cond ;; cedet was not compiled into ECB
+            ((null ecb-compiled-in-cedet-version)
+             (concat (format "Currently CEDET %s is loaded but ECB has been byte-compiled without\n"
+                             cedet-version)
+                     "any CEDET. Please either use ECB un-byte-compiled \(remove all *.elc\n"
+                     "files from the ECB-directory) or byte-compile ECB correctly with CEDET!\n"
+                     "In the later case it is recommended to start ECB first-time not byte-compiled\n"
+                     "and then call the command `ecb-byte-compile'. This ensures you byte-compile ECB\n"
+                     "with the same CEDET-library-version as you load into Emacs.\n"
+                     "If you use the Makefile check the variable CEDET before compiling!\n"
+                     ))
+            ;; Different cedet-version used for byte-compiling ECB and
+            ;; loading into Emacs.
+            ((not (string= cedet-version ecb-compiled-in-cedet-version))
+             (concat "ECB has been byte-compiled with another cedet-version than currently\n"
+                     "loaded into Emacs:\n"
+                     (format "  + CECET used for byte-compiling ECB: %s\n"
+                             ecb-compiled-in-cedet-version)
+                     (format "  + CEDET currently loaded into Emacs: %s\n"
+                             cedet-version)
+                     "Please ensure that ECB is byte-compiled with the same cedet-version as you\n"
+                     "you load into your Emacs.\n\n"
+                     "In general it is recommended to start ECB first-time not byte-compiled\n"
+                     "and then call the command `ecb-byte-compile'. This ensures you byte-compile ECB\n"
+                     "with the same CEDET-library-version as you load into Emacs.\n"
+                     "If you use the Makefile check the variable CEDET before compiling!\n"))
+            (t ""))))
+      (unless (= 0 (length err-msg)) 
+        (with-output-to-temp-buffer "*ECB cedet-load problems*"
+          (princ "Currently ECB can not be activated cause of the following reason:\n\n")
+          (princ err-msg)
+          (princ "\n\nPlease fix the reported problem and restart Emacs\n"))
+        (ecb-error "Please fix the reported problem and restart Emacs!")))))
+
+(defconst ecb-semantic-2-loaded (ignore-errors
+                                  (string-match "^2" semantic-version)))
 
 ;; -- getter functions for all variables of cedet currently used by ECB ---
 
@@ -223,8 +359,9 @@ use `require' for looading a cedet-library into Emacs!"
 
 ;; new let us create the aliase. Each alias has the name "ecb--"<function of
 ;; cedet >= 1.0
-(dolist (f-elem  (append ecb--cedet-function-list ecb--semantic-format-function-list))
-  (defalias (intern (concat "ecb--" (symbol-name f-elem))) f-elem))
+(unless ecb-cedet-missing-libraries
+  (dolist (f-elem  (append ecb--cedet-function-list ecb--semantic-format-function-list))
+    (defalias (intern (concat "ecb--" (symbol-name f-elem))) f-elem)))
 
 (silentcomp-provide 'ecb-cedet-wrapper)
 

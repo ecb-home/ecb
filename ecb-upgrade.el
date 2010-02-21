@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.116 2009/06/09 10:39:46 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.117 2010/02/21 13:10:12 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1145,9 +1145,9 @@ options with their old \(before the upgrade/reset) and new values."
 ;; all needs for the requirements check
 ;; ----------------------------------------------------------------------
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we should set this to pre6
-(defconst ecb-required-cedet-version-min '(1 0 2 6))
-(defconst ecb-required-cedet-version-max '(1 0 4 9))
+;; we need the min and max version of cedet and the list of missing libraries
+;; of cedet (if there are any)
+(require 'ecb-cedet-wrapper)
 
 (defvar ecb-all-requirements-available nil)
 
@@ -1162,20 +1162,24 @@ Currently this is a check if the right `cedet-version is loaded."
   (when ecb-regular-xemacs-package-p
     (ecb-error "Sorry, but ECB is currently not runnable as XEmacs-package. Install \"by hand\"."))
 
+  (when ecb-cedet-missing-libraries
+    (ecb-error "ECB is missing the libs %s of CEDET - check the CEDET-installation/setup!"
+               ecb-cedet-missing-libraries))
+
   (when (and (or (not (boundp 'ecb-version-check)) ecb-version-check)
              (not ecb-all-requirements-available))
     (let ((cedet-required-version-str-min (ecb-package-version-list2str
-                                           ecb-required-cedet-version-min))
+                                           ecb-cedet-required-version-min))
           (cedet-required-version-str-max (ecb-package-version-list2str
-                                           ecb-required-cedet-version-max))
+                                           ecb-cedet-required-version-max))
           (version-error nil))
-      ;; check if vedet-version is correct
+      ;; check if cedet-version is correct
       (when (or (not (boundp 'cedet-version))
                 (ecb-package-version-list<
                  (ecb-package-version-str2list cedet-version)
-                 ecb-required-cedet-version-min)
+                 ecb-cedet-required-version-min)
                 (ecb-package-version-list<
-                 ecb-required-cedet-version-max
+                 ecb-cedet-required-version-max
                  (ecb-package-version-str2list cedet-version)))
         (setq version-error (concat "cedet ["
                                     cedet-required-version-str-min

@@ -23,7 +23,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.232 2009/11/20 10:15:04 berndl Exp $
+@c $Id: ecb.texi,v 1.233 2010/02/21 13:10:15 berndl Exp $
 
 @setfilename ecb.info
 
@@ -417,22 +417,39 @@ This section describes how to install ECB.
 @node Requirements, ECB as XEmacs-package, Installation, Installation
 @subsection Requirements
 
-This section describes the requirements of ECB. Just follow these steps and
-the requirements of ECB are fulfilled.
+This section describes the requirements of ECB. Just ensure that these
+requirements of ECB are fulfilled.
+
+The short story: With Emacs >= 23.2 there is nothing to do. With XEmacs or
+Emacs < 23.2 you have to install the CEDET-suite.
+
+The long story:
 
 @enumerate
 
 @item Emacs-version:
 ECB works only with (X)Emacs >= 21! If you have an older one, please upgrade.
 
-@item Install CEDET-suite:
-Get it from @url{http://cedet.sourceforge.net}, read the setup-instructions in
-@url{http://cedet.sourceforge.net/setup.shtml} and read also the shipped file
-@file{INSTALL}.
+@item CEDET-suite:
+If Emacs >= 23.2 is used then CEDET is already integrated into Emacs and there
+is nothing to do.
 
-@strong{Please note}: ECB requires now a complete CEDET-installation! It will
-not longer work with outdated separate packages semantic 1.4.X, eieio 0.X and
-speedbar 0.X!
+For users of any XEmacs-version, any Emacs-version < 23.2 or the latest author
+CEDET version: Get it from @url{http://cedet.sourceforge.net}, read the
+setup-instructions in @url{http://cedet.sourceforge.net/setup.shtml} and read
+also the shipped file @file{INSTALL}.
+
+@strong{Please note}: If ECB detects an author version of CEDET (as available
+at @url{http://cedet.sourceforge.net}) then ECB will ALWAYS try to use that
+one even if you use Emacs >= 23.2! This is for users who want to use latest
+Emacs >= 23.2 but want to use still the latest author version of CEDET and not the
+Emacs-integrated one.
+
+So if you want to use the Emacs-integrated CEDET-suite of Emacs >= 23.2 you
+have to ensure that no author-version of CEDET is in the @code{load-path}!
+This means that the library cedet.el of the author-version MUST NOT be loaded
+into Emacs! This is a valid check: (locate-library "semantic-ctxt") must
+return nil!
 
 @item Only for XEmacs-users:
 If you use XEmacs you must have installed the
@@ -442,8 +459,8 @@ mail-lib XEmacs package) installed; this package is also needed for submitting
 problem-reports to the ECB-maintainers!
 
 @item Optional for Java-coding:
-If Java code is edited the ECB works best when the JDEE package (
-@url{http://jdee.sourceforge.net}) is installed.
+ECB works very well with the JDEE package (
+@url{http://jdee.sourceforge.net}) but JDEE is not required by ECB.
 
 @end enumerate
 
@@ -760,19 +777,38 @@ concerning your Emacs-setup:
 @enumerate
 @item Setting up CEDET/semantic itself
 
-This section implies that you have already successfully installed
-the CEDET-suite and describes how to setup cedet and here mainly
-semantic.
+This section implies that you either use Emacs >= 23.2 or that you have
+already successfully installed the CEDET-suite.
 
 For all semantic-supported file-types parsing files is done completely
-by semantic. ECB just displays the parsing results. For all needs of
-ECB semantic is completely setup by ECB itself, i.e. ECB sets up
-semantic for you!
+by semantic. ECB just displays the parsing results.
 
-@strong{Please note}: Nevertheless you should read carefully the file
-@file{INSTALL} shipped with the cedet-suite. In addition the CEDET-website
-offers a link to a ``Gentle introduction to Cedet''. It's worth to read it!
-You find it here:
+@itemize
+@item Users of Emacs >= 23.2:
+You just have to enable semantic by activating the semantic-mode. This can be
+done by adding code to your initialization-file (e.g. .emacs) like
+this:
+
+@lisp
+(semantic-mode 1)
+@end lisp
+
+This should be placed BEFORE the statements which activate ECB.
+
+As an alternative you can use the @code{ecb-before-activate-hook} like
+follows:
+
+@lisp
+(add-hook 'ecb-before-activate-hook
+          (lambda () (semantic-mode 1)))
+@end lisp
+
+This is a smarter way when you need semantic only if ECB is active.
+
+@item Users of XEmacs or Emacs < 23.2:
+You should read carefully the file @file{INSTALL} shipped with the
+cedet-suite. In addition the CEDET-website offers a link to a ``Gentle
+introduction to Cedet''. It's worth to read it! You find it here:
 @ifhtml
 @uref{http://xtalk.msk.su/~ott/en/writings/emacs-devenv/EmacsCedet.html}
 @end ifhtml
@@ -782,16 +818,20 @@ You find it here:
 If CEDET is not correctly installed then ECB can not setup semantic for its
 needs.
 
+@end itemize
+
 @strong{Minimum setup recommendation}: It is very useful to enable the
 @code{global-semantic-idle-scheduler-mode} and
-@code{global-semanticdb-minor-mode}. Read the manual of cedet/semantic how to
-do this. With CEDET-versions >= 1.0pre6 this can be done by adding
-@code{semantic-load-enable-minimum-features} to your startup-file. Please read
-also the subsection ``Jumping to the definition of external types'' in
-@ref{ECB Methods-window}.
+@code{global-semanticdb-minor-mode}. Read the manual of Emacs 23.2 or the
+manual of cedet/semantic how to do this. With CEDET-versions >= 1.0pre6 this
+can be done by adding @code{semantic-load-enable-minimum-features} to your
+startup-file. Please read also the subsection ``Jumping to the definition of
+external types'' in @ref{ECB Methods-window}.
 
 @anchor{Checking your hooks}
-@item Checking your hooks
+@item Checking your hooks (Only for XEmacs and Emacs < 23.2!)
+
+If you use Emacs > 23.2 you can ignore the following paragraphs.
 
 If you have already checked point (1.) and if you have still problems
 getting ECB/semantic working properly for your sources you should
@@ -820,9 +860,9 @@ value of a hook with the new value whereas @code{add-hook}
 
 @end enumerate
 
-If your source-files are ``running'' with correct @code{major-mode}
-and correct major-mode hooks ECB and semantic will do what you expect
-them doing!
+If your source-files are ``running'' with correct @code{major-mode} and - in
+case of XEmacs or Emacs < 23.2 - correct major-mode hooks ECB and semantic
+will do what you expect them doing!
 
 @node Non-semantic files, , Setting up CEDET/semantic, Setting up Emacs
 @subsection Setup for file types not supported by semantic

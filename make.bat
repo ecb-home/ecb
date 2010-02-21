@@ -26,8 +26,13 @@ REM You should have received a copy of the GNU General Public License along with
 REM GNU Emacs; see the file COPYING.  If not, write to the Free Software
 REM Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-REM $Id: make.bat,v 1.29 2009/04/21 15:23:22 berndl Exp $
+REM $Id: make.bat,v 1.30 2010/02/21 13:10:16 berndl Exp $
 
+REM ******************************************************
+REM *  Do not use make.bat when using Emacs >= 23.2!     *
+REM *  With Emacs 23.2 byte-compiling is only supported  *
+REM *  by the shipped Makefile!                          *
+REM ******************************************************
 
 REM Make sure you byte-compile ECB with the semantic, eieio and
 REM speedbar-version you load into (X)Emacs (see below)!
