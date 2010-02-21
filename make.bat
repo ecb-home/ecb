@@ -28,6 +28,11 @@ REM Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 REM $Id$
 
+REM ******************************************************
+REM *  Do not use make.bat when using Emacs >= 23.2!     *
+REM *  With Emacs 23.2 byte-compiling is only supported  *
+REM *  by the shipped Makefile!                          *
+REM ******************************************************
 
 REM Make sure you byte-compile ECB with the semantic, eieio and
 REM speedbar-version you load into (X)Emacs (see below)!
