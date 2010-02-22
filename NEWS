@@ -1,8 +1,29 @@
 * Changes for ECB version 2.40.1
 
+** Better compatibility with forthcoming Gnu Emacs 23.2
+
+*** Works out of the box with the Emacs-integrated CEDET-suite
+
+    If Emacs >= 23.2 is used then CEDET is already integrated into Emacs and
+    ECB can be used out of the box without further requirements.
+
+    PLEASE NOTE: If ECB detects an author version of CEDET (as available at
+    `http://cedet.sourceforge.net') then ECB will ALWAYS try to use that one
+    even if you use Emacs >= 23.2! This is for users who want to use latest
+    Emacs >= 23.2 but still prefer using the latest author version of CEDET
+    instead of the Emacs-integrated one.
+
+    So if you want to use the Emacs-integrated CEDET-suite you have to ensure
+    that no author-version of CEDET is in the `load-path'! This means that the
+    library cedet.el of the author-version MUST NOT be loaded into Emacs (as
+    described in the file INSTALL of CEDET)!
+    This is a valid check: (locate-library "semantic-ctxt") must return nil!
+
+    Details about the Requirements of ECB are available in the README.
+    
 ** The special symboldef ECB-window is now stable and ready for usage
 
-*** TODO
+*** TODO description what is new
 
 ** ECB now uses the partial reparse feature of semantic
 
@@ -61,24 +82,6 @@
 
    This is only relevant for people who program own special ecb-windows.
 
-** Better compatibility with forthcoming Gnu Emacs 23.2
-
-*** Works out of the box with the Emacs-integrated cedet-suite
-
-    If Emacs >= 23.2 is used then CEDET is already integrated into Emacs and
-    ECB can be used out of the box without further requirements.
-
-    PLEASE NOTE: If ECB detects an author version of CEDET (as available at
-    `http://cedet.sourceforge.net') then ECB will ALWAYS try to use that one
-    even if you use Emacs >= 23.2! This is for users who want to use latest
-    Emacs >= 23.2 but want to use still the latest author version of CEDET and
-    not the Emacs-integrated one.
-
-    So if you want to use the Emacs-integrated CEDET-suite you have to ensure
-    that no author-version of CEDET is in the `load-path'! This means that the
-    library cedet.el of the author-version MUST NOT be loaded into Emacs!
-    This is a valid check: (locate-library "semantic-ctxt") must return nil!
-   
 ** Fixed Bugs
 
 *** Command `delete-windows-on' has only deleted one window

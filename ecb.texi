@@ -23,7 +23,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.233 2010/02/21 13:10:15 berndl Exp $
+@c $Id: ecb.texi,v 1.234 2010/02/22 16:33:44 berndl Exp $
 
 @setfilename ecb.info
 
@@ -442,14 +442,14 @@ also the shipped file @file{INSTALL}.
 @strong{Please note}: If ECB detects an author version of CEDET (as available
 at @url{http://cedet.sourceforge.net}) then ECB will ALWAYS try to use that
 one even if you use Emacs >= 23.2! This is for users who want to use latest
-Emacs >= 23.2 but want to use still the latest author version of CEDET and not the
-Emacs-integrated one.
+Emacs >= 23.2 but still prefer using the latest author version of CEDET
+instead of the Emacs-integrated one.
 
 So if you want to use the Emacs-integrated CEDET-suite of Emacs >= 23.2 you
 have to ensure that no author-version of CEDET is in the @code{load-path}!
 This means that the library cedet.el of the author-version MUST NOT be loaded
-into Emacs! This is a valid check: (locate-library "semantic-ctxt") must
-return nil!
+into Emacs (as described in the file INSTALL of CEDET)! This is a valid check:
+(locate-library "semantic-ctxt") must return nil!
 
 @item Only for XEmacs-users:
 If you use XEmacs you must have installed the
@@ -631,6 +631,10 @@ This loads all available autoloads of ECB, e.g. @code{ecb-activate},
 Regardless which method you prefer: In both cases the used statement
 must be placed @strong{after} the statement of step 3!
 
+Only for users of a manually installed author version of the CEDET-suite (not
+that one integrated into Emacs >= 23.2): Instructions for loading CEDET into
+Emacs must be placed somewhere before the statements needed for loading ECB
+(s.a.)!
 
 @item Restart (X)Emacs.
 @end enumerate

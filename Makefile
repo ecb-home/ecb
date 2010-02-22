@@ -1,6 +1,6 @@
 # This Makefile byte-compiles the ECB lisp files and generates online-help.
 
-# Copyright (C) 2000 - 2005 Jesper Nordenberg,
+# Copyright (C) 2000 - 2010 Jesper Nordenberg,
 #                           Klaus Berndl,
 #                           Free Software Foundation, Inc.
 
@@ -23,7 +23,7 @@
 # GNU Emacs; see the file COPYING.  If not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# $Id: Makefile,v 1.118 2010/02/21 13:10:09 berndl Exp $
+# $Id: Makefile,v 1.119 2010/02/22 16:33:42 berndl Exp $
 
 
 # ========================================================================
@@ -43,10 +43,13 @@ EMACS=emacs
 # -------- Compiling ECB with the cedet-library ----------------------
 
 # cedet >= 1.0pre6 (contains a.o. semantic >= 2.0, eieio >= 0.18 and
-# speedbar >= 0.15). Set here the full path to the cedet-installation
-# directory. Set this to EMPTY if you want to use that cedet which is
-# integrated into Emacs >= 23.2. For Emacs-versions < 23.2 you MUST set
-# this path!
+# speedbar >= 0.15).
+#
+# + If you use Emacs >= 23.2 and you want to use the integrated CEDET:
+#   Set this to empty (CEDET=)
+#
+# + If you use Emacs < 23.2 or if you want to use the author version of CEDET:
+#   Set this to the full path of your CEDET-installation.
 
 #CEDET=
 CEDET=c:/Programme/emacs-23.1/site-lisp/package-development/cedet
@@ -115,7 +118,7 @@ INSTALLINFO=/usr/bin/install-info
 # ========================================================================
 
 
-# $Id: Makefile,v 1.118 2010/02/21 13:10:09 berndl Exp $
+# $Id: Makefile,v 1.119 2010/02/22 16:33:42 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!

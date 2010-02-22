@@ -1,4 +1,4 @@
-README for the Emacs Code Browser (ECB) version 2.40
+README for the Emacs Code Browser (ECB) version 2.40.1
 
 
 About
@@ -15,12 +15,35 @@ The latest version can be found at: http://ecb.sourceforge.net
 Requirements
 ------------
 
+The short story:
+
+With Emacs >= 23.2 there is nothing to do. With XEmacs or Emacs < 23.2 you
+have to install the CEDET-suite by hand.
+
+The long story:
+
 1. Emacs-version: ECB works only with (X)Emacs >= 21! If you have an older
    one, please upgrade.
 
-2. Install CEDET-suite: Get it from http://cedet.sourceforge.net, read
+2. CEDET-suite: If Emacs >= 23.2 is used then CEDET is already integrated
+   into Emacs and there is nothing to do.
+
+   For users of any XEmacs-version, any Emacs-version < 23.2 or the latest
+   author CEDET version: Get it from http://cedet.sourceforge.net, read
    the setup-instructions in http://cedet.sourceforge.net/setup.shtml and
-   read also the shipped file INSTALL.
+   read also the shipped file `INSTALL'.
+
+   *Please note*: If ECB detects an author version of CEDET (as available
+   at http://cedet.sourceforge.net) then ECB will ALWAYS try to use that
+   one even if you use Emacs >= 23.2! This is for users who want to use
+   latest Emacs >= 23.2 but still prefer using the latest author version of
+   CEDET instead of the Emacs-integrated one.
+
+   So if you want to use the Emacs-integrated CEDET-suite of Emacs >= 23.2
+   you have to ensure that no author-version of CEDET is in the `load-path'!
+   This means that the library cedet.el of the author-version MUST NOT be
+   loaded into Emacs (as described in the file INSTALL of CEDET)! This is a
+   valid check: (locate-library "semantic-ctxt") must return nil!
 
 3. Only for XEmacs-users: If you use XEmacs you must have installed the
    package c-support (contains hideshow.el). If you want to read the
@@ -28,8 +51,8 @@ Requirements
    (part of the mail-lib XEmacs package) installed; this package is also
    needed for submitting problem-reports to the ECB-maintainers!
 
-4. Optional for Java-coding: If Java code is edited the ECB works best when
-   the JDEE package ( http://jdee.sourceforge.net) is installed.
+4. Optional for Java-coding: ECB works very well with the JDEE package (
+   http://jdee.sourceforge.net) but JDEE is not required by ECB.
 
 
 Do not install ECB before you have successfully installed the requirements!
@@ -45,7 +68,7 @@ XEmacs-package. Therefore ECB can also not be run as XEmacs-package. If CEDET
 will later become a XEmacs-package then probably ECB will come back as
 XEmacs-package. But in the meanwhile you have to install ECB "by hand".
 
-  1. Fulfill all requirements ECB needs (*note Requirements::)
+  1. Fulfill all requirements ECB needs (s.a. Requirements)
 
      ECB performs two autom checks:
 
@@ -101,6 +124,11 @@ XEmacs-package. But in the meanwhile you have to install ECB "by hand".
 
      Regardless which method you prefer: In both cases the used statement
      must be placed *after* the statement of step 3!
+
+     Only for users of a manually installed author version of the CEDET-suite
+     (not that one integrated into Emacs >= 23.2): Instructions for loading
+     CEDET into Emacs must be placed somewhere before the statements needed for
+     loading ECB (s.a.)!
 
   5. Restart (X)Emacs.
 
