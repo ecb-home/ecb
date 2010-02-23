@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.287 2009/11/20 10:15:02 berndl Exp $
+;; $Id: ecb-layout.el,v 1.288 2010/02/23 16:09:00 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -777,8 +777,7 @@ then set always nil!"
   (unless ecb-running-xemacs
     (let ((l (ecb-canonical-ecb-windows-list)))
       (dolist (w l)
-        (save-excursion
-          (set-buffer (window-buffer w))
+        (with-current-buffer (window-buffer w)
           (setq window-size-fixed (if (and (not ecb-running-gnu-emacs-version-22)
                                            ecb-compile-window-height)
                                       nil
@@ -6138,8 +6137,7 @@ Emacs)."
   (if (and (ecb-compile-window-live-p)
            (member ecb-compile-window-temporally-enlarge
                    '(after-display both))
-           (or (save-excursion
-                 (set-buffer (window-buffer ecb-compile-window))
+           (or (with-current-buffer (window-buffer ecb-compile-window)
                  (equal major-mode 'compilation-mode))
                (if ecb-running-xemacs
                    temp-buffer-shrink-to-fit

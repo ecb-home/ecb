@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.44 2009/11/20 10:15:01 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.45 2010/02/23 16:08:56 berndl Exp $
 
 
 ;;; History
@@ -2158,8 +2158,7 @@ the returned string: 'tree-buffer-image-start which holds 0 as value and
 value."
   (let ((image nil)
         (ret nil))
-    (save-excursion
-      (set-buffer name-of-buffer)
+    (with-current-buffer name-of-buffer
       (setq image (and icon-name (tree-buffer-find-image icon-name)))
       (setq ret
             (if image

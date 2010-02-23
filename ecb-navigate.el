@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-navigate.el,v 1.25 2009/11/20 10:15:04 berndl Exp $
+;; $Id: ecb-navigate.el,v 1.26 2010/02/23 16:09:06 berndl Exp $
 
 ;;; Commentary:
 
@@ -189,8 +189,7 @@ case no position saving is done."
   (let ((tag-start (ecb-nav-get-tag-start item)))
     (if (and tag-start (marker-buffer tag-start))
         (progn
-          (save-excursion
-            (set-buffer (marker-buffer tag-start))
+          (with-current-buffer (marker-buffer tag-start)
             (ecb-nav-set-pos item (- (point) tag-start)))
           (ecb-nav-set-window-start
            item

@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.76 2009/11/20 10:15:04 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.77 2010/02/23 16:09:06 berndl Exp $
 
 ;;; Commentary:
 
@@ -410,8 +410,7 @@ future this could break."
     ecb-speedbar-buffer-name ecb-speedbar-buffer-sync t
   "Update the speedbar so that it's synced up with the current file."
   (let ((speedbar-default-directory
-         (save-excursion
-           (set-buffer visible-buffer)
+         (with-current-buffer visible-buffer
            (ecb-fix-filename default-directory)))
         (ecb-default-directory (ecb-fix-filename default-directory)))
     (when (and (or (not (ecb-string= speedbar-default-directory

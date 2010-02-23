@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-autogen.el,v 1.14 2009/04/15 14:22:35 berndl Exp $
+;; $Id: ecb-autogen.el,v 1.15 2010/02/23 16:08:56 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -146,8 +146,7 @@ does nothing."
     ;; XEmacs adds autom. the provide statement but for GNU Emacs we must do
     ;; this:
     (when (not ecb-running-xemacs)
-      (save-excursion
-        (set-buffer (find-file-noselect (expand-file-name ecb-autogen-file)))
+      (with-current-buffer (find-file-noselect (expand-file-name ecb-autogen-file))
         (goto-char (point-min))
         (when (not (re-search-forward (format "^(provide '%s)"
                                               ecb-autoload-feature) nil t))

@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.187 2009/11/20 10:15:04 berndl Exp $
+;; $Id: tree-buffer.el,v 1.188 2010/02/23 16:09:16 berndl Exp $
 
 ;;; Commentary:
 
@@ -1421,8 +1421,7 @@ to test NODE-DATA-1 and NODE-DATA-2 for equality."
 			       (frame-width)))
 	 (click-col (+ (/ (* 10 x-point) pixels-per-10-col)
                        (if include-fringe-scrollbar
-                           (length (save-excursion
-                                     (set-buffer (tree-buffer-event-buffer e))
+                           (length (with-current-buffer (tree-buffer-event-buffer e)
                                      (tree-buffer-spec->sticky-indent-string
                                       tree-buffer-spec)))
                          0))))
@@ -1630,13 +1629,12 @@ nil is returned."
 
 (defun tree-buffer-help-echo-fn (win obj pos)
   "This function is the value of the `help-echo' property of each
-tree-node. This is only used with GNU Emacs 21!"
+tree-node. This is only used with GNU Emacs >= 21!"
   (let* ((window win)
          (position pos)
          (buffer (window-buffer window))
          node)
-    (save-excursion
-      (set-buffer buffer)
+    (with-current-buffer buffer
       (setq node (tree-buffer-get-node-at-point position))
       (and (tree-buffer-spec->node-mouse-over-fn tree-buffer-spec)
            node
@@ -2622,16 +2620,14 @@ functionality is done with the `help-echo'-property and the function
 `tree-buffer-help-echo-fn'!"
   (when tree-buffer-running-xemacs
     (dolist (buf tree-buffers)
-      (save-excursion
-        (set-buffer buf)
+      (with-current-buffer buf
         (add-hook 'mode-motion-hook 'tree-buffer-follow-mouse)))))
 
 (defun tree-buffer-deactivate-follow-mouse ()
   "Complementary function to `tree-buffer-activate-follow-mouse'."
   (when tree-buffer-running-xemacs
     (dolist (buf tree-buffers)
-      (save-excursion
-        (set-buffer buf)
+      (with-current-buffer buf
         (remove-hook 'mode-motion-hook 'tree-buffer-follow-mouse)))))
 
 ;; pressed keys

@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compilation.el,v 1.40 2009/11/20 10:15:01 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.41 2010/02/23 16:08:56 berndl Exp $
 
 ;;; Commentary:
 
@@ -220,8 +220,7 @@ either
       (if (ecb-compilation-registered-buffer-p (buffer-name buffer))
           buffer
         ;;else test if this is a valid buffer by mode
-        (if (save-excursion
-              (set-buffer buffer)
+        (if (with-current-buffer buffer
               (member major-mode (ecb-compilation-major-modes)))
             buffer
           ;;else test if this is a regular compilation buffer

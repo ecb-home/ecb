@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.98 2009/11/20 10:15:03 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.99 2010/02/23 16:09:05 berndl Exp $
 
 ;;; Commentary:
 
@@ -2066,8 +2066,7 @@ onto the whole tag-table are performed by `ecb-apply-tag-table-filters'.")
                                                 &optional tag-class)
   "Filter the Methods-buffer by a tag-class."
   (let* ((curr-semantic-symbol->name-assoc-list
-          (save-excursion
-            (set-buffer source-buffer)
+          (with-current-buffer source-buffer
             (ecb--semantic-symbol->name-assoc-list)))
          (choice (or tag-class
                      (ecb-query-string "Tag-class filter:"
@@ -2253,13 +2252,11 @@ used; if point does not stay on a tag then nil is returned."
   "Display only the current-type and its contents in the methods-buffer. The
 argument INVERSE is ignored here."
   (let* ((curr-type-tag (or (and (ecb--semantic-tag-p tag)
-                                 (save-excursion
-                                   (set-buffer source-buffer)
+                                 (with-current-buffer source-buffer
                                    (ecb-get-type-tag-of-tag tag)))
                             (cond ((ecb-point-in-edit-window-number)
                                    (if (ecb--semantic-active-p)
-                                       (save-excursion
-                                         (set-buffer source-buffer)
+                                       (with-current-buffer source-buffer
                                          (ecb-get-type-tag-of-tag (ecb-get-real-curr-tag)))))
                                   ((equal (current-buffer)
                                           (ecb-buffer-obj ecb-methods-buffer-name))
@@ -2268,8 +2265,7 @@ argument INVERSE is ignored here."
                                           (tree-node->data (ecb-get-type-node-of-node node)))))
                                   (t (ecb-error "ECB can not identify the current-type-tag!")))))
          (curr-tag-type-name-hierachy (and curr-type-tag
-                                           (save-excursion
-                                             (set-buffer source-buffer)
+                                           (with-current-buffer source-buffer
                                              (ecb-get-type-name-hierarchy-of-current-tag
                                               curr-type-tag)))))
     (if (and curr-type-tag curr-tag-type-name-hierachy)
@@ -2420,13 +2416,11 @@ applied default-tag-filters."
 (defun ecb-methods-filter-internal (inverse &optional filter-type)
   "FILTER-TYPE has to be one of the symbols 'regexp, 'protection,
 'tag-class, 'curr-type, 'function, 'no-filter or 'delete-last."
-  (if (save-excursion
-        (set-buffer ecb-methods-buffer-name)
+  (if (with-current-buffer ecb-methods-buffer-name
         (tree-buffer-empty-p))
       (message "There is nothing to filter in an empty Methods-buffer!")
     (let* ((source-buffer (ecb-get-source-buffer-for-tag-filter))
-           (semantic-source-p (save-excursion
-                                (set-buffer source-buffer)
+           (semantic-source-p (with-current-buffer source-buffer
                                 (ecb--semantic-active-p)))
            (choice (or filter-type
                        (intern (ecb-query-string
@@ -2466,8 +2460,7 @@ should be displayed in the modeline of the methods-buffer. If REMOVE-LAST is
 not nil then the topmost filter will be removed and all other arguments unless
 SOURCE-BUFFER arguments are ignored. Returns t if the filter has been applied
 otherwise nil."
-  (save-excursion
-    (set-buffer source-buffer)
+  (with-current-buffer source-buffer
     (if (and (not remove-last)
              (member filtertype '(protection tag-class curr-type))
              (not (ecb--semantic-active-p)))
@@ -2503,8 +2496,7 @@ otherwise nil."
           (setq ecb-methods-user-filter-alist
                 (cons (cons source-buffer filters) ecb-methods-user-filter-alist)))))
   (when (buffer-live-p source-buffer)
-    (save-excursion
-      (set-buffer source-buffer)
+    (with-current-buffer source-buffer
       (if (ecb--semantic-active-p)
           ;; For semantic-sources we do not use `ecb-rebuild-methods-buffer)'
           ;; because this would always reparse the source-buffer even if not
@@ -2514,8 +2506,7 @@ otherwise nil."
             (ecb-rebuild-methods-buffer-with-tagcache
              (ecb-fetch-semantic-tags)))
         (ecb-rebuild-methods-buffer-fully)))
-    (if (save-excursion
-          (set-buffer ecb-methods-buffer-name)
+    (if (with-current-buffer ecb-methods-buffer-name
           (tree-buffer-empty-p))
         (progn
           (ecb-methods-filter-apply nil nil nil "" "" source-buffer t)
@@ -2872,8 +2863,7 @@ partial reparse and update-mechanism."
                   (let* ((id (ecb-overlay-get (ecb--semantic-tag-overlay tag-for-update)
                                               'ECB-tree-node-id))
                          (node (when id
-                                 (save-excursion
-                                   (set-buffer ecb-methods-buffer-name)
+                                 (with-current-buffer ecb-methods-buffer-name
                                    (tree-node-search-subtree-by-id (tree-buffer-get-root)
                                                                    id))))
                          (data-parent (and node
@@ -2892,8 +2882,7 @@ partial reparse and update-mechanism."
                           (ecb-partial-reparse-debug "We update node for tag:%s with new name:%s"
                                                      (ecb--semantic-tag-name tag-for-update)
                                                      new-tag-name)
-                          (save-excursion
-                            (set-buffer ecb-methods-buffer-name)
+                          (with-current-buffer ecb-methods-buffer-name
                             (tree-buffer-update-node node
                                                      new-tag-name
                                                      'use-old-value
@@ -2943,8 +2932,7 @@ partial reparse and update-mechanism."
   "Return not nil if FILENAME is already displayed in a buffer and if semantic
 is active for this buffer."
   (and (get-file-buffer filename)
-       (save-excursion
-         (set-buffer (get-file-buffer filename))
+       (with-current-buffer (get-file-buffer filename)
          (ecb--semantic-active-p))))
 
 
@@ -3127,8 +3115,7 @@ TABLE."
 
 (defun ecb-methods-get-data-store (key)
   "Get the value for KEY from the tree-buffer-data-store of the Methods-buffer."
-  (save-excursion
-    (set-buffer ecb-methods-buffer-name)
+  (with-current-buffer ecb-methods-buffer-name
     (cdr (assoc key (tree-buffer-get-data-store)))))
   
 
@@ -3314,8 +3301,7 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
       ;; cache can not work because the buffer-string is a "copy" of the
       ;; tree-buffer and therefore the cached buffer-string can not be updated
       ;; automatically.
-      (save-excursion
-        (set-buffer ecb-methods-buffer-name)
+      (with-current-buffer ecb-methods-buffer-name
         ;; we store in the tree-buffer the buffer and the major-mode for which
         ;; the tree-buffer has been build. In no other place the data-store
         ;; will be set!
@@ -3786,8 +3772,7 @@ file types which are parsed by imenu or etags \(see
     ;; expanded to max level...
     (when ecb-expand-methods-switch-off-auto-expand
       (ecb-toggle-auto-expand-tag-tree -1))
-    (ecb-expand-methods-node-internal (save-excursion
-                                         (set-buffer ecb-methods-buffer-name)
+    (ecb-expand-methods-node-internal (with-current-buffer ecb-methods-buffer-name
                                          (tree-buffer-get-root))
                                        level force-all t t)))
 
@@ -3935,8 +3920,7 @@ This function is fully fitting the needs of the option
       ;; included file
       (unless destination
         (when (equal 'include (ecb--semantic-tag-class node-tag))
-          (save-excursion
-            (set-buffer (ecb-path-selected-source 'buffer))
+          (with-current-buffer (ecb-path-selected-source 'buffer)
             (let ((file (ecb--semantic-dependency-tag-file node-tag)))
               (when (and file (ecb-file-exists-p file))
                 (setq destination (list (ecb-source-make file)
@@ -4303,8 +4287,7 @@ Returns current point."
 (defun ecb-methods-menu-activate-hs ()
   "Activates `hs-minor-mode' in the buffer of `ecb-path-selected-source'. If
 this fails then nil is returned otherwise t."
-  (save-excursion
-    (set-buffer (get-file-buffer (ecb-path-selected-source 'file)))
+  (with-current-buffer (get-file-buffer (ecb-path-selected-source 'file))
     (if (or (not (boundp 'hs-minor-mode))
             (not hs-minor-mode))
         (if (fboundp 'hs-minor-mode)
@@ -4464,8 +4447,7 @@ edit-windows. Otherwise return nil."
           ;; we must not use here (ecb-methods-get-data-store
           ;; 'semantic-symbol->name-assoc-list) because we do not want the
           ;; function-prototypes...
-          (save-excursion
-            (set-buffer (ecb-methods-get-data-store 'source-buffer))
+          (with-current-buffer (ecb-methods-get-data-store 'source-buffer)
             (ecb--semantic-symbol->name-assoc-list)))
          (prot-list '("private" "protected" "public"))
          (prot-menu-elems nil)
@@ -4732,8 +4714,7 @@ moved over it."
     ;; we ca not use format here because XEmacs-format removes all
     ;; text-properties! 
     (insert (concat (make-string indent ? )
-                    (save-excursion
-                      (set-buffer source-buffer)
+                    (with-current-buffer source-buffer
                       (ecb--semantic-format-tag-uml-prototype tag parent t))
                     ", tag-class: "
                     (format "%s" (ecb--semantic-tag-class tag))
