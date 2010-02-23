@@ -272,8 +272,7 @@ ECB and if either this function is called interactively or
                          ecb-eshell-buffer-list)))
            (my-reference-directory default-directory)
            (my-eshell-directory (and (bufferp my-eshell-buffer)
-                                     (save-excursion
-                                       (set-buffer my-eshell-buffer)
+                                     (with-current-buffer my-eshell-buffer
                                        default-directory))))
       (when (and (bufferp my-eshell-buffer)
                  (stringp my-reference-directory)
@@ -281,8 +280,7 @@ ECB and if either this function is called interactively or
                  (not (ecb-string= (ecb-fix-filename my-reference-directory)
                                    (ecb-fix-filename my-eshell-directory))))
         (ecb-eshell-save-buffer-history
-         (save-excursion
-           (set-buffer my-eshell-buffer)
+         (with-current-buffer my-eshell-buffer
            ;; make sure we have a clean eshell-command-line
            (goto-char (point-max))
            (eshell-bol)
@@ -359,8 +357,7 @@ enlarge the compile-window over half of the frame-height and also not below
               (ecb-normalize-number ecb-compile-window-height
                                     (1- (frame-height))))
              (ecb-enlarged-compilation-window-max-height
-              (max (min (save-excursion
-                          (set-buffer (window-buffer ecb-compile-window))
+              (max (min (with-current-buffer (window-buffer ecb-compile-window)
                           ;; we want to see the old command line too and 2
                           ;; must be added because we have a modeline and one
                           ;; empty line cause of the (recenter -2) in

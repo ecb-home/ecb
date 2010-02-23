@@ -410,8 +410,7 @@ future this could break."
     ecb-speedbar-buffer-name ecb-speedbar-buffer-sync t
   "Update the speedbar so that it's synced up with the current file."
   (let ((speedbar-default-directory
-         (save-excursion
-           (set-buffer visible-buffer)
+         (with-current-buffer visible-buffer
            (ecb-fix-filename default-directory)))
         (ecb-default-directory (ecb-fix-filename default-directory)))
     (when (and (or (not (ecb-string= speedbar-default-directory

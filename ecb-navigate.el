@@ -189,8 +189,7 @@ case no position saving is done."
   (let ((tag-start (ecb-nav-get-tag-start item)))
     (if (and tag-start (marker-buffer tag-start))
         (progn
-          (save-excursion
-            (set-buffer (marker-buffer tag-start))
+          (with-current-buffer (marker-buffer tag-start)
             (ecb-nav-set-pos item (- (point) tag-start)))
           (ecb-nav-set-window-start
            item

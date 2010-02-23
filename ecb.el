@@ -1353,8 +1353,7 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
               ;; menus - dealing with the menu for XEmacs is really a pain...
               (when ecb-running-xemacs
                 (let ((dummy-buf-name " *dummytogetglobalmap*"))
-                  (save-excursion
-                    (set-buffer (get-buffer-create dummy-buf-name))
+                  (with-current-buffer (get-buffer-create dummy-buf-name)
                     (add-submenu nil ecb-minor-menu)
                     (kill-buffer dummy-buf-name)))
                 (save-excursion
@@ -1437,8 +1436,7 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
                          (null (ecb-buffer-file-name
                                 (window-buffer edit-window))))
                 (ecb-set-selected-directory
-                 (ecb-fix-filename (save-excursion
-                                     (set-buffer (window-buffer edit-window))
+                 (ecb-fix-filename (with-current-buffer (window-buffer edit-window)
                                      default-directory)))))
           (error
            (ecb-clean-up-after-activation-failure

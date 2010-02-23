@@ -220,8 +220,7 @@ either
       (if (ecb-compilation-registered-buffer-p (buffer-name buffer))
           buffer
         ;;else test if this is a valid buffer by mode
-        (if (save-excursion
-              (set-buffer buffer)
+        (if (with-current-buffer buffer
               (member major-mode (ecb-compilation-major-modes)))
             buffer
           ;;else test if this is a regular compilation buffer

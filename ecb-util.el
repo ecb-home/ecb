@@ -1665,8 +1665,7 @@ BUFFER \(not read-only an evaluation-time of BODY) and make afterwards BUFFER
 read-only. Note: All this is done with `save-excursion' so after BODY that
 buffer is current which was it before calling this macro."
   `(if (buffer-live-p ,buffer)
-       (save-excursion
-         (set-buffer ,buffer)
+       (with-current-buffer ,buffer
          (unwind-protect
              (progn
                (setq buffer-read-only nil)
@@ -1796,8 +1795,7 @@ nil whereas in the latter case the current-buffer is assumed."
     (or (and file (file-readable-p file))
         (and (not ecb-running-xemacs)
              (if filename
-                 (save-excursion
-                   (set-buffer (find-file-noselect filename))
+                 (with-current-buffer (find-file-noselect filename)
                    (ecb-current-buffer-archive-extract-p))
                (ecb-current-buffer-archive-extract-p))))))
 
@@ -2020,6 +2018,20 @@ nothing happens and nil is returned."
 	(select-window window)
       nil)))
 
+
+;; (defmacro ecb-exec-in-window (buffer-or-name &rest body)
+;;   "Evaluates BODY in that window which displays the buffer BUFFER-OR-NAME
+;; which can be either a buffer-object or a buffer-name. If that window is not
+;; visible then BODY is not evaluated and the symbol 'window-not-visible is
+;; returned. Otherwise the return value of BODY is returned. Runs encapsulated in
+;; `save-selected-window' and `save-excursion'."
+;;   `(save-selected-window
+;;      (if (not (ecb-window-select ,buffer-or-name))
+;;          'window-not-visible
+;;        (save-excursion
+;;          (set-buffer ,buffer-or-name)
+;;          ,@body))))
+
 (defmacro ecb-exec-in-window (buffer-or-name &rest body)
   "Evaluates BODY in that window which displays the buffer BUFFER-OR-NAME
 which can be either a buffer-object or a buffer-name. If that window is not
@@ -2029,8 +2041,7 @@ returned. Otherwise the return value of BODY is returned. Runs encapsulated in
   `(save-selected-window
      (if (not (ecb-window-select ,buffer-or-name))
          'window-not-visible
-       (save-excursion
-         (set-buffer ,buffer-or-name)
+       (with-current-buffer ,buffer-or-name
          ,@body))))
 
 (put 'ecb-exec-in-window 'lisp-indent-function 1)

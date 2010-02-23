@@ -392,8 +392,7 @@ should be displayed with. LIST is a list of tags for this bucket. NODETYPE is
 an integer which will be added as type to the nodes created for the elements
 of LIST."
   (when list
-    (save-excursion
-      (set-buffer ecb-analyse-buffer-name)
+    (with-current-buffer ecb-analyse-buffer-name
       (let* ((bucket-name-formatted
               (ecb-merge-face-into-text (ecb-format-bucket-name bucket-name)
                                         ecb-analyse-bucket-node-face))
@@ -532,8 +531,7 @@ ECB-analyse-window is not visible in current layout."
 (defun ecb-analyse-show-tag-info-in-temp-buffer (info-string)
   "Display INFO-STRING in a temp-buffer in the edit-area." 
   (with-output-to-temp-buffer "*Tag Information*"
-    (save-excursion
-      (set-buffer "*Tag Information*")
+    (with-current-buffer "*Tag Information*"
       (insert info-string)))
   ;; Make it small
   (shrink-window-if-larger-than-buffer

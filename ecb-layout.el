@@ -777,8 +777,7 @@ then set always nil!"
   (unless ecb-running-xemacs
     (let ((l (ecb-canonical-ecb-windows-list)))
       (dolist (w l)
-        (save-excursion
-          (set-buffer (window-buffer w))
+        (with-current-buffer (window-buffer w)
           (setq window-size-fixed (if (and (not ecb-running-gnu-emacs-version-22)
                                            ecb-compile-window-height)
                                       nil
@@ -6138,8 +6137,7 @@ Emacs)."
   (if (and (ecb-compile-window-live-p)
            (member ecb-compile-window-temporally-enlarge
                    '(after-display both))
-           (or (save-excursion
-                 (set-buffer (window-buffer ecb-compile-window))
+           (or (with-current-buffer (window-buffer ecb-compile-window)
                  (equal major-mode 'compilation-mode))
                (if ecb-running-xemacs
                    temp-buffer-shrink-to-fit

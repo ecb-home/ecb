@@ -2158,8 +2158,7 @@ the returned string: 'tree-buffer-image-start which holds 0 as value and
 value."
   (let ((image nil)
         (ret nil))
-    (save-excursion
-      (set-buffer name-of-buffer)
+    (with-current-buffer name-of-buffer
       (setq image (and icon-name (tree-buffer-find-image icon-name)))
       (setq ret
             (if image

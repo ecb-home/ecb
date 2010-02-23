@@ -2377,8 +2377,7 @@ added.")
                      (y-or-n-p "Remove history entry for this buffer?")))
         ;; we must do this even when the history is not visible!!
         ;; the history should be always up-to-date
-        (save-excursion
-          (set-buffer ecb-history-buffer-name)
+        (with-current-buffer ecb-history-buffer-name
           (tree-buffer-remove-node node))
         ;; if we have removed a node then we must ignore the related buffer
         ;; when rebuilding the history - otherwise the node would be added
@@ -2408,8 +2407,7 @@ bucket)."
 (defun ecb-history-content-all-dead-buffers-alist ()
   "Return alist with items \(<buffer-name> . <file-name>) for dead buffers
 entries of the history-buffer."
-  (save-excursion
-    (set-buffer ecb-history-buffer-name)
+  (with-current-buffer ecb-history-buffer-name
     (delq nil (tree-node-map-subtree
                (tree-buffer-get-root)
                (function
@@ -2532,8 +2530,7 @@ Returns t if the current history filter has been applied otherwise nil."
                                           (if ecb-running-xemacs 0)))
                                         (mode (symbol-name
                                                (if (ecb-buffer-obj (car elem))
-                                                   (save-excursion
-                                                     (set-buffer (ecb-buffer-obj (car elem)))
+                                                   (with-current-buffer (ecb-buffer-obj (car elem))
                                                      major-mode)
                                                  ;; for dead buffers of the
                                                  ;; history we use auto-mode-alist
@@ -2562,8 +2559,7 @@ Returns t if the current history filter has been applied otherwise nil."
          ;; toplevel bucket of the history-buffer. This is the state before
          ;; rebuilding the history!
          (curr-bucket-expand-status-alist
-          (save-excursion
-            (set-buffer ecb-history-buffer-name)
+          (with-current-buffer ecb-history-buffer-name
             (delq nil (mapcar (function
                                (lambda (node)
                                  (when (= (tree-node->type node)
@@ -2579,8 +2575,7 @@ Returns t if the current history filter has been applied otherwise nil."
 ;;           additonal-dead-history-buffer-alist
 ;;           indirect-buffer-base
 ;;           aggregated-indirect-buffers-alist)
-    (save-excursion
-      (set-buffer ecb-history-buffer-name)
+    (with-current-buffer ecb-history-buffer-name
       (tree-buffer-clear-tree)
       (dolist (bucket-elem aggregated-alist-with-buckets)
         (let* ((best-matching-sp (if (eq ecb-history-make-buckets 'directory-with-source-path)
@@ -2726,8 +2721,7 @@ Returns t if the current history filter has been applied otherwise nil."
       (tree-buffer-update)
       (tree-buffer-highlight-node-by-data/name (ecb-path-selected-source)))
     (prog1
-        (if (and (save-excursion
-                   (set-buffer ecb-history-buffer-name)
+        (if (and (with-current-buffer ecb-history-buffer-name
                    (tree-buffer-empty-p))
                  (not (ecb-history-filter-reset-p)))
             (progn
@@ -2769,8 +2763,7 @@ indirect-buffer."
       ;; display the methods in the METHOD-buffer. We can not go back to
       ;; the edit-window because then the METHODS buffer would be
       ;; immediately updated with the methods of the edit-window.
-      (save-excursion
-        (set-buffer (ecb-source-get-buffer source))
+      (with-current-buffer (ecb-source-get-buffer source)
         (ecb-path-selected-source-set (ecb-source-get-filename source)
                                       (buffer-name))
         (ecb-update-methods-buffer--internal 'scroll-to-begin nil t t))
@@ -3351,6 +3344,25 @@ the SOURCES-cache."
        (require 'vc)
        (require 'vc-bzr)
        'BZR))
+
+;; Mercurial support
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: if this works we should add it to
+;; `ecb-vc-supported-backends'.
+
+(defun ecb-vc-dir-managed-by-HG (directory)
+  "Return 'GIT if DIRECTORY is managed by Mercurial. nil if not.
+Because with Mercurial only the top-most directory of a source-tree has a subdir
+.hg this function tries recursively upwards if there is a .hg-subdir."
+  ;; With XEmacs we must first load the vc-hooks which contain the function
+  ;; `vc-find-root'
+  (when ecb-running-xemacs
+    (ignore-errors (vc-load-vc-hooks)))
+  (and (locate-library "vc-hg")
+       (fboundp 'vc-find-root)
+       (vc-find-root directory ".hg")
+       (require 'vc)
+       (require 'vc-hg)
+       'HG))
 
 ;; Git support
 
@@ -4482,8 +4494,7 @@ edit-windows. Otherwise return nil."
       ;; current buffer is always the history-buffer - we have to set
       ;; the buffer representing data (buf) as current buffer - otherwise
       ;; ecb-kill-buffer-hook would not run correctly
-      (save-excursion
-        (set-buffer buf)
+      (with-current-buffer buf
         (kill-buffer buf)
         (ecb-add-buffers-to-history-new)))))
 

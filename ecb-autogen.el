@@ -146,8 +146,7 @@ does nothing."
     ;; XEmacs adds autom. the provide statement but for GNU Emacs we must do
     ;; this:
     (when (not ecb-running-xemacs)
-      (save-excursion
-        (set-buffer (find-file-noselect (expand-file-name ecb-autogen-file)))
+      (with-current-buffer (find-file-noselect (expand-file-name ecb-autogen-file))
         (goto-char (point-min))
         (when (not (re-search-forward (format "^(provide '%s)"
                                               ecb-autoload-feature) nil t))

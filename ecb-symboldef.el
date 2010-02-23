@@ -250,8 +250,7 @@ EDIT-BUFFER is that buffer FSYMBOL is used."
   ;; describe-function-1 to print all its output to this buffer. 
   (let ((standard-output (get-buffer-create ecb-symboldef-temp-buffer-name))
         (doc-string nil))
-    (save-excursion
-      (set-buffer standard-output)
+    (with-current-buffer standard-output
       ;;(insert (symbol-name symbol))
       (describe-function-1 fsymbol)
       (setq doc-string (buffer-string)))
@@ -276,20 +275,21 @@ EDIT-BUFFER is that buffer VSYMBOL is used."
   ;; 3. setting temp-buffer-setup-hook to nil
   ;; 3. Binding standart-output to a temporally buffer-object
   ;; 4. running describe-variable
-  (save-excursion
-    (set-buffer edit-buffer)
+  (with-current-buffer edit-buffer
     (let ((standard-output (get-buffer-create ecb-symboldef-temp-buffer-name))
           (temp-buffer-setup-hook nil)
           ;; this does not call temp-buffer-show-hook!!!
           (temp-buffer-show-function (function (lambda (b) nil))))
       (flet ((help-buffer () ecb-symboldef-temp-buffer-name)
-             (print-help-return-message (&optional function) nil)
+             ;; (print-help-return-message (&optional function) nil)
              ;; for XEmacs
              (help-buffer-name () ecb-symboldef-temp-buffer-name))
-        (describe-variable vsymbol))
+        ;; we can not use flet for redefining print-help-return-message
+        ;; because the byte-compailer would complain about this.
+        (labels ((print-help-return-message (&optional function) nil))
+          (describe-variable vsymbol)))
       ))
-  (save-excursion
-    (set-buffer ecb-symboldef-temp-buffer-name)
+  (with-current-buffer ecb-symboldef-temp-buffer-name
     (when (member 'eieio-help-mode-augmentation-maybee temp-buffer-show-hook)
       (let ((major-mode 'help-mode))
         (eieio-help-mode-augmentation-maybee)))
@@ -344,8 +344,7 @@ list containing point.  If that doesn't give a function, return nil."
     ;; - display function around
     ;; - display conditions for function symbols (length, regexp to match)
     (when (setq fsymbol
-                (save-excursion
-                  (set-buffer edit-buffer)
+                (with-current-buffer edit-buffer
                   (ecb-symboldef-function-at-point)))
       (unless ecb-running-xemacs
         ;; With XEmacs the symbol itself is already contained in the
@@ -503,8 +502,7 @@ list containing point.  If that doesn't give a function, return nil."
 (defun ecb-symboldef-find-tag-by-semanticdb (symbol-name edit-buffer)
   "Function to find a semantic-tag by SYMBOL-NAME.
 Returns nil if not found otherwise a list \(tag-buffer tag-begin tag-end)"
-  (save-excursion
-    (set-buffer edit-buffer)
+  (with-current-buffer edit-buffer
     (let* ((mytag-list (ecb--semanticdb-brute-deep-find-tags-by-name symbol-name
                                                                      nil t))
 	   (mytag (if mytag-list 
@@ -555,14 +553,14 @@ with semanticdb and then - if no success - with current etags-file."
          (hilight-point-max nil))
     (setq truncate-lines t)
     (when tag-buf
-      (save-excursion
-        (set-buffer tag-buf)
-        (goto-char tag-point)
-        (forward-line (- num-tag-lines))
-        (setq extend-point-min (point))
-        (forward-line num-tag-lines)
-        (forward-line num-tag-lines)
-        (setq extend-point-max (point)))
+      (with-current-buffer tag-buf
+        (save-excursion
+          (goto-char tag-point)
+          (forward-line (- num-tag-lines))
+          (setq extend-point-min (point))
+          (forward-line num-tag-lines)
+          (forward-line num-tag-lines)
+          (setq extend-point-max (point))))
       (insert (ecb-buffer-substring extend-point-min extend-point-max tag-buf))
       (goto-char (+ (- tag-point extend-point-min) 1))
       (setq hilight-point-min (point))
