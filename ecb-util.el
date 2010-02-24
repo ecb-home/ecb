@@ -418,6 +418,7 @@ in exactly this sequence."
 
 ;;; ----- Some function from cl ----------------------------
 
+
 (defun ecb-filter (seq pred)
   "Filter out those elements of SEQUENCE for which PREDICATE returns nil."
   (let ((res))
@@ -450,6 +451,7 @@ The elements of the list are not copied, just the list structure itself."
           (while (consp list) (push (pop list) res))
           (prog1 (nreverse res) (setcdr res list)))
       (car list))))
+
 
 (defun ecb-set-difference (list1 list2 &optional test-fcn)
   "Combine LIST1 and LIST2 using a set-difference operation.
@@ -485,20 +487,140 @@ optimization."
           list))
     (member item list)))
 
-(defun ecb-position (seq elem &optional test-fcn)
-  "Return the position of ELEM within SEQ counting from 0. Comparison is done
-with `equal' unless TEST-FCN is not nil: In this case TEST-FCN will be used to
-compare ITEM with the elements of SEQ."
-  (if (listp seq)
-      (let ((pos (- (length seq) (length (ecb-member elem seq test-fcn)))))
-        (if (= pos (length seq))
-            nil
-          pos))
-    (catch 'found
-      (dotimes (i (length seq))
-        (if (funcall (or test-fcn 'equal) elem (aref seq i))
-            (throw 'found i)))
-      nil)))
+;; stolen and adapted from cl-seq.el
+(defun ecb-delete-duplicates (cl-seq &optional
+                                     cl-test-fcn cl-start cl-end cl-from-end cl-copy)
+  "Deletes duplicate elements from CL-SEQ.
+Comparison is done with `equal' unless CL-TEST-FCN is not nil: In
+this case TEST-FCN will be used to compare CL-ITEM with the
+elements of CL-SEQ. Specifically, if two elements from the
+sequence match according to the test-function \(s.a.) only the
+rightmost one is retained. If CL-FROM-END is true, the leftmost
+one is retained instead. If CL-START or CL-END is specified, only
+elements within that subsequence are examined or removed. If
+CL-COPY is nil then it destructively modifies CL-SEQ otherwise a
+copy of CL-SEQ with removed duplicates is returned."
+  (if (listp cl-seq)
+      (let ((cl-start (or cl-start 0)))
+        (if cl-from-end
+            (let ((cl-p (nthcdr cl-start cl-seq))
+                  cl-i)
+              (setq cl-end (- (or cl-end (length cl-seq)) cl-start))
+              (while (> cl-end 1)
+                (setq cl-i 0)
+                (while (setq cl-i (ecb-position (car cl-p)
+                                                (cdr cl-p)
+                                                cl-test-fcn
+                                                cl-i
+                                                (1- cl-end)))
+                  (if cl-copy (setq cl-seq (ecb-copy-list cl-seq)
+                                    cl-p (nthcdr cl-start cl-seq) cl-copy nil))
+                  (let ((cl-tail (nthcdr cl-i cl-p)))
+                    (setcdr cl-tail (cdr (cdr cl-tail))))
+                  (setq cl-end (1- cl-end)))
+                (setq cl-p (cdr cl-p) cl-end (1- cl-end)
+                      cl-start (1+ cl-start)))
+              cl-seq)
+          (setq cl-end (- (or cl-end (length cl-seq)) cl-start))
+          (while (and (cdr cl-seq) (= cl-start 0) (> cl-end 1)
+                      (ecb-position (car cl-seq)
+                                    (cdr cl-seq)
+                                    cl-test-fcn
+                                    0
+                                    (1- cl-end)))
+            (setq cl-seq (cdr cl-seq) cl-end (1- cl-end)))
+          (let ((cl-p (if (> cl-start 0) (nthcdr (1- cl-start) cl-seq)
+                        (setq cl-end (1- cl-end) cl-start 1) cl-seq)))
+            (while (and (cdr (cdr cl-p)) (> cl-end 1))
+              (if (ecb-position (car (cdr cl-p))
+                                (cdr (cdr cl-p))
+                                cl-test-fcn
+                                0
+                                (1- cl-end))
+                  (progn
+                    (if cl-copy (setq cl-seq (ecb-copy-list cl-seq)
+                                      cl-p (nthcdr (1- cl-start) cl-seq)
+                                      cl-copy nil))
+                    (setcdr cl-p (cdr (cdr cl-p))))
+                (setq cl-p (cdr cl-p)))
+              (setq cl-end (1- cl-end) cl-start (1+ cl-start)))
+            cl-seq)))
+    (let ((cl-res (ecb-delete-duplicates (append cl-seq nil)
+                                         cl-test-fcn
+                                         cl-start
+                                         cl-end
+                                         cl-from-end
+                                         nil)))
+      (if (stringp cl-seq) (concat cl-res) (vconcat cl-res)))))
+
+;; (ecb-delete-duplicates (vector 'a 'b 'c 'd 'A 'a 'c 'e) nil nil nil t t)
+
+;; (ecb-delete-duplicates '("a" "b" "c" "d" "A" ("a" . 0) "a" ("c" . "ewfwrew") "e")
+;;                           (function (lambda (l r)
+;;                                       (ecb-string= (if (consp l) (car l) l)
+;;                                                    (if (consp r) (car r) r))
+;;                                       ))
+;;                           nil nil t t)
+
+;; (remove-duplicates '("a" "b" "c" "d" "A" ("a" . 0) "a" ("c" . "ewfwrew") "e")
+;;                    :test (function (lambda (l r)
+;;                                      (ecb-string= (if (consp l) (car l) l)
+;;                                                   (if (consp r) (car r) r))
+;;                                      ))
+;;                    :from-end nil)
+
+;; stolen and adapted from cl-seq.el
+(defun ecb-position (cl-item cl-seq &optional cl-test-fcn cl-start cl-end cl-from-end)
+  "Return the position of first occurence of CL-ITEM in CL-SEQ.
+Comparison is done with `equal' unless CL-TEST-FCN is not nil: In
+this case TEST-FCN will be used to compare CL-ITEM with the elements
+of CL-SEQ.
+Return the 0-based index of the matching item, or nil if not found."
+  (let ((cl-test (or cl-test-fcn 'equal)))
+    (or cl-start (setq cl-start 0))
+    (if (listp cl-seq)
+        (let ((cl-p (nthcdr cl-start cl-seq)))
+          (or cl-end (setq cl-end 8000000))
+          (let ((cl-res nil))
+            (while (and cl-p (< cl-start cl-end) (or (not cl-res) cl-from-end))
+              (if (funcall cl-test cl-item (car cl-p))
+                  (setq cl-res cl-start))
+              (setq cl-p (cdr cl-p) cl-start (1+ cl-start)))
+            cl-res))
+      (or cl-end (setq cl-end (length cl-seq)))
+      (if cl-from-end
+          (progn
+            (while (and (>= (setq cl-end (1- cl-end)) cl-start)
+                        (not (funcall cl-test cl-item (aref cl-seq cl-end)))))
+            (and (>= cl-end cl-start) cl-end))
+        (while (and (< cl-start cl-end)
+                    (not (funcall cl-test cl-item (aref cl-seq cl-start))))
+          (setq cl-start (1+ cl-start)))
+        (and (< cl-start cl-end) cl-start)))))
+
+;; (ecb-position "v" '("a" "b" "c" "d" "A" ("a" . 0) "w" "a" ("c" . "ewfwrew") "e")
+;;                  (function (lambda (l r)
+;;                              (ecb-string= (if (consp l) (car l) l)
+;;                                           (if (consp r) (car r) r))
+;;                              ))
+;;                  0)
+;; (ecb-position "d" '("a" "b" "c" "d" "e") 'ecb-string= 1 4)
+;; (position "d" '("a" "b" "c" "d" "e") :test 'ecb-string= :start 1 :end 3)
+
+;; (defun ecb-position (seq elem &optional test-fcn)
+;;   "Return the position of ELEM within SEQ counting from 0. Comparison is done
+;; with `equal' unless TEST-FCN is not nil: In this case TEST-FCN will be used to
+;; compare ITEM with the elements of SEQ."
+;;   (if (listp seq)
+;;       (let ((pos (- (length seq) (length (ecb-member elem seq test-fcn)))))
+;;         (if (= pos (length seq))
+;;             nil
+;;           pos))
+;;     (catch 'found
+;;       (dotimes (i (length seq))
+;;         (if (funcall (or test-fcn 'equal) elem (aref seq i))
+;;             (throw 'found i)))
+;;       nil)))
 
 (defun ecb-set-elt (seq n val)
   "Set VAL as new N-th element of SEQ. SEQ can be any sequence. SEQ will be
@@ -516,7 +638,7 @@ changed because this is desctructive function. SEQ is returned."
 (defun ecb-replace-first-occurence (seq old-elem new-elem)
   "Replace in SEQ the first occurence of OLD-ELEM with NEW-ELEM. Comparison is
 done by `equal'. This is desctructive function. SEQ is returned."
-  (let ((pos (ecb-position seq old-elem)))
+  (let ((pos (ecb-position old-elem seq)))
     (if pos
         (ecb-set-elt seq pos new-elem)))
   seq)
@@ -524,7 +646,7 @@ done by `equal'. This is desctructive function. SEQ is returned."
 (defun ecb-replace-all-occurences (seq old-elem new-elem)
   "Replace in SEQ all occurences of OLD-ELEM with NEW-ELEM. Comparison is
 done by `equal'. This is desctructive function. SEQ is returned."
-  (while (ecb-position seq old-elem)
+  (while (ecb-position old-elem seq)
     (setq seq (ecb-replace-first-occurence seq old-elem new-elem)))
   seq)
 
@@ -539,7 +661,7 @@ This is desctructive function. LIST is returned."
 This is desctructive function. LIST is returned."
   (delq 'ecb-util-remove-marker
         (progn          
-          (while (ecb-position list elem)
+          (while (ecb-position elem list)
             (setq list (ecb-replace-first-occurence list elem
                                                     'ecb-util-remove-marker)))
           list)))
@@ -581,7 +703,7 @@ TYPE can be 'string, 'vector or 'list."
   "Rotate SEQ so START-ELEM is the new first element of SEQ. SEQ is an
 arbitrary sequence. Example: \(ecb-rotate '\(a b c d e f) 'c) results in \(c d
 e f a b). If START-ELEM is not contained in SEQ then nil is returned."
-  (let ((start-pos (ecb-position seq start-elem)))
+  (let ((start-pos (ecb-position start-elem seq)))
     (when start-pos
       (ecb-concatenate (typecase seq
                          (list 'list)
@@ -619,7 +741,7 @@ times. Example: Suppose LIST = '\(a b c d), ELEM is 'c and NTH-NEXT = 3 then
 'b is returned - same result for NTH-NEXT = 7, 11... It works also for
 negative integers, so when NTH-NEXT is -1 in the example above then 'b is
 returned."
-  (let ((elem-pos (ecb-position list elem))
+  (let ((elem-pos (ecb-position elem list))
         (next (or nth-next 1)))
     (and elem-pos
          (nth (mod (+ elem-pos next)
@@ -2068,7 +2190,7 @@ The left-top-most window of the frame has number 1. The other windows have
 the same ordering as `other-window' would walk through the frame.
 
 If WINDOW is nil then the currently selected window is used."
-  (let ((win-number (ecb-position win-list (or window (selected-window)))))
+  (let ((win-number (ecb-position (or window (selected-window)) win-list)))
     (if win-number (1+ win-number) nil)))
 
 ;;; ----- Time  stuff -----------------------------------------
