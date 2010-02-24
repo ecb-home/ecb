@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.288 2010/02/23 16:09:00 berndl Exp $
+;; $Id: ecb-layout.el,v 1.289 2010/02/24 21:52:55 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -3729,7 +3729,7 @@ reported but `delete-window' will be executed correctly."
     (condition-case oops
         (let* ((edit-win-list (ecb-canonical-edit-windows-list))
                (window (or (ad-get-arg 0) (selected-window)))
-               (edit-win-number (ecb-position edit-win-list window)))
+               (edit-win-number (ecb-position window edit-win-list)))
           (when edit-win-number
             (if (or (= (length edit-win-list) 1)
                     (/= (length edit-win-list)
@@ -3796,7 +3796,7 @@ compile-window then it will be hidden and otherwise the behavior depends on
      
      (let* ((edit-win-list (ecb-canonical-edit-windows-list))
             (window (or (ad-get-arg 0) (selected-window)))
-            (edit-win-number (ecb-position edit-win-list window))
+            (edit-win-number (ecb-position window edit-win-list))
             (curr-window-before (selected-window)))
        (cond ((equal window ecb-compile-window)
               (ecb-toggle-compile-window -1))
@@ -3833,7 +3833,7 @@ reported but `delete-window' will be executed correctly."
     (condition-case oops
         (let* ((edit-win-list (ecb-canonical-edit-windows-list))
                (window (or (ad-get-arg 0) (selected-window)))
-               (edit-win-number (ecb-position edit-win-list window)))
+               (edit-win-number (ecb-position window edit-win-list)))
           (when edit-win-number
             ;; After the deletion of the other edit-windows there will be only
             ;; one edit-window. We can init the edit-area-creators always
@@ -3906,7 +3906,7 @@ behavior depends on `ecb-advice-window-functions-signal-error'."
        (cond ((equal window ecb-compile-window)
               (if ecb-advice-window-functions-signal-error
                   (ecb-error "The compile window can not be maximized!")))
-             ((integerp (ecb-position edit-win-list window))
+             ((integerp (ecb-position window edit-win-list))
               ;; we run the adviced version of delete-window for each "other"
               ;; edit-window
               (if (= (length edit-win-list) 1)
@@ -3978,7 +3978,7 @@ an error occurs during this before-advice then it will be reported but
     (condition-case oops
         (let* ((edit-win-list (ecb-canonical-edit-windows-list))
                (window (or (ad-get-arg 0) (selected-window)))
-               (edit-win-number (ecb-position edit-win-list window)))
+               (edit-win-number (ecb-position window edit-win-list)))
           (when (and edit-win-number
                      (or (= (length edit-win-list) 1)
                          (/= (length edit-win-list)
@@ -4021,8 +4021,8 @@ version."
 
     ;; now perform the splitting task
     (let* ((window (or (ad-get-arg 0) (selected-window)))
-           (edit-win-number (ecb-position (ecb-canonical-edit-windows-list)
-                                          window)))
+           (edit-win-number (ecb-position window
+                                          (ecb-canonical-edit-windows-list))))
       (if edit-win-number
           ad-do-it
         (if ecb-advice-window-functions-signal-error
@@ -5012,8 +5012,8 @@ by ECB."
                      nil
                    (ecb-get-current-visible-ecb-buffers))
                  (if (ecb-compile-window-live-p)
-                     (ecb-position (ecb-canonical-windows-list)
-                                   ecb-compile-window))
+                     (ecb-position ecb-compile-window
+                                   (ecb-canonical-windows-list)))
                  ;; We add here as first element `ecb-frame' and also in the
                  ;; check of `ecb-window-configuration-invalidp'! Then a
                  ;; ecb-window-config made from a frame which is now deleted
