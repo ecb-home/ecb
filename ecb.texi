@@ -10884,15 +10884,14 @@ possible performance.
 To prepend ECB from checking the VC-state for any file set
 @code{ecb-vc-enable-support} to nil.
 
-Default value: Support for CVS, RCS, SCCS, Subversion, Git,
-Bazaar and Monotone. To identify the VC-backend the functions
+Default value: Support for CVS, RCS, SCCS, Subversion, Git, Bazaar, Monotone
+and Mercurial. To identify the VC-backend the functions
 @code{ecb-vc-dir-managed-by-CVS}, @code{ecb-vc-dir-managed-by-RCS} rsp.
-@code{ecb-vc-dir-managed-by-SCCS} rsp. @code{ecb-vc-dir-managed-by-SVN}
-rsp. @code{ecb-vc--dir-managed-by-GIT} rsp.
-@code{ecb-vc-dir-managed-by-BZR} rsp. @code{ecb-vc-dir-managed-by-MTN} are
-used.
+@code{ecb-vc-dir-managed-by-SCCS} rsp. @code{ecb-vc-dir-managed-by-SVN} rsp.
+@code{ecb-vc--dir-managed-by-GIT} rsp. @code{ecb-vc-dir-managed-by-BZR} rsp.
+@code{ecb-vc-dir-managed-by-MTN} rsp. @code{ecb-vc-dir-managed-by-HG}are used.
 
-For all six backends the function @code{ecb-vc-state} of the
+For all eight backends the function @code{ecb-vc-state} of the
 VC-package is used by default (which uses a heuristic and
 therefore faster but less accurate approach), but there is also
 @code{ecb-vc-recompute-state} available which is an alias for

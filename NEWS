@@ -42,6 +42,10 @@
    nothing else, ie. the expand/collapse-states of all other nodes in the
    methods-window will not be changed.
 
+** ECB eliminates duplicates in the directories-buffer
+
+   There can be duplicates either .... TODO description
+   
 ** New default-value for `ecb-auto-update-methods-after-save': nil
 
    Switching off this by default makes sense because now ECB uses the
