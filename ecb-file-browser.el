@@ -1289,7 +1289,8 @@ Emacs) and `vc-cvs-status' \(Xemacs) to the ECB-VC-state-values."
                 (ecb-vc-dir-managed-by-SVN . ecb-vc-state)
                 (ecb-vc-dir-managed-by-GIT . ecb-vc-state)
                 (ecb-vc-dir-managed-by-BZR . ecb-vc-state)
-                (ecb-vc-dir-managed-by-MTN . ecb-vc-state))
+                (ecb-vc-dir-managed-by-MTN . ecb-vc-state)
+                (ecb-vc-dir-managed-by-HG . ecb-vc-state))
   "*Define how to to identify the VC-backend and how to check the state.
 The value of this option is a list containing cons-cells where the car is a
 function which is called to identify the VC-backend for a DIRECTORY and the
@@ -1321,14 +1322,15 @@ To prepend ECB from checking the VC-state for any file set
 `ecb-vc-enable-support' to nil.
 
 Default value: Support for CVS, RCS, SCCS, Subversion, Git,
-Bazaar and Monotone. To identify the VC-backend the functions
-`ecb-vc-dir-managed-by-CVS', `ecb-vc-dir-managed-by-RCS' rsp.
-`ecb-vc-dir-managed-by-SCCS' rsp. `ecb-vc-dir-managed-by-SVN'
-rsp. `ecb-vc--dir-managed-by-GIT' rsp.
-`ecb-vc-dir-managed-by-BZR' rsp. `ecb-vc-dir-managed-by-MTN' are
-used.
+Bazaar, Monotone and Mercurial. To identify the VC-backend the
+functions `ecb-vc-dir-managed-by-CVS',
+`ecb-vc-dir-managed-by-RCS' rsp. `ecb-vc-dir-managed-by-SCCS'
+rsp. `ecb-vc-dir-managed-by-SVN' rsp.
+`ecb-vc--dir-managed-by-GIT' rsp. `ecb-vc-dir-managed-by-BZR'
+rsp. `ecb-vc-dir-managed-by-MTN' rsp. `ecb-vc-dir-managed-by-HG'
+are used.
 
-For all six backends the function `ecb-vc-state' of the
+For all eight backends the function `ecb-vc-state' of the
 VC-package is used by default \(which uses a heuristic and
 therefore faster but less accurate approach), but there is also
 `ecb-vc-recompute-state' available which is an alias for
@@ -1363,6 +1365,8 @@ beginning of this option."
                                       :value ecb-vc-dir-managed-by-BZR)
                                (const :tag "ecb-vc-dir-managed-by-MTN"
                                       :value ecb-vc-dir-managed-by-MTN)
+                               (const :tag "ecb-vc-dir-managed-by-HG"
+                                      :value ecb-vc-dir-managed-by-HG)
                                (function :tag "Any function"))
                        (choice :tag "Check-state-function"
                                :menu-tag "Check-state-function"
@@ -2160,7 +2164,19 @@ nil. Returns 'window-not-visible if the ECB-sources-buffer is not visible."
     ;; displayed in the mode-line. See `ecb-sources-filter-modeline-prefix'.
     (ecb-mode-line-format)))
 
-(defun ecb-normed-source-paths ()
+
+;; Klaus Berndl <klaus.berndl@sdm.de>: the duplicates MUST be eliminated only
+;; on path-basis and not of cons (path . alias)-basis, because
+;; ecb-source-path-functions only return paths without alias
+;; (setq ecb-source-path-functions
+;;       (list (lambda ()
+;;               '("c:/Programme/emacs-23.1/site-lisp/package-development/ecb"
+;;                 "c:/Programme/emacs-22.3"
+;;                 "c:/Programme/emacs-23.1/site-lisp/package-development"))))
+      
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: should we add an option for
+;; ignore-case for the duplicate-removing?!
+(defun ecb-normed-source-paths (&optional no-duplicates)
   "Return a normalized list of all source-paths.
 
 This is a list created from all elements of `ecb-source-path' and all
@@ -2169,13 +2185,27 @@ source-paths created by `ecb-source-path-functions'.
 Each element is a cons whereas car is the normed and expanded pathname \(done by
 `ecb-fix-filename') and cdr is either the alias defined for this path \(see
 `ecb-source-path') or - if there is no alias defined - the path itself \(in
-this case car and cdr are equal)."
-  (mapcar (function (lambda (elem)
-                      (let* ((path (ecb-fix-filename (if (listp elem) (nth 0 elem) elem)))
-                             (alias (if (listp elem) (nth 1 elem) path)))
-                        (cons path alias))))
-          (append (ecb-get-source-paths-from-functions)
-                  ecb-source-path)))
+this case car and cdr are equal).
+
+If NO-DUPLICATES is not nil then all duplicates in the paths-list are removed.
+An element is a duplicate if the car \(i.e. the normed and expaneded path)
+matches exactly the car of another element."
+  (let ((res (mapcar (function (lambda (elem)
+                                 (let* ((path (ecb-fix-filename (if (listp elem) (nth 0 elem) elem)))
+                                        (alias (if (listp elem) (nth 1 elem) path)))
+                                   (cons path alias))))
+                     (append ecb-source-path
+                             (ecb-get-source-paths-from-functions)
+                             ))))
+    (if no-duplicates
+        (ecb-delete-duplicates
+         res
+         (function (lambda (l r)
+                     (ecb-string= (if (consp l) (car l) l)
+                                  (if (consp r) (car r) r))
+                     ))
+         nil nil t t)
+      res)))
   
 (defun ecb-matching-source-paths (path-to-match &optional sorted)
   "Return all source-paths of `ecb-source-path' which match PATH-TO-MATCH. If
@@ -3350,7 +3380,7 @@ the SOURCES-cache."
 ;; `ecb-vc-supported-backends'.
 
 (defun ecb-vc-dir-managed-by-HG (directory)
-  "Return 'GIT if DIRECTORY is managed by Mercurial. nil if not.
+  "Return 'HG if DIRECTORY is managed by Mercurial. nil if not.
 Because with Mercurial only the top-most directory of a source-tree has a subdir
 .hg this function tries recursively upwards if there is a .hg-subdir."
   ;; With XEmacs we must first load the vc-hooks which contain the function
