@@ -1052,6 +1052,16 @@ This option makes only sense if the value is a list with more than 1 element!"
                                     name)))
                    (set symbol value))))
 
+(defcustom ecb-left-right-layout-hide-sequence '(left-side all right-side none)
+  "*"
+  :group 'ecb-layout
+  :type '(repeat (choice :tag "Hidden windows"
+                         :menu-tag "Hidden windows"
+                         (const :tag "Only left side ecb-windows hidden" :value left-side)
+                         (const :tag "Only right side ecb-windows hidden" :value right-side)
+                         (const :tag "All ecb-windows hidden" :value all)
+                         (const :tag "No ecb-window hidden (ie. all displayed)" :value none))))
+
 (defcustom ecb-hide-ecb-windows-before-hook nil
   "*Hook run direct before the ECB windows will be hidden.
 Hiding is done either by `ecb-toggle-ecb-windows' or `ecb-hide-ecb-windows'.
@@ -1201,16 +1211,14 @@ not change this variable!")
 
 (defvar ecb-windows-hidden-state ecb-windows-hidden-none-value
   "Information which ECB windows are hidden.
-The value is either 'all \(means that all ecb-windows of current layout are
-hidden) or 'none \(means all ecb-windows of current
-layout are displayed) or a list which can contain any senseful
-combination of the symbols left-side, right-side or top-side which means
-all ecb-windows on this frame-side are hidden.
+The value is one of the symbols left-side, right-side, top-side,
+none or all which indicates which ecb-windows are hidden \(ie.
+all ecb-windows on this frame-side are hidden).
 
-\"senseful\" means that for a certain layout-type only certain lists are
-senseful, e.g. for a top-layout the list can only contain one element 'top-side
-whereas for a left-right layout any combination of 'left-side and 'right-side is
-possible and senseful.
+\"senseful\" means that for a certain layout-type only certain
+values are senseful, e.g. for a top-, left- or right-layout only
+'none or 'all is sensefull whereas for a left-right layout
+'left-side, 'right-side, 'none or 'all is possible and senseful.
 
 Do not evaluate this variable - always use the functions
 `ecb-windows-all-hidden', `ecb-windows-all-displayed' or
@@ -1228,16 +1236,7 @@ This function has a \"binary\" semantic: a return value of nil
 means that some or all ecb-windows of current layout are displayed and a
 return value of not nil means that all ecb-windows are hidden."
   (let ((state (or hidden-state ecb-windows-hidden-state)))
-    (case state
-      (none nil) ;; no ecb-window is hidden ==> nil
-      (all t)  ;; all ecb-windows are hidden ==> t
-      (otherwise ;; now state is a list
-       (case (ecb-get-layout-type)
-         (left-right (and (memq 'left-side state)
-                          (memq 'right-side state)))
-         (left (memq 'left-side state))
-         (right (memq 'right-side state))
-         (top (memq 'top-side state)))))))
+    (equal state ecb-windows-hidden-all-value)))
 
 (defun ecb-windows-all-displayed (&optional hidden-state)
   "Return not nil if all ecb-windows are displayed.
@@ -1249,7 +1248,7 @@ ecb-windows of current layout are displayed and a return value of
 nil means that either no or only some but not all ecb-windows are
 displayed."
   (let ((state (or hidden-state ecb-windows-hidden-state)))
-    (eq state 'none)))
+    (equal state ecb-windows-hidden-none-value)))
 
 (defun ecb-windows-hidden-state-list (&optional hidden-state)
   "Return the hidden-state of the ecb-windows as list.
@@ -1269,7 +1268,27 @@ symbols of 'left-side, 'right-side or 'top-side."
              (right '(right-side))
              (top '(top-side))))
       (none nil)
-      (otherwise state))))
+      (otherwise (list state)))))
+
+(defun ecb-windows-toggled-hidden-state (&optional hidden-state)
+  "Return the current hidden-state toggled.
+If HIDDEN-STATE is not nil then it must be of the same type as
+`ecb-windows-hidden-state'. If nil then the value of
+`ecb-windows-hidden-state' is used.
+
+For all layout-types except left-right this is 'none when current state is
+'all and vice versa.
+
+For the layout-type left-right this depends on the value of the option
+'ecb-left-right-layout-hide-sequence': It is the successor of the
+current-state in that list. If current-state is the last element in that list
+the toggled state is the first element of that list."
+  (let ((state (or hidden-state ecb-windows-hidden-state)))
+    (if (equal (ecb-get-layout-type) 'left-right)
+        (ecb-next-listelem ecb-left-right-layout-hide-sequence state)
+      (if (ecb-windows-all-displayed)
+          'all
+        'none))))
 
 (defvar ecb-special-ecb-buffers-of-current-layout nil
   "The list of special ecb-buffers of current-layout.
@@ -1439,10 +1458,6 @@ is no compile-window displayed."
 (defun ecb-edit-window-live-p ()
   "At least one edit-window is always alive."
   t)
-
-(defun ecb-window-live-p (buffer-name)
-  "Return not nil if buffer BUFFER-NAME is displayed in an active window."
-  (and buffer-name (window-live-p (get-buffer-window buffer-name))))
 
 ;; ====== basic advices ======================================================
 
@@ -4298,10 +4313,10 @@ BUFFER-OR-NAME ca be either a buffer-object or a buffer-name."
                 (ecb-option-get-value 'ecb-minor-mode-text 'standard-value))
           "")))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: For left-right-layouts: Not only
-;; hiding all the ecb-windows but offering to hide only one of the left or the
-;; right column. Maybe toggling in the sequence "Hide left" --> "Hide all" -->
-;; Hide right" --> "Show all". ADAPT!!!!!!!!!!!
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Remove this and rename
+;; ecb-toggle-ecb-windows-new to ecb-toggle-ecb-windows when maximizing has
+;; been rewritten with new mechanism and new hidding takes account of
+;; maximized windows.
 (defun ecb-toggle-ecb-windows (&optional arg)
   "Toggle visibility of the ECB-windows.
 With prefix argument ARG, make visible if positive, otherwise invisible.
@@ -4310,10 +4325,6 @@ visibility of the ECB windows. ECB minor mode remains active!"
   (interactive "P")
   (unless (or (not ecb-minor-mode)
               (not (equal (selected-frame) ecb-frame)))
-
-    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: new-state must be completely
-    ;; new written - this is just an interim solution until we have rewritten
-    ;; the full new feature with left-right layouts!!
     (let ((new-state (if (null arg)
                          (not (ecb-windows-all-hidden))
                        (<= (prefix-numeric-value arg) 0))))
@@ -4336,23 +4347,91 @@ visibility of the ECB windows. ECB minor mode remains active!"
         (unless (ecb-windows-all-hidden)
           (run-hooks 'ecb-hide-ecb-windows-before-hook)
           (tree-buffer-deactivate-follow-mouse)
-            (let ((compwin-hidden (equal 'hidden
-                                         (ecb-compile-window-state))))
-              (ecb-redraw-layout-full nil nil nil ecb-windows-hidden-all-value)
-              (if compwin-hidden
-                  (ecb-toggle-compile-window -1)))
+          (let ((compwin-hidden (equal 'hidden
+                                       (ecb-compile-window-state))))
+            (ecb-redraw-layout-full nil nil nil ecb-windows-hidden-all-value)
+            (if compwin-hidden
+                (ecb-toggle-compile-window -1)))
           (run-hooks 'ecb-hide-ecb-windows-after-hook)
           (message "ECB windows are now hidden."))))))
+
+(defun ecb-toggle-ecb-windows-new (&optional arg)
+  "Toggle visibility of the ECB-windows.
+For layout-type left-right the toggle sequence depends on the
+value of the option `ecb-left-right-layout-hide-sequence'. For
+all other layout types toggling follows the intuitive way. With
+prefix argument ARG you will be asked which ecb-windows to hide
+if the current layout is of type left-right.
+
+This has nothing to do with \(de)activating ECB but only affects the
+visibility of the ECB windows. ECB minor mode remains active!"
+  (interactive "P")
+  (unless (or (not ecb-minor-mode)
+              (not (equal (selected-frame) ecb-frame)))
+    (let ((new-state (if (null arg)
+                         (ecb-windows-toggled-hidden-state)
+                       (if (not (equal (ecb-get-layout-type) 'left-right))
+                           (ecb-windows-toggled-hidden-state)
+                         ;; ask for the new state
+                         (let ((possible-hide-options
+                                (mapcar (function (lambda (e)
+                                                    (symbol-name e)))
+                                        (ecb-delete-first-occurence-from-list
+                                         ;; ecb-delete-first-occ... is destructive!
+                                         (ecb-copy-list '(none all left-side right-side))
+                                         ecb-windows-hidden-state))))
+                           (intern (ecb-query-string "ECB-windows to hide:"
+                                                     possible-hide-options)))))))
+      (ecb-hide-ecb-windows-internal new-state))))
+
+(defun ecb-hide-ecb-windows-internal (new-state)
+  "Make ECB-windows visible or invisible.
+NEW-STATE must be one of the symbols none, all, left-side or right-side."
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: make safe against wrong values
+  ;; of NEW-STATE.
+  (unless (or (not ecb-minor-mode)
+              (not (equal (selected-frame) ecb-frame)))
+
+    (let ((old-state ecb-windows-hidden-state)
+          (compwin-hidden (equal 'hidden
+                                 (ecb-compile-window-state))))
+      (unless (equal old-state new-state)
+        (when (equal old-state ecb-windows-hidden-all-value)
+          ;; before all ecb-windows were hidden, now we display at least some
+          ;; ecb-windows
+          (run-hooks 'ecb-show-ecb-windows-before-hook)
+          (if (ecb-show-any-node-info-by-mouse-moving-p)
+              (tree-buffer-activate-follow-mouse)))
+        (when (equal new-state ecb-windows-hidden-all-value)
+          ;; before at least some ecb-windows were displayed, now we hide all
+          (run-hooks 'ecb-hide-ecb-windows-before-hook)
+          (tree-buffer-deactivate-follow-mouse))
+        (ecb-redraw-layout-full nil nil nil new-state)
+        ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: we must deal with
+        ;; maximized buffers...
+        ;; (if (ecb-buffer-is-maximized-p)
+        ;;     (ecb-maximize-ecb-buffer (ecb-maximized-ecb-buffer-name))
+        (when compwin-hidden
+          (ecb-toggle-compile-window -1))
+        (when (equal old-state ecb-windows-hidden-all-value)
+          (run-hooks 'ecb-show-ecb-windows-after-hook))
+        (when (equal new-state ecb-windows-hidden-all-value)
+          (run-hooks 'ecb-hide-ecb-windows-after-hook))))))
+
 
 (defun ecb-hide-ecb-windows ()
   "Hide the ECB windows if not already hidden."
   (interactive)
   (ecb-toggle-ecb-windows 0))
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: use this when new mechanism is ready
+  ;; (ecb-hide-ecb-windows-internal ecb-windows-hidden-all-value))
 
 (defun ecb-show-ecb-windows ()
   "Make the ECB windows visible."
   (interactive)
   (ecb-toggle-ecb-windows 1))
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: use this when new mechanism is ready
+  ;; (ecb-hide-ecb-windows-internal ecb-windows-hidden-none-value))
 
 
 (defvar ecb-current-maximized-ecb-buffer-name nil
@@ -4427,11 +4506,6 @@ buffer of current layout is maximized otherwise nil."
 ;; - throw away the creator-fcn stuff, now we do maximizing via deleting all
 ;;   other ecb-windows of the same column (left, right, left-right) or row
 ;;   (top)..
-;; - ecb-windows-hidden can now have the following values: nil and t and
-;;   additional left or right (for left-right layouts). CHECK ALL LOCATIONS
-;;   WHERE THIS IS SET OR EVALUATED - adaprt the code!!!!
-;; - we need a mechanism to get the info, if a ecb-window is on the left or on
-;;   the right column
 ;; - maximizing can be done in each column
 ;; - ecb-maximized-ecb-buffer-name can now hold a list of maximized
 ;;   buffer-names!!! CHECK WHERE THIS IS SET OR EVALUATED - adapt the code!!
@@ -4481,6 +4555,44 @@ will be selected also after."
             (compile
              (ecb-window-select ecb-compile-window))))))))
 
+(defun ecb-maximize-ecb-buffer-new (ecb-buffer-name &optional preserve-selected-window)
+  "Maximize that window which displays the special ECB-buffer ECB-BUFFER-NAME.
+Afterwards ECB-BUFFER-NAME is the only visible special ECB-buffer. If optional
+arg PRESERVE-SELECTED-WINDOW is nil then after maximizing always the current
+edit-window is selected and if not nil then the currently selected window-type
+does not change which means: If any ecb-window was selected before maximizing
+then after maximizing the maximized ecb-window is selected \(regardless if its
+the same as before the maximizing). If the compile window was selected before
+then it will be selected also after. If an edit-window was selected before it
+will be selected also after."
+  (when (equal (selected-frame) ecb-frame)
+    (let ((curr-point (ecb-where-is-point))
+          (compwin-hidden (equal 'hidden (ecb-compile-window-state))))
+      ;; maximize the window if ECB-BUFFER-NAME is one of the special
+      ;; ecb-buffers of current layout
+      (when (ecb-buffer-is-ecb-buffer-of-current-layout-p ecb-buffer-name)
+        ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
+        ;; - we have to check if ecb-buffer-name ist currently visible. If yes
+        ;;   we have no problem, if no we have to do:
+        ;;   1. redrawing full layout to make ecb-buffer-name visible but
+        ;;      preserving current maximizing state (of an eventually other
+        ;;      maximizied ecb-window which is possible in left-right-layouts)
+        ;;   2. maximizing ecb-buffer-name
+        ;;   3. to make it not too easy we have to deal with hidden windows
+        ;;      but maybe this is done with step 1....think about it
+        (ecb-delete-ecb-windows (ecb-get-ecb-window-location
+                                 (get-buffer-window ecb-buffer-name))
+                                nil ecb-buffer-name)
+        (if compwin-hidden (ecb-toggle-compile-window -1))
+        (setq ecb-current-maximized-ecb-buffer-name ecb-buffer-name)
+        ;; point is now in the edit-buffer so maybe we have to move point to the
+        ;; buffer where it was before.
+        (when preserve-selected-window
+          (case (car curr-point)
+            (ecb
+             (ecb-window-select ecb-buffer-name))
+            (compile
+             (ecb-window-select ecb-compile-window))))))))
 
 (defvar ecb-cycle-ecb-buffer-state nil
   "State of ecb-buffer-cycling. An alist where the car is the list of all
@@ -5316,9 +5428,9 @@ buffer-name of an ecb-buffer: In this case all ecb-windows except this window
 will be deleted on SIDE or with other words: In this case this window will be
 maximized.
 
-If RESIDUAL-WINDOW is not nil it must be
-one of the windows `ecb-canonical-residual-windows-list' would compute. If nil
-then it will be computed."
+If RESIDUAL-WINDOW is not nil it must be one of the windows
+`ecb-canonical-residual-windows-list' would compute. If nil then
+it will be computed."
   (message "Klausi - del ecb-windows: side: %s" side)
   (let ((err-p (or (not (memq side '(left-side right-side top-side)))
                    (case (ecb-get-layout-type)

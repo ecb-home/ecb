@@ -69,6 +69,11 @@
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
 ;; 1. Add all necessary documentation to the info-manual (texi)
 ;; 2. Add this preferences group to the menu in ecb.el
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
+;; new option which allows to exclude arbitrary fsymbols from being
+;; docu-displayed.
+
 (defgroup ecb-symboldef nil
   "Settings for the symbol-definition-buffer in the Emacs code browser."
   :group 'ecb
