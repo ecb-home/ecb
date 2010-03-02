@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-symboldef.el,v 1.19 2010/02/23 16:09:08 berndl Exp $
+;; $Id: ecb-symboldef.el,v 1.20 2010/03/02 12:02:59 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -69,6 +69,11 @@
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
 ;; 1. Add all necessary documentation to the info-manual (texi)
 ;; 2. Add this preferences group to the menu in ecb.el
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
+;; new option which allows to exclude arbitrary fsymbols from being
+;; docu-displayed.
+
 (defgroup ecb-symboldef nil
   "Settings for the symbol-definition-buffer in the Emacs code browser."
   :group 'ecb

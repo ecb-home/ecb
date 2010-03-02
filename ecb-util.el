@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.164 2010/02/24 21:50:44 berndl Exp $
+;; $Id: ecb-util.el,v 1.165 2010/03/02 12:02:59 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -650,13 +650,13 @@ done by `equal'. This is desctructive function. SEQ is returned."
     (setq seq (ecb-replace-first-occurence seq old-elem new-elem)))
   seq)
 
-(defun ecb-remove-first-occurence-from-list (list elem)
+(defun ecb-delete-first-occurence-from-list (list elem)
   "Replace first occurence of ELEM from LIST. Comparison is done by `equal'.
 This is desctructive function. LIST is returned."
   (delq 'ecb-util-remove-marker
         (ecb-replace-first-occurence list elem 'ecb-util-remove-marker)))
 
-(defun ecb-remove-all-occurences-from-list (list elem)
+(defun ecb-delete-all-occurences-from-list (list elem)
   "Replace all occurences of ELEM from LIST. Comparison is done by `equal'.
 This is desctructive function. LIST is returned."
   (delq 'ecb-util-remove-marker
@@ -1992,6 +1992,10 @@ means not to count the minibuffer even if it is active."
 from the left-most top-most window) in the order `next-window' would walk
 through these windows."
   (ecb-window-list ecb-frame 0 (frame-first-window ecb-frame)))
+
+(defun ecb-window-live-p (buffer-or-name)
+  "Return not nil if buffer BUFFER-OR-NAME is displayed in an active window."
+  (and buffer-or-name (window-live-p (get-buffer-window buffer-or-name))))
 
 (defun ecb-enlarge-window (window &optional val)
   "Enlarge the given window.
