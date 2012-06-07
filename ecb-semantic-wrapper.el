@@ -38,8 +38,13 @@
 
 
 (require 'semantic)
-(require 'semantic-ctxt)
-(require 'semantic-analyze)
+(if (locate-library "semantic-ctxt")
+    (progn
+      (require 'semantic-ctxt)
+      (require 'semantic-analyze))
+  (progn
+    (require 'semantic/ctxt)
+    (require 'semantic/analyze)))
 
 (defconst ecb-semantic-2-loaded (string-match "^2" semantic-version))
 (defconst ecb-semantic-2-beta-nr (if (and ecb-semantic-2-loaded
@@ -60,8 +65,6 @@
 (silentcomp-defvar semanticdb-search-system-databases)
 (silentcomp-defvar semantic-format-use-images-flag)
 (silentcomp-defvar ezimage-use-images)
-;; semantic 2.0 does not have this
-(silentcomp-defvar semantic-toplevel-bovine-cache)
 
 ;; -- getter functions for all variables of semantic currently used by ECB ---
 
@@ -285,7 +288,9 @@ unloaded buffer representation."
 (if (fboundp 'semantic-fetch-available-tags)
     (defalias 'ecb--semantic-fetch-available-tags 'semantic-fetch-available-tags)
   (defsubst ecb--semantic-fetch-available-tags ()
-    semantic-toplevel-bovine-cache))
+    (if (boundp 'semantic--buffer-cache)
+	semantic--buffer-cache
+      semantic-toplevel-bovine-cache)))
 
 (if (fboundp 'semantic-tag-components)
     (defalias 'ecb--semantic-tag-components

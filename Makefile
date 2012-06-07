@@ -131,7 +131,11 @@ ecb: $(ecb_LISP_EL)
 	@$(RM) $(ecb_LISP_ELC) ecb-compile-script
 	@echo "(add-to-list 'load-path nil)" > ecb-compile-script
 	@if test ! -z "${CEDET}"; then\
-	   echo "(load-file \"$(CEDET)/common/cedet.el\")" >> ecb-compile-script; \
+		if test -f $(CEDET)/cedet-devel-load.el ; then \
+		   echo "(load-file \"$(CEDET)/cedet-devel-load.el\")" >> ecb-compile-script; \
+		else \
+		   echo "(load-file \"$(CEDET)/common/cedet.el\")" >> ecb-compile-script; \
+		fi \
 	else \
 	   echo "(semantic-mode 1)" >> ecb-compile-script; \
 	   echo "(require 'semantic/bovine/el)" >> ecb-compile-script; \
