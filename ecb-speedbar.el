@@ -203,7 +203,7 @@ after clicking onto a filename in the speedbar."
 (defecb-advice speedbar-frame-mode around ecb-speedbar-adviced-functions
   "During running speedbar within ECB this command is disabled!"
   (if ecb-minor-mode
-      (when (interactive-p)
+      (when (called-interactively-p 'interactive)
         (ecb-info-message "speedbar-frame-mode takes no effect when running within ECB!"))
     ad-do-it))
 
@@ -272,7 +272,7 @@ the point was not set by `mouse-set-point'."
   (set-window-buffer (selected-window)
                      (get-buffer-create ecb-speedbar-buffer-name))
   (unless ecb-running-xemacs
-    (set (make-local-variable 'automatic-hscrolling) nil)))
+    (set (make-local-variable 'auto-hscroll-mode) nil)))
 
 
 

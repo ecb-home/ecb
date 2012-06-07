@@ -52,7 +52,6 @@
 (silentcomp-defvar vertical-divider-map)
 (silentcomp-defvar modeline-map)
 ;; Emacs 21.X stuff
-(silentcomp-defvar automatic-hscrolling)
 (silentcomp-defvar before-make-frame-hook)
 (silentcomp-defvar after-make-frame-functions)
 ;; First loaded during activated ECB
@@ -260,9 +259,9 @@ other other frame!"
   "Cancel layout-creation without saving the layout."
   (interactive)
   (when (ecb-create-layout-frame-ok)
-    (ecb-create-layout-clear-all (interactive-p))
+    (ecb-create-layout-clear-all (called-interactively-p 'interactive))
     (message "ECB Layout Creation canceled - the layout is not saved!")
-    (and (interactive-p) (ecb-activate))))
+    (and (called-interactively-p 'interactive) (ecb-activate))))
 
 (defun ecb-create-layout-clear-all (&optional delete-frame)
   "Resets all stuff to state before `ecb-create-new-layout' was called. If
@@ -285,7 +284,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
             ecb-create-layout-old-minor-mode-map-alist))
   ;; restore horiz. scrolling
   (unless ecb-running-xemacs
-    (setq automatic-hscrolling ecb-create-layout-old-hscroll))
+    (setq auto-hscroll-mode ecb-create-layout-old-hscroll))
   ;; for XEmacs restore these maps
   (if ecb-running-xemacs
       (progn
@@ -313,7 +312,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
   (interactive)
   (when (ecb-create-layout-frame-ok)
     (if (ecb-create-layout-ready-for-save-p)
-        (let ((delete-frame (interactive-p)))
+        (let ((delete-frame (called-interactively-p 'interactive)))
           ;; if an error occurs during `ecb-create-layout-save-layout' or the
           ;; user hits C-q we must clean the layout creation stuff!
           (unwind-protect
@@ -465,7 +464,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
                          (concat "ECB " new-type) nil t)
       ;; setting the new buffer type in the buffer itself
       (ecb-create-layout-set-buffer-type new-type)
-      (when (interactive-p)
+      (when (called-interactively-p 'interactive)
         (ecb-create-layout-gen-lisp-for-buffer-type new-type)
         (ecb-create-layout-next-window))
       new-type)))
@@ -783,8 +782,8 @@ never selects the edit-window."
 
   ;; horiz. scrolling
   (unless ecb-running-xemacs
-    (setq ecb-create-layout-old-hscroll automatic-hscrolling)
-    (setq automatic-hscrolling nil))
+    (setq ecb-create-layout-old-hscroll auto-hscroll-mode)
+    (setq auto-hscroll-mode nil))
 
   ;; for XEmacs modeline- and vertical-divider maps
   (when ecb-running-xemacs
