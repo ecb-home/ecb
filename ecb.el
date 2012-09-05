@@ -136,6 +136,7 @@
 (eval-when-compile
   (require 'silentcomp))
 
+(require 'info)
 
 ;; We need this libraries already here if we miss some requirements
 (require 'ecb-upgrade)
