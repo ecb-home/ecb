@@ -1330,19 +1330,6 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
               ;; enabling the VC-support
               (ecb-vc-enable-internals 1)
               
-              ;; menus - dealing with the menu for XEmacs is really a pain...
-              (when ecb-running-xemacs
-                (let ((dummy-buf-name " *dummytogetglobalmap*"))
-                  (with-current-buffer (get-buffer-create dummy-buf-name)
-                    (add-submenu nil ecb-minor-menu)
-                    (kill-buffer dummy-buf-name)))
-                (save-excursion
-                  (dolist (buf (buffer-list))
-                    (set-buffer buf)
-                    (if (null (car (find-menu-item current-menubar
-                                                   (list ecb-menu-name))))
-                        (add-submenu nil ecb-minor-menu)))))
-
               (add-hook (if ecb-running-xemacs
                             'activate-menubar-hook
                           'menu-bar-update-hook)
@@ -1540,16 +1527,6 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
 
       ;; disabling the VC-support
       (ecb-vc-enable-internals -1)
-
-      ;; menus - dealing with the menu for XEmacs is really a pain...
-      (ignore-errors
-        (when ecb-running-xemacs
-          (save-excursion
-            (dolist (buf (buffer-list))
-              (set-buffer buf)
-              (if (car (find-menu-item current-menubar
-                                       (list ecb-menu-name)))
-                  (delete-menu-item (list ecb-menu-name)))))))
       
       (remove-hook (if ecb-running-xemacs
                        'activate-menubar-hook
