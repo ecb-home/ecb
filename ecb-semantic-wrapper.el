@@ -217,8 +217,7 @@ unloaded buffer representation."
   "Attempt to calculate the parent-tag of TAG."
   (if (fboundp 'semantic-tag-calculate-parent)
       (apply 'semantic-tag-calculate-parent (list tag))
-    (save-excursion
-      (set-buffer (ecb--semantic-tag-buffer tag))
+    (with-current-buffer  (set-buffer (ecb--semantic-tag-buffer tag))
       (goto-char (ecb--semantic-tag-start tag))
       (ecb--semantic-current-tag-parent))))
 
