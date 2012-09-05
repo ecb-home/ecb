@@ -196,9 +196,6 @@
 (require 'ecb-analyse)
 (require 'ecb-symboldef)
 
-;; various loads
-(require 'assoc)
-
 (eval-when-compile
   ;; to avoid compiler grips
   (require 'cl))

@@ -46,9 +46,6 @@
 ;; This loads the semantic-setups for the major-modes.
 ;; (require 'semantic-load)
 
-;; various loads
-(require 'assoc)
-
 (eval-when-compile
   ;; to avoid compiler grips
   (require 'cl))
@@ -3087,6 +3084,8 @@ a list of cons-cells where the car is the name of the source and the cdr is
 the current tag-tree for this source. The cache contains exactly one element
 for a certain source.")
 (setq ecb-tag-tree-cache nil)
+
+(require 'assoc)
 
 (defun ecb-clear-tag-tree-cache (&optional source-name)
   "Clears either the whole tag-tree-cache \(SOURCE-NAME is nil) or

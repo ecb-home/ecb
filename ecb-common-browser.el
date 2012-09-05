@@ -46,9 +46,6 @@
 (require 'ecb-mode-line)
 (require 'ecb-navigate)
 
-;; various loads
-(require 'assoc)
-
 (eval-when-compile
   ;; to avoid compiler grips
   (require 'cl))
