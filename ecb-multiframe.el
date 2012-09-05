@@ -144,7 +144,7 @@ frame.  When complete return the new buffer name."
     (modify-frame-parameters nil (list (cons variable new-buffer-name)))
     new-buffer-name))
 
-(defun ecb-deactivate-internal ()
+(defun ecb-multiframe-deactivate-internal ()
   "Deactivates the ECB and kills all ECB buffers and windows."
   (unless (not ecb-minor-mode)
     
