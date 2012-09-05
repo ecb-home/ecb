@@ -94,8 +94,6 @@
   ;;reset everything to the default value?
   
   (dolist(variable ecb-multiframe-variables)
-    (make-variable-frame-local variable)
-
     (modify-frame-parameters frame (list (cons variable nil))))
 
   ;;ecb-eshell-buffer-name ?
@@ -123,7 +121,6 @@
       
     (mapcar (lambda(sframe)
               (when (boundp sframe)
-                (make-variable-frame-local sframe)
                 (modify-frame-parameters frame (list (cons sframe frame)))))
             '(speedbar-frame speedbar-attached-frame dframe-attached-frame))
       
@@ -133,7 +130,6 @@
     
       (setq new-ecb-speedbar-buffer-name (ecb-multiframe-setup-buffer-name 'ecb-speedbar-buffer-name " SPEEDBAR <%s>"))
 
-      (make-variable-frame-local 'speedbar-buffer)
       (modify-frame-parameters frame (list (cons 'speedbar-buffer
                                                  (get-buffer-create new-ecb-speedbar-buffer-name)))))))
 
@@ -145,9 +141,7 @@ frame.  When complete return the new buffer name."
   (let((new-buffer-name (format buffer-format-name
                                 (format-time-string "%s"))))
   
-    (make-variable-frame-local variable)
-  
-    (modify-frame-parameters frame (list (cons variable new-buffer-name)))
+    (modify-frame-parameters nil (list (cons variable new-buffer-name)))
     new-buffer-name))
 
 (defun ecb-deactivate-internal ()
