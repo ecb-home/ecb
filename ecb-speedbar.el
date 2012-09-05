@@ -272,7 +272,7 @@ the point was not set by `mouse-set-point'."
   (set-window-buffer (selected-window)
                      (get-buffer-create ecb-speedbar-buffer-name))
   (unless ecb-running-xemacs
-    (set (make-local-variable 'automatic-hscrolling) nil)))
+    (set (make-local-variable 'auto-hscroll-mode) nil)))
 
 
 

@@ -52,7 +52,7 @@
 (silentcomp-defvar vertical-divider-map)
 (silentcomp-defvar modeline-map)
 ;; Emacs 21.X stuff
-(silentcomp-defvar automatic-hscrolling)
+;;(silentcomp-defvar automatic-hscrolling)
 (silentcomp-defvar before-make-frame-hook)
 (silentcomp-defvar after-make-frame-functions)
 ;; First loaded during activated ECB
@@ -285,7 +285,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
             ecb-create-layout-old-minor-mode-map-alist))
   ;; restore horiz. scrolling
   (unless ecb-running-xemacs
-    (setq automatic-hscrolling ecb-create-layout-old-hscroll))
+    (setq auto-hscroll-mode ecb-create-layout-old-hscroll))
   ;; for XEmacs restore these maps
   (if ecb-running-xemacs
       (progn
@@ -783,8 +783,8 @@ never selects the edit-window."
 
   ;; horiz. scrolling
   (unless ecb-running-xemacs
-    (setq ecb-create-layout-old-hscroll automatic-hscrolling)
-    (setq automatic-hscrolling nil))
+    (setq ecb-create-layout-old-hscroll auto-hscroll-mode)
+    (setq auto-hscroll-mode nil))
 
   ;; for XEmacs modeline- and vertical-divider maps
   (when ecb-running-xemacs
