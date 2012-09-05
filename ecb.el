@@ -1216,7 +1216,7 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
         (ecb-select-ecb-frame)
         (ecb-update-directories-buffer))
 
-    (let ((stack-trace-on-error stack-trace-on-error))
+    (let ((debug-on-error debug-on-error))
       ;; we activate only if all before-hooks return non nil
       (when (run-hook-with-args-until-failure 'ecb-before-activate-hook)
 
