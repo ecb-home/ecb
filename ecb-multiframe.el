@@ -119,10 +119,10 @@
     
     ;;fix speedbar by binding the given speedbar frame value with the current frame
       
-    (mapcar (lambda(sframe)
-              (when (boundp sframe)
-                (modify-frame-parameters frame (list (cons sframe frame)))))
-            '(speedbar-frame speedbar-attached-frame dframe-attached-frame))
+    (mapc (lambda(sframe)
+	    (when (boundp sframe)
+	      (modify-frame-parameters frame (list (cons sframe frame)))))
+	  '(speedbar-frame speedbar-attached-frame dframe-attached-frame))
       
     ;;setup speedbar with a new buffer
 
@@ -140,7 +140,7 @@ frame.  When complete return the new buffer name."
 
   (let((new-buffer-name (format buffer-format-name
                                 (format-time-string "%s"))))
-  
+    
     (modify-frame-parameters nil (list (cons variable new-buffer-name)))
     new-buffer-name))
 
