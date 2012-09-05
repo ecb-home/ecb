@@ -202,25 +202,6 @@
   ;; to avoid compiler grips
   (require 'cl))
 
-
-;; XEmacs
-(silentcomp-defun redraw-modeline)
-(silentcomp-defvar modeline-map)
-(silentcomp-defvar progress-feedback-use-echo-area)
-;; Emacs
-(silentcomp-defun force-mode-line-update)
-(silentcomp-defun font-lock-add-keywords)
-
-(silentcomp-defvar current-menubar)
-(silentcomp-defun find-menu-item)
-(silentcomp-defun add-submenu)
-(silentcomp-defun delete-menu-item)
-(silentcomp-defun Info-goto-node)
-
-(silentcomp-defun ecb-speedbar-deactivate)
-(silentcomp-defvar ecb-speedbar-buffer-name)
-
-
 ;;====================================================
 ;; Variables
 ;;====================================================
@@ -1166,9 +1147,8 @@ always the ECB-frame if called from another frame."
   (let ((ecb-minor-mode t))
     (ecb-deactivate-internal t))
   (setq ecb-minor-mode nil)
-  (if ecb-running-xemacs
-      (redraw-modeline t)
-    (force-mode-line-update t))
+
+  (force-mode-line-update t)
   (error "ECB %s: %s (error-type: %S, error-data: %S)" ecb-version msg
          (car err) (cdr err)))
 
@@ -1695,9 +1675,8 @@ if the minor mode is enabled.
     (if new-state
         (ecb-activate-internal)
       (ecb-deactivate-internal)))
-  (if ecb-running-xemacs
-      (redraw-modeline t)
-    (force-mode-line-update t))
+  
+  (force-mode-line-update t)
   ecb-minor-mode)
 
 

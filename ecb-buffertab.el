@@ -96,13 +96,11 @@
   (interactive)
 
   (let((ecb-prefix "   ECB: " ))
-    (save-excursion
-
-      (set-buffer (get-buffer ecb-speedbar-buffer-name))
-
+    (with-current-buffer (get-buffer ecb-speedbar-buffer-name)
+      
       ;;FIXME: figure out what modeline tab to use
       (setq header-line-format (concat ecb-prefix "/ " (buffer-name)" "))
-                                   
+      
       (add-text-properties 0 (length ecb-prefix)
                            (list 'face 'ecb-buffertab-primary-face)
                            header-line-format)

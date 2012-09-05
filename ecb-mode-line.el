@@ -328,9 +328,7 @@ as \"W-<number>\"."
   (if (ecb-buffer-obj buffer-name)
       (with-current-buffer buffer-name
         (setq mode-line-format new-mode-line-format)
-        (if ecb-running-xemacs
-            (redraw-modeline)
-          (force-mode-line-update)))
+	(force-mode-line-update))
     (message "This buffer isn't available: %s"  buffer-name)))
 
 (silentcomp-provide 'ecb-mode-line)
