@@ -42,6 +42,7 @@
 
 (require 'ecb-cedet-wrapper)
 (require 'ecb-semantic)
+(require 'ecb-semantic-wrapper)
 ;; This loads the semantic-setups for the major-modes.
 ;; (require 'semantic-load)
 
@@ -1901,6 +1902,7 @@ This function MUST be called with the source-buffer as current buffer!"
     (ecb-tag-generate-node-name plain-tag-name
                                 (if has-protection 1 -1)
                                 icon-name)))
+
 
 (defun ecb-children-tags (parent-tag)
   "Return a list of children-tags of PARENT-TAG. If a child is not a
