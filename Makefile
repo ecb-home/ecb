@@ -126,6 +126,8 @@ ecb_VERSION=2.41
 
 include ecb-makedef.mk
 
+all: ecb autoloads online-help
+
 ecb: $(ecb_LISP_EL)
 	@echo "Byte-compiling ECB with LOADPATH=${LOADPATH} ..."
 	@$(RM) $(ecb_LISP_ELC) ecb-compile-script
@@ -149,8 +151,6 @@ ecb: $(ecb_LISP_EL)
 	@echo "(setq debug-on-error t)" >> ecb-compile-script
 	$(EBATCH) -l ecb-compile-script --eval '(ecb-byte-compile t)'
 	@$(RM) ecb-compile-script
-
-all: ecb online-help
 
 online-help: $(ecb_TEXI)
 	@if test -x "$(MAKEINFO)"; then\
@@ -210,7 +210,7 @@ install-help: $(ecb_INFO_DIR)/$(ecb_INFO)
 
 
 clean:
-	@$(RM) $(ecb_LISP_ELC) ecb-compile-script
+	@$(RM) $(ecb_LISP_ELC) ecb-compile-script ecb-autoloads.el*
 
 # The targets below are only for maintaining the ECB-package.
 
@@ -239,11 +239,9 @@ prepversion:
 	  echo "w";				\
 	  echo "q") | ed -s $(ecb_TEXI) 1> /dev/null
 
-
-autoloads:
+autoloads: ecb
 	@$(RM) $(ecb_AUTOLOADS) $(ecb_AUTOLOADS)c
-	$(EBATCH) -l ecb-autogen -f ecb-update-autoloads
-
+	$(EBATCH) --eval "(add-to-list 'load-path nil)" -l ecb-autogen -f ecb-update-autoloads
 
 # builds the distribution file $(ecb_VERSION).tar.gz
 distrib: $(ecb_INFO_DIR)/$(ecb_INFO) prepversion autoloads ecb
