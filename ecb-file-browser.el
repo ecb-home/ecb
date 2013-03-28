@@ -352,7 +352,7 @@ also `ecb-ping-options'."
 (defcustom ecb-ping-options
   (append (cond ((memq system-type (list 'gnu 'gnu/linux 'irix 'darwin))
                  (list "-c" "2"))
-                ((eq system-type 'windows-nt 'cygwin)
+                ((memq system-type '(windows-nt cygwin))
                  (list "-n" "2")))
           (list "HOST"))
   "List of options for the ping program.
