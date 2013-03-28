@@ -350,9 +350,9 @@ also `ecb-ping-options'."
   :type  'string)
 
 (defcustom ecb-ping-options
-  (append (cond ((memq system-type (list 'gnu 'gnu/linux 'irix 'darwin))
+  (append (cond ((memq system-type '(gnu gnu/linux irix darwin berkeley-unix))
                  (list "-c" "2"))
-                ((eq system-type 'windows-nt 'cygwin)
+                ((memq system-type '(windows-nt cygwin))
                  (list "-n" "2")))
           (list "HOST"))
   "List of options for the ping program.
