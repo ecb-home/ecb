@@ -47,7 +47,8 @@
 (require 'ecb-navigate)
 
 ;; various loads
-(require 'assoc)
+(if (or (not (fboundp 'version<)) (version< emacs-version "24.3"))
+    (require 'assoc))
 
 (eval-when-compile
   ;; to avoid compiler grips
