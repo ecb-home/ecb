@@ -1681,7 +1681,7 @@ arguments. Do never set this variable; it is only set by
      ;; ECB and if `ecb-compile-window-temporally-enlarge' is either
      ;; after-selection or nil then we shrink to the
      ;; ecb-compile-window-height! Otherwise we run the normal job!
-     (if (and (not (called-interactively-p 'interactive))
+     (if (and (not (called-interactively-p 'any))
               (equal (ad-get-arg 0) ecb-compile-window)
               (member ecb-compile-window-temporally-enlarge
                       '(after-selection nil))
@@ -1697,7 +1697,7 @@ arguments. Do never set this variable; it is only set by
          ;; `ecb-compile-window-height'
          (let ((window-min-height (if (and (equal (ad-get-arg 0) ecb-compile-window)
                                            (and ecb-compile-window-prevent-shrink-below-height
-                                                (not (called-interactively-p 'interactive)))
+                                                (not (called-interactively-p 'any)))
                                            window-min-height
                                            ecb-compile-window-height-lines
                                            (< window-min-height
@@ -1796,7 +1796,7 @@ for current layout."
               ;; `ecb-compile-window-height'
               (window-min-height (if (and (equal (ad-get-arg 0) ecb-compile-window)
                                           (and ecb-compile-window-prevent-shrink-below-height
-                                               (not (called-interactively-p 'interactive)))
+                                               (not (called-interactively-p 'any)))
                                           window-min-height
                                           ecb-compile-window-height-lines
                                           (< window-min-height
@@ -3141,7 +3141,7 @@ If called for other frames it works like the original version."
                      ;; algorithm of `ecb-toggle-compile-window-height' fails
                      ;; (e.g. during `compile-internal'!).
                      (unless pop-up-frames
-                       (if (called-interactively-p 'interactive)
+                       (if (called-interactively-p 'any)
                            (ecb-set-compile-window-height)
                          (if (save-excursion
                                (set-buffer (ad-get-arg 0))
@@ -3367,7 +3367,7 @@ If called for other frames it works like the original version."
 ;;                      ;; algorithm of `ecb-toggle-compile-window-height' fails
 ;;                      ;; (e.g. during `compile-internal'!).
 ;;                      (unless pop-up-frames
-;;                        (if (called-interactively-p 'interactive)
+;;                        (if (called-interactively-p 'any)
 ;;                            (ecb-set-compile-window-height)
 ;;                          (if (save-excursion
 ;;                                (set-buffer (ad-get-arg 0))
@@ -3800,7 +3800,7 @@ compile-window then it will be hidden and otherwise the behavior depends on
       (ecb-with-original-basic-functions
        ad-do-it)
     (ecb-do-with-unfixed-ecb-buffers
-     (when (and (called-interactively-p 'interactive)
+     (when (and (called-interactively-p 'any)
                 (null (ad-get-arg 0))
                 (member 'delete-window ecb-layout-always-operate-in-edit-window)
                 (not (ecb-point-in-compile-window))
@@ -3903,7 +3903,7 @@ behavior depends on `ecb-advice-window-functions-signal-error'."
       (ecb-with-original-basic-functions
        ad-do-it)
     (ecb-do-with-unfixed-ecb-buffers
-     (when (and (called-interactively-p 'interactive)
+     (when (and (called-interactively-p 'any)
                 (null (ad-get-arg 0))
                 (member 'delete-other-windows
                         ecb-layout-always-operate-in-edit-window)
@@ -4027,7 +4027,7 @@ version."
     ;; used) then we maybe must first go to the edit-window.
     ;; The check for interactiv-p prevents that we jump to the edit-window if
     ;; called from within `split-window-vertically' for example.
-    (when (and (called-interactively-p 'interactive)
+    (when (and (called-interactively-p 'any)
                (null (ad-get-arg 0))
                (member 'split-window
                        ecb-layout-always-operate-in-edit-window)
@@ -6226,7 +6226,7 @@ if no compile-window is visible."
               )
             ;; return the new compile-window height
             (ecb-window-full-height))))
-    (if (called-interactively-p 'interactive)
+    (if (called-interactively-p 'any)
         (ecb-info-message "No compile-window in current ECB-layout!"))
     nil))
 
@@ -6293,7 +6293,7 @@ you have to quit with `C-g')."
           (new-win nil))
       (if new-state
           (let ((height (or ecb-compile-window-height
-                            (and (called-interactively-p 'interactive)
+                            (and (called-interactively-p 'any)
                                  (or (ecb-option-get-value 'ecb-compile-window-height
                                                            'saved-value)
                                      (ecb-read-number "Insert height of the compile-window: " 6))))))

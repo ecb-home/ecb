@@ -63,7 +63,6 @@
 (silentcomp-defun noninteractive)
 ;; Emacs
 (silentcomp-defun event-basic-type)
-(silentcomp-defvar noninteractive)
 (silentcomp-defun window-edges)
 (silentcomp-defun buffer-local-value)
 (silentcomp-defun posn-point)

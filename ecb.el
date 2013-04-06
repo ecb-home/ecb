@@ -136,6 +136,7 @@
 (eval-when-compile
   (require 'silentcomp))
 
+(require 'info)
 
 ;; We need this libraries already here if we miss some requirements
 (require 'ecb-upgrade)
@@ -202,25 +203,6 @@
 (eval-when-compile
   ;; to avoid compiler grips
   (require 'cl))
-
-
-;; XEmacs
-(silentcomp-defun redraw-modeline)
-(silentcomp-defvar modeline-map)
-(silentcomp-defvar progress-feedback-use-echo-area)
-;; Emacs
-(silentcomp-defun force-mode-line-update)
-(silentcomp-defun font-lock-add-keywords)
-
-(silentcomp-defvar current-menubar)
-(silentcomp-defun find-menu-item)
-(silentcomp-defun add-submenu)
-(silentcomp-defun delete-menu-item)
-(silentcomp-defun Info-goto-node)
-
-(silentcomp-defun ecb-speedbar-deactivate)
-(silentcomp-defvar ecb-speedbar-buffer-name)
-
 
 ;;====================================================
 ;; Variables
@@ -1167,9 +1149,8 @@ always the ECB-frame if called from another frame."
   (let ((ecb-minor-mode t))
     (ecb-deactivate-internal t))
   (setq ecb-minor-mode nil)
-  (if ecb-running-xemacs
-      (redraw-modeline t)
-    (force-mode-line-update t))
+
+  (force-mode-line-update t)
   (error "ECB %s: %s (error-type: %S, error-data: %S)" ecb-version msg
          (car err) (cdr err)))
 
@@ -1351,19 +1332,6 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
               ;; enabling the VC-support
               (ecb-vc-enable-internals 1)
               
-              ;; menus - dealing with the menu for XEmacs is really a pain...
-              (when ecb-running-xemacs
-                (let ((dummy-buf-name " *dummytogetglobalmap*"))
-                  (with-current-buffer (get-buffer-create dummy-buf-name)
-                    (add-submenu nil ecb-minor-menu)
-                    (kill-buffer dummy-buf-name)))
-                (save-excursion
-                  (dolist (buf (buffer-list))
-                    (set-buffer buf)
-                    (if (null (car (find-menu-item current-menubar
-                                                   (list ecb-menu-name))))
-                        (add-submenu nil ecb-minor-menu)))))
-
               (add-hook (if ecb-running-xemacs
                             'activate-menubar-hook
                           'menu-bar-update-hook)
@@ -1561,16 +1529,6 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
 
       ;; disabling the VC-support
       (ecb-vc-enable-internals -1)
-
-      ;; menus - dealing with the menu for XEmacs is really a pain...
-      (ignore-errors
-        (when ecb-running-xemacs
-          (save-excursion
-            (dolist (buf (buffer-list))
-              (set-buffer buf)
-              (if (car (find-menu-item current-menubar
-                                       (list ecb-menu-name)))
-                  (delete-menu-item (list ecb-menu-name)))))))
       
       (remove-hook (if ecb-running-xemacs
                        'activate-menubar-hook
@@ -1696,9 +1654,8 @@ if the minor mode is enabled.
     (if new-state
         (ecb-activate-internal)
       (ecb-deactivate-internal)))
-  (if ecb-running-xemacs
-      (redraw-modeline t)
-    (force-mode-line-update t))
+  
+  (force-mode-line-update t)
   ecb-minor-mode)
 
 

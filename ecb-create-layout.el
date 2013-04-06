@@ -259,9 +259,9 @@ other other frame!"
   "Cancel layout-creation without saving the layout."
   (interactive)
   (when (ecb-create-layout-frame-ok)
-    (ecb-create-layout-clear-all (called-interactively-p 'interactive))
+    (ecb-create-layout-clear-all (called-interactively-p 'any))
     (message "ECB Layout Creation canceled - the layout is not saved!")
-    (and (called-interactively-p 'interactive) (ecb-activate))))
+    (and (called-interactively-p 'any) (ecb-activate))))
 
 (defun ecb-create-layout-clear-all (&optional delete-frame)
   "Resets all stuff to state before `ecb-create-new-layout' was called. If
@@ -312,7 +312,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
   (interactive)
   (when (ecb-create-layout-frame-ok)
     (if (ecb-create-layout-ready-for-save-p)
-        (let ((delete-frame (called-interactively-p 'interactive)))
+        (let ((delete-frame (called-interactively-p 'any)))
           ;; if an error occurs during `ecb-create-layout-save-layout' or the
           ;; user hits C-q we must clean the layout creation stuff!
           (unwind-protect
@@ -464,7 +464,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
                          (concat "ECB " new-type) nil t)
       ;; setting the new buffer type in the buffer itself
       (ecb-create-layout-set-buffer-type new-type)
-      (when (called-interactively-p 'interactive)
+      (when (called-interactively-p 'any)
         (ecb-create-layout-gen-lisp-for-buffer-type new-type)
         (ecb-create-layout-next-window))
       new-type)))

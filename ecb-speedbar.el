@@ -203,7 +203,7 @@ after clicking onto a filename in the speedbar."
 (defecb-advice speedbar-frame-mode around ecb-speedbar-adviced-functions
   "During running speedbar within ECB this command is disabled!"
   (if ecb-minor-mode
-      (when (called-interactively-p 'interactive)
+      (when (called-interactively-p 'any)
         (ecb-info-message "speedbar-frame-mode takes no effect when running within ECB!"))
     ad-do-it))
 
