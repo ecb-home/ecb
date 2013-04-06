@@ -51,8 +51,8 @@ EMACS=emacs
 # + If you use Emacs < 23.2 or if you want to use the author version of CEDET:
 #   Set this to the full path of your CEDET-installation.
 
-#CEDET=
-CEDET=~/projects/cedet-bzr
+CEDET=
+#CEDET=~/projects/cedet-bzr
 
 # You can set here more load-paths to arbitrary packages if you want. But
 # this is really not necessary!
