@@ -3189,7 +3189,8 @@ If called for other frames it works like the original version."
                                         nil
                                       pop-up-frames)))
                  ;; maybe we have to split the edit-area here
-                 (when (and (or pop-up-windows (ad-get-arg 1))
+                 (when (and (not ecb-running-gnu-emacs-version-23)
+			    (or pop-up-windows (ad-get-arg 1))
                             (not pop-up-frames)
                             (not (ecb-edit-window-splitted edit-win-list))
                             ;; if the BUFFER is already displayed in an
