@@ -46,10 +46,6 @@
 ;; This loads the semantic-setups for the major-modes.
 ;; (require 'semantic-load)
 
-;; various loads
-(if (or (not (fboundp 'version<)) (version< emacs-version "24.3"))
-    (require 'assoc))
-
 (eval-when-compile
   ;; to avoid compiler grips
   (require 'cl))
@@ -3089,15 +3085,13 @@ the current tag-tree for this source. The cache contains exactly one element
 for a certain source.")
 (setq ecb-tag-tree-cache nil)
 
-(require 'assoc)
-
 (defun ecb-clear-tag-tree-cache (&optional source-name)
   "Clears either the whole tag-tree-cache \(SOURCE-NAME is nil) or
 removes only the tag-tree for SOURCE-NAME from the cache."
   (if (not source-name)
       (setq ecb-tag-tree-cache nil)
     (setq ecb-tag-tree-cache
-          (adelete 'ecb-tag-tree-cache source-name))))
+          (delq (assoc source-name ecb-tag-tree-cache) ecb-tag-tree-cache))))
 
 (defvar ecb-current-post-processed-tag-table nil
   "This is the current tag-table of the current source-buffer returned by

@@ -196,10 +196,6 @@
 (require 'ecb-analyse)
 (require 'ecb-symboldef)
 
-;; various loads
-(if (or (not (fboundp 'version<)) (version< emacs-version "24.3"))
-    (require 'assoc))
-
 (eval-when-compile
   ;; to avoid compiler grips
   (require 'cl))
