@@ -2340,19 +2340,20 @@ cons-cell \('test-inner-loop . \"test\")"
                  )
 	       'exit))))
 
-;; (defun ecb-test-throw-on-input-new ()
-;;   "Test that while-no-input will work even better."
-;;   (interactive)
-;;   (message "Exit Code: %s"
-;; 	   (while-no-input
-;; 	     (let ((inhibit-quit nil)
-;; 		   (message-log-max nil))
-;; 	       (while t
-;; 		 (message "Looping ...")
-;;                  (while t nil)
-;; 		 "test")
-;; 	       'exit))))
+;; Compatibility Functions ---------------------------------
 
+;; A number of functions in Gnu Emacs have been obsoleted in the
+;; last few years.  To ensure compatibility with versions of
+;; emacs that do not track Gnu Emacs the below functions so
+;; ecb is implementing compatibilty functions
+
+;; interactive-p is obsolete as of Emacs 23.2
+(defmacro ecb-interactive-p (&optional kind)
+  (if (or (> emacs-major-version 23)
+	  (and (>= emacs-major-version 23)
+	       (>= emacs-minor-version 2)))
+      `(called-interactively-p ,kind)
+    `(interactive-p)))
 
 ;;; ----- Provide ------------------------------------------
 
