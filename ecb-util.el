@@ -2358,6 +2358,14 @@ cons-cell \('test-inner-loop . \"test\")"
 ;; labels is obsolete as of Gnu Emacs 24.3
 (unless (fboundp 'cl-labels) (fset 'cl-labels 'labels))
 
+;; redraw-modeline is an obsolete function as of Gnu Emacs 24.3
+(defmacro ecb-redraw-modeline (&optional kind)
+  (if (or (> emacs-major-version 24)
+	  (and (>= emacs-major-version 24)
+	       (>= emacs-minor-version 3)))
+      `(force-mode-line-update ,kind)
+    `(redraw-modeline)))
+
 ;;; ----- Provide ------------------------------------------
 
 (silentcomp-provide 'ecb-util)

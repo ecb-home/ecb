@@ -61,7 +61,7 @@
 (silentcomp-defvar semantic-format-use-images-flag)
 (silentcomp-defvar ezimage-use-images)
 ;; semantic 2.0 does not have this
-(silentcomp-defvar semantic-toplevel-bovine-cache)
+(silentcomp-defvar semantic--buffer-cache)
 
 ;; -- getter functions for all variables of semantic currently used by ECB ---
 
@@ -205,11 +205,11 @@ function ECB uses from the semanticdb library.")
       (apply 'semantic-tag name class ignore)
     (list name class nil nil nil nil)))
 
-(defsubst ecb--semantic-tag-new-variable (name type default-value &rest attributes)
+(with-no-warnings(defsubst ecb--semantic-tag-new-variable (name type default-value &rest attributes)
   "Create a semantic tag of class variable"
   (if (fboundp 'semantic-tag-new-variable)
       (apply 'semantic-tag-new-variable name type default-value attributes)
-    (list name 'variable nil nil nil nil)))
+    (list name 'variable nil nil nil nil))))
 
 (defsubst ecb--semantic--tag-set-overlay (tag overlay)
   "Set the overlay part of TAG with OVERLAY. OVERLAY can be an overlay or an
@@ -285,7 +285,7 @@ unloaded buffer representation."
 (if (fboundp 'semantic-fetch-available-tags)
     (defalias 'ecb--semantic-fetch-available-tags 'semantic-fetch-available-tags)
   (defsubst ecb--semantic-fetch-available-tags ()
-    semantic-toplevel-bovine-cache))
+    semantic--buffer-cache))
 
 (if (fboundp 'semantic-tag-components)
     (defalias 'ecb--semantic-tag-components

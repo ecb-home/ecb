@@ -44,7 +44,7 @@
 (require 'ecb-face)
 
 ;; XEmacs
-(silentcomp-defun redraw-modeline)
+(silentcomp-defun ecb-redraw-modeline)
 (silentcomp-defun make-extent)
 (silentcomp-defun set-extent-face)
 (silentcomp-defun set-extent-property)
@@ -329,7 +329,7 @@ as \"W-<number>\"."
       (with-current-buffer buffer-name
         (setq mode-line-format new-mode-line-format)
         (if ecb-running-xemacs
-            (redraw-modeline)
+            (ecb-redraw-modeline)
           (force-mode-line-update)))
     (message "This buffer isn't available: %s"  buffer-name)))
 

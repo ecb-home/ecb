@@ -204,7 +204,7 @@
 
 
 ;; XEmacs
-(silentcomp-defun redraw-modeline)
+(silentcomp-defun ecb-redraw-modeline)
 (silentcomp-defvar modeline-map)
 (silentcomp-defvar progress-feedback-use-echo-area)
 ;; Emacs
@@ -1167,7 +1167,7 @@ always the ECB-frame if called from another frame."
     (ecb-deactivate-internal t))
   (setq ecb-minor-mode nil)
   (if ecb-running-xemacs
-      (redraw-modeline t)
+      (ecb-redraw-modeline t)
     (force-mode-line-update t))
   (error "ECB %s: %s (error-type: %S, error-data: %S)" ecb-version msg
          (car err) (cdr err)))
@@ -1696,7 +1696,7 @@ if the minor mode is enabled.
         (ecb-activate-internal)
       (ecb-deactivate-internal)))
   (if ecb-running-xemacs
-      (redraw-modeline t)
+      (ecb-redraw-modeline t)
     (force-mode-line-update t))
   ecb-minor-mode)
 

@@ -94,7 +94,7 @@
   ;;reset everything to the default value?
   
   (dolist(variable ecb-multiframe-variables)
-    (make-variable-frame-local variable)
+    (set-frame-parameter nil frame (list (cons variable nil)))
 
     (modify-frame-parameters frame (list (cons variable nil))))
 
@@ -121,10 +121,10 @@
     
     ;;fix speedbar by binding the given speedbar frame value with the current frame
       
-    (mapcar (lambda(sframe)
+    (mapc (lambda(sframe)
               (when (boundp sframe)
-                (make-variable-frame-local sframe)
-                (modify-frame-parameters frame (list (cons sframe frame)))))
+                (set-frame-parameter nil frame (list (cons sframe frame))))
+                (modify-frame-parameters frame (list (cons sframe frame))))
             '(speedbar-frame speedbar-attached-frame dframe-attached-frame))
       
     ;;setup speedbar with a new buffer
@@ -133,7 +133,8 @@
     
       (setq new-ecb-speedbar-buffer-name (ecb-multiframe-setup-buffer-name 'ecb-speedbar-buffer-name " SPEEDBAR <%s>"))
 
-      (make-variable-frame-local 'speedbar-buffer)
+      (set-frame-parameter nil frame (list (cons 'speedbar-buffer
+						 (get-buffer-create new-ecb-speedbar-buffer-name))))
       (modify-frame-parameters frame (list (cons 'speedbar-buffer
                                                  (get-buffer-create new-ecb-speedbar-buffer-name)))))))
 
@@ -145,18 +146,18 @@ frame.  When complete return the new buffer name."
   (let((new-buffer-name (format buffer-format-name
                                 (format-time-string "%s"))))
   
-    (make-variable-frame-local variable)
+    (with-no-warnings(set-frame-parameter nil frame (list (cons variable new-buffer-name))))
   
-    (modify-frame-parameters frame (list (cons variable new-buffer-name)))
+    (with-no-warnings(modify-frame-parameters frame (list (cons variable new-buffer-name))))
     new-buffer-name))
 
-(defun ecb-deactivate-internal ()
+(with-no-warnings(defun ecb-deactivate-internal ()
   "Deactivates the ECB and kills all ECB buffers and windows."
   (unless (not ecb-minor-mode)
     
     (setq ecb-minor-mode nil))
   (message "The ECB is now deactivated.")
-  ecb-minor-mode)
+  ecb-minor-mode))
 
 (defun ecb-multiframe-activate-hook()
   "Hook to run to initialize multiframe support"
