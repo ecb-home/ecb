@@ -80,9 +80,7 @@ The meaning is as follows:
 3. 0 = alpha, 1 = beta, 2 = pre, 3 = nothing \(e.g. \"1.4\"), 4 = . \(e.g. \"1.4.3\"
 4. Subversion after the alpha, beta, pre or .")
 
-(defconst ecb-cedet-required-version-max '(1 0 4 9)
-  "Maximum version of CEDET currently accepted by ECB.
-See `ecb-required-cedet-version-min' for an explanation.")
+;; The constraint on a max version of ECB has been removed.
 
 (defun ecb-cedet-missing-libs ()
   "Return a list of names of missing cedet-libs.
