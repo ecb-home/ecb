@@ -52,6 +52,7 @@
 (silentcomp-defvar vertical-divider-map)
 (silentcomp-defvar modeline-map)
 ;; Emacs 21.X stuff
+(silentcomp-defvar auto-hscroll-mode)
 (silentcomp-defvar before-make-frame-hook)
 (silentcomp-defvar after-make-frame-functions)
 ;; First loaded during activated ECB
