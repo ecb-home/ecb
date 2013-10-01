@@ -2347,13 +2347,16 @@ cons-cell \('test-inner-loop . \"test\")"
 ;; emacs that do not track Gnu Emacs the below functions so
 ;; ecb is implementing compatibilty functions
 
-;; interactive-p is obsolete as of Emacs 23.2
+;; interactive-p is obsolete as of Gnu Emacs 23.2
 (defmacro ecb-interactive-p (&optional kind)
   (if (or (> emacs-major-version 23)
 	  (and (>= emacs-major-version 23)
 	       (>= emacs-minor-version 2)))
       `(called-interactively-p ,kind)
     `(interactive-p)))
+
+;; labels is obsolete as of Gnu Emacs 24.3
+(unless (fboundp 'cl-labels) (fset 'cl-labels 'labels))
 
 ;;; ----- Provide ------------------------------------------
 

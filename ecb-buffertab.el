@@ -50,20 +50,20 @@
 
 (require 'ecb-compilation)
 
-(defface ecb-buffertab-primary-face '((t (:bold t :foreground "black")))
-  "Face used to highlight the annotation lines to the left of the annotate buffer.")
+(with-no-warnings (defface ecb-buffertab-primary-face '((t (:bold t :foreground "black")))
+  "Face used to highlight the annotation lines to the left of the annotate buffer."))
 
-(defface ecb-buffertab-secondary-face '((t (:bold nil :foreground "black")))
-  "Face used to highlight the annotation lines to the left of the annotate buffer.")
+(with-no-warnings (defface ecb-buffertab-secondary-face '((t (:bold nil :foreground "black")))
+  "Face used to highlight the annotation lines to the left of the annotate buffer."))
 
-(defface ecb-buffertab-secondary-mouse-face '((t (:bold nil :foreground "black" :italic t)))
-  "Face used to highlight the annotation lines to the left of the annotate buffer.")
+(with-no-warnings (defface ecb-buffertab-secondary-mouse-face '((t (:bold nil :foreground "black" :italic t)))
+  "Face used to highlight the annotation lines to the left of the annotate buffer."))
 
-(defcustom ecb-buffertab-map (let ((map (make-sparse-keymap)))
+(with-no-warnings (defcustom ecb-buffertab-map (let ((map (make-sparse-keymap)))
                                (define-key map [header-line down-mouse-2] 'ecb-buffertab-popup-menu)
                                map)
 
-  "Key map used for buffertab navigation")
+  "Key map used for buffertab navigation"))
 
 (defun ecb-buffertab-popup-menu()
   "Popup a menu for selecting an ECB buffer."
@@ -91,7 +91,7 @@
   ""
   (interactive)
 
-  (let((ecb-prefix "   ECB: " ))
+  (with-no-warnings(let((ecb-prefix "   ECB: " ))
     (save-excursion
 
       (set-buffer (get-buffer ecb-speedbar-buffer-name))
@@ -107,7 +107,7 @@
                            (list 'face 'ecb-buffertab-secondary-face
                                  'mouse-face 'ecb-buffertab-secondary-mouse-face
                                  'local-map 'ecb-buffertab-map)
-                           header-line-format))))
+                           header-line-format)))))
 
 (silentcomp-provide 'ecb-buffertab)
 

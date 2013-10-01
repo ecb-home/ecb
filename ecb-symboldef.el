@@ -290,7 +290,7 @@ EDIT-BUFFER is that buffer VSYMBOL is used."
              ;; (print-help-return-message (&optional function) nil)
              ;; for XEmacs
              (help-buffer-name () ecb-symboldef-temp-buffer-name))
-        (labels ((print-help-return-message (&optional function) nil))
+        (cl-labels ((print-help-return-message (&optional function) nil))
           (describe-variable vsymbol)))
       ))
   (with-current-buffer ecb-symboldef-temp-buffer-name
