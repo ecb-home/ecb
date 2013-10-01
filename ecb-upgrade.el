@@ -1048,7 +1048,7 @@ your customization-file!"
     ;; now we display only the choice to save the ecb-options-version but only
     ;; if ecb-options-version != ecb-version and (either the command is called
     ;; interactively or first-time called by program)
-    (when (and (or (called-interactively-p 'any)
+    (when (and (or (ecb-interactive-p)
                    (not (get 'ecb-display-upgraded-options
                          'ecb-options-version-save-displayed)))
                (not (ecb-options-version=ecb-version-p)))
@@ -1111,7 +1111,7 @@ If FULL-NEWS is not nil then the NEWS-file is displayed in another window."
     (if (and ecb-old-ecb-version
              (or (not (get 'ecb-display-news-for-upgrade
                            'ecb-news-for-upgrade-displayed))
-                 (called-interactively-p 'any)))
+                 (ecb-interactive-p)))
         (progn
           (with-output-to-temp-buffer "*News for the new ECB-version*"
             (princ (format "You have upgraded ECB from version %s to %s.\n\n"
