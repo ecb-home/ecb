@@ -285,12 +285,11 @@ EDIT-BUFFER is that buffer VSYMBOL is used."
           (temp-buffer-setup-hook nil)
           ;; this does not call temp-buffer-show-hook!!!
           (temp-buffer-show-function (function (lambda (b) nil))))
-      (flet ((help-buffer () ecb-symboldef-temp-buffer-name)
+      ;; Moved to cl-flet from flet.
+      (cl-flet ((help-buffer () ecb-symboldef-temp-buffer-name)
              ;; (print-help-return-message (&optional function) nil)
              ;; for XEmacs
              (help-buffer-name () ecb-symboldef-temp-buffer-name))
-        ;; we can not use flet for redefining print-help-return-message
-        ;; because the byte-compailer would complain about this.
         (labels ((print-help-return-message (&optional function) nil))
           (describe-variable vsymbol)))
       ))
