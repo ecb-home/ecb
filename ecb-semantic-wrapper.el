@@ -208,11 +208,11 @@ function ECB uses from the semanticdb library.")
       (apply 'semantic-tag name class ignore)
     (list name class nil nil nil nil)))
 
-(defsubst ecb--semantic-tag-new-variable (name type default-value &rest attributes)
+(with-no-warnings(defsubst ecb--semantic-tag-new-variable (name type default-value &rest attributes)
   "Create a semantic tag of class variable"
   (if (fboundp 'semantic-tag-new-variable)
       (apply 'semantic-tag-new-variable name type default-value attributes)
-    (list name 'variable nil nil nil nil)))
+    (list name 'variable nil nil nil nil))))
 
 (defsubst ecb--semantic--tag-set-overlay (tag overlay)
   "Set the overlay part of TAG with OVERLAY. OVERLAY can be an overlay or an
