@@ -2354,8 +2354,10 @@ cons-cell \('test-inner-loop . \"test\")"
       `(called-interactively-p ,kind)
     `(interactive-p)))
 
-;; labels is obsolete as of Gnu Emacs 24.3
+;; labels & flet is obsolete as of Gnu Emacs 24.3, so we use them but provide
+;; compatibility with older versions
 (unless (fboundp 'cl-labels) (fset 'cl-labels 'labels))
+(unless (fboundp 'cl-flet) (fset 'cl-flet 'flet))
 
 ;; redraw-modeline is an obsolete function as of Gnu Emacs 24.3
 (defmacro ecb-redraw-modeline (&optional kind)
