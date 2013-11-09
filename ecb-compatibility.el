@@ -175,7 +175,7 @@ BUFFER is displayed in an edit-window!"
           (ecb-other-window-behavior 'only-edit))
       ;; return the current number of edit-windows if point is in an edit-window
       ;; and always return 1 if point is not in an edit-window.
-      (flet ((count-windows (&optional minibuf)
+      (cl-flet ((count-windows (&optional minibuf)
                             (if (ecb-point-in-edit-window-number)
                                 (length (ecb-canonical-edit-windows-list))
                               1)))

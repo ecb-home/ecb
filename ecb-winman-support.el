@@ -294,17 +294,17 @@ ecb-frame. This advice is a permanent advice set!"
 (when-ecb-running-xemacs
   (defecb-advice push-window-configuration before ecb-winman-not-supported-function-advices
     (if (and (equal (selected-frame) ecb-frame)
-             (called-interactively-p 'any))
+             (ecb-interactive-p))
         (ecb-error "Can't use interactive push-window-configuration in the ecb-frame.")))
 
   (defecb-advice pop-window-configuration before ecb-winman-not-supported-function-advices
     (if (and (equal (selected-frame) ecb-frame)
-             (called-interactively-p 'any))
+             (ecb-interactive-p))
         (ecb-error "Can't use interactive pop-window-configuration in the ecb-frame.")))
   
   (defecb-advice unpop-window-configuration before ecb-winman-not-supported-function-advices
     (if (and (equal (selected-frame) ecb-frame)
-             (called-interactively-p 'any))
+             (ecb-interactive-p))
         (ecb-error "Can't use interactive unpop-window-configuration in the ecb-frame.")))
   )
 

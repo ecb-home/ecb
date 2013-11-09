@@ -200,6 +200,9 @@
   ;; to avoid compiler grips
   (require 'cl))
 
+;; XEmacs
+(silentcomp-defun ecb-redraw-modeline)
+
 ;;====================================================
 ;; Variables
 ;;====================================================
@@ -1145,8 +1148,9 @@ always the ECB-frame if called from another frame."
   (let ((ecb-minor-mode t))
     (ecb-deactivate-internal t))
   (setq ecb-minor-mode nil)
-
-  (force-mode-line-update t)
+  (if ecb-running-xemacs
+      (ecb-redraw-modeline t)
+    (force-mode-line-update t))
   (error "ECB %s: %s (error-type: %S, error-data: %S)" ecb-version msg
          (car err) (cdr err)))
 
@@ -1650,8 +1654,11 @@ if the minor mode is enabled.
     (if new-state
         (ecb-activate-internal)
       (ecb-deactivate-internal)))
-  
-  (force-mode-line-update t)
+
+  (if ecb-running-xemacs
+      (ecb-redraw-modeline t)
+    (force-mode-line-update t))
+
   ecb-minor-mode)
 
 

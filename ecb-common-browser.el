@@ -1499,7 +1499,7 @@ has been contained)."
 
 (defmacro defecb-autocontrol/sync-function (fcn buffer-name-symbol
                                                 buffer-sync-option-symbol
-                                                called-interactively-p docstring
+                                                ecb-interactive-p docstring
                                                 &rest body)
   "Define a function run either by idle-timer or before or after each command.
 Such a function is used either for automatic self-controlling certain aspects
@@ -1539,7 +1539,7 @@ exactly true when either:
 - The value of BUFFER-SYNC-OPTION-SYMBOL is 'basic and the conditions above
   are true for `ecb-basic-buffer-sync'.
 
-If CALLED-INTERACTIVELY-P is not nil then FCN will be defined as an interactice
+If ECB-INTERACTIVE-P is not nil then FCN will be defined as an interactice
 command, i.e. it will containe the clause \(interactive \"P\").
 
 The defined function is automatically prepared for tracing its calls when
@@ -1570,7 +1570,7 @@ hold in the variable `ecb-a-special-buffer-name'.
 
      (defun ,fcn (&optional force)
        ,docstring
-       ,(if called-interactively-p
+       ,(if ecb-interactive-p
             '(interactive "P"))
        (ecb-autotrace-autocontrol/sync-fcn-error (quote ,fcn)
                                                  "Begin: Cur-buf: %s" (current-buffer))
