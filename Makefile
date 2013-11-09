@@ -43,7 +43,7 @@ ifeq ($(PLATFORM),Linux)
 	EMACS ?= emacs
 	CEDET ?=
 	LOADPATH ?=
-	MAKEINFO = makeinfo
+	MAKEINFO ?= makeinfo
 	TEXI2PDF ?= texi2pdf
 	TEXI2DVI ?= texi2dvi
 	DVIPDFM ?= dvipdf
