@@ -27,17 +27,22 @@
 
 SHELL = /bin/bash
 
+PLATFORM=$(shell uname -s)
+
 #
 # Override vars in Makefile.conf if needed
 #
 -include Makefile.conf
 
+ifeq ($(wildcard Makefile.conf),)
+$(warning Makefile.conf not found. Using defaults for $(PLATFORM)!)
+$(warning Create Makefile.conf from Makefile.conf.template to override the defaults.)
+endif
+
 # When run inside Emacs, the variable contains 't', so correct it
 ifeq ($(origin EMACS),environment)
 	EMACS = emacs
 endif
-
-PLATFORM=$(shell uname -s)
 
 ifeq ($(PLATFORM),Linux)
 	EMACS ?= emacs
