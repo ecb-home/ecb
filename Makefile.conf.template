@@ -2,8 +2,8 @@
 # Use 'make printconf' to print configuration variables.
 #
 
-# Define here the correct path to your Emacs or XEmacs binary. Ensure you
-# have set this variable to 'xemacs' if you want byte-compile with XEmacs!
+# Path to your Emacs or XEmacs binary. Set to 'xemacs' if you want byte-compile
+# with XEmacs!
 #EMACS =
 
 # In the following path-settings of this section use always FORWARD-SLASHES
@@ -49,6 +49,7 @@
 # not available let the related setting X empty! NOTE: For generating the
 # PDF-format you will need an installed TeX and Ghostscript!
 #MAKEINFO =
+#TEXI2PDF=
 #TEXI2DVI =
 
 # You need either the dvipdfm-tool
