@@ -44,6 +44,8 @@ ifeq ($(origin EMACS),environment)
 	EMACS = emacs
 endif
 
+EMACS ?= emacs
+
 ifeq ($(PLATFORM),Linux)
 	EMACS ?= emacs
 	CEDET ?=
@@ -56,18 +58,6 @@ ifeq ($(PLATFORM),Linux)
 	PS2PDF ?= ps2pdf
 	EMACSINFOPATH ?=
 	INSTALLINFO ?= install-info
-else #TODO add defaults for other platforms
-	EMACS ?= emacs
-	CEDET ?= c:/Programme/emacs-23.1/site-lisp/package-development/cedet
-	LOADPATH ?=
-	MAKEINFO ?= /usr/bin/makeinfo
-	TEXI2PDF ?= /C/Programme/texmf/miktex/bin/texi2pdf
-	TEXI2DVI ?= /C/Programme/texmf/miktex/bin/texi2dvi
-	DVIPDFM ?= /C/Programme/texmf/miktex/bin/dvipdfm
-	DVIPS ?= /C/Programme/texmf/miktex/bin/dvips
-	PS2PDF ?= /C/home/bin/ps2pdf
-	EMACSINFOPATH ?= /C/Programme/emacs-22.3/info
-	INSTALLINFO ?= /usr/bin/install-info
 endif
 
 # For the ECB-maintainers: Change the version-number here and not
