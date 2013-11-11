@@ -46,7 +46,8 @@ endif
 
 EMACS ?= emacs
 
-ifeq ($(PLATFORM),Linux)
+# If it's one of Linux, Cygwin, or Darwin, use defaults.
+ifneq ($(filter Linux CYGWIN% Darwin, $(PLATFORM)),)
 	EMACS ?= emacs
 	CEDET ?=
 	LOADPATH ?=
