@@ -178,6 +178,16 @@ these optional installation steps:
      But it doesn't matter if you do not execute this step (8.) because the
      online help of ECB is always available though, see `ecb-show-help'.
 
+--------------
+Using Makefile
+--------------
+Makefile can be configured using Makefile.conf, for which there is a template in
+Makefile.conf.template. Usually it's enough to set a path to CEDET (if you use
+repo version) and EMACSINFOPATH to local (e.g. ~/.emacs.d/info).
+
+For Linux, Makefile tries to use reasonable defaults.
+
+You can print configuration used in Makefile using `make printconf'.
      
 -----   
 Usage

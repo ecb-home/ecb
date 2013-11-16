@@ -193,6 +193,7 @@ Installation of ECB
 * Requirements::                Requirements for ECB
 * ECB as XEmacs-package::       Installation of ECB as a XEmacs-package
 * Standard ECB-Installation::   Standard installation of ECB for (X)Emacs
+* Makefile customization::      Customizing build using Makefile.conf
 
 How to set up Emacs for file parsing with ECB
 
@@ -412,6 +413,7 @@ This section describes how to install ECB.
 * Requirements::                Requirements for ECB
 * ECB as XEmacs-package::       Installation of ECB as a XEmacs-package
 * Standard ECB-Installation::   Standard installation of ECB for (X)Emacs
+* Makefile customization::      Customizing build using Makefile.conf
 @end menu
 
 @node Requirements, ECB as XEmacs-package, Installation, Installation
@@ -543,7 +545,7 @@ described in the next section (@pxref{Standard ECB-Installation}).
 @c installing ECB ``by hand'' direct from the ECB-website then you have
 @c to follow the instructions in @ref{Standard ECB-Installation}.
 
-@node Standard ECB-Installation,  , ECB as XEmacs-package, Installation
+@node Standard ECB-Installation, Makefile customization, ECB as XEmacs-package, Installation
 @subsection Standard installation of ECB for (X)Emacs
 
 Follow exatly these steps to install ECB:
@@ -657,6 +659,9 @@ are any. (You can also bytecompile ECB from the command-line either by
 using the @file{Makefile} or by using the batch-file @file{make.bat};
 just read the comments in that file you choose.)
 
+@file{Mekefile} can be customized using @file{Makefile.conf}
+(@pxref{Makefile customization}).
+
 @item Installing the Info-help of ECB
 
 The ECB distribution contains a subdirectory @file{info-help} which
@@ -697,6 +702,32 @@ online help of ECB is always available though, see
 @code{ecb-show-help} (@pxref{Interactive ECB commands}).
 
 @end enumerate
+
+@node Makefile customization, , Standard ECB-Installation, Installation
+@subsection Customizing build using Makefile.conf
+
+Platform specific vars and programs can be customized from a
+command-line or by means of @file{Makefile.conf}, for which
+@file{Makefile.conf.template} is a template. It contains descriptions
+of all configuration options. Copy it to @file{Makefile.conf} and
+override as needed.
+
+If settings hasn't been changed, @file{Makefile} uses platform
+specific defaults.
+
+There is a target, that prints configuration values: @code{make
+printconf}.
+
+When you use CEDET built into Emacs and don't install help, then you
+don't even need the @file{Makefile.conf}.
+
+When you use CEDET from the repo and/or want to install info files,
+then set appropriate variables in @file{Makefile.conf}, for example:
+
+@example
+CEDET = ~/projects/cedet-bzr
+EMACSINFOPATH = ~/.emacs.d/info
+@end example
 
 @node Setting up Emacs, First steps, Installation, Install and first steps
 @section How to set up Emacs for file parsing with ECB
