@@ -1940,7 +1940,7 @@ and IGNORE-CASE return a function which can be used as argument for `sort'."
   "Return a cons cell where car is a list of all files to display in DIR and
 cdr is a list of all subdirs to display in DIR. Both lists are sorted
 according to `ecb-sources-sort-method'."
-  (when (file-directory-p dir)
+  (when (file-accessible-directory-p dir)
       (or (ecb-files-and-subdirs-cache-get dir)
 	  ;; dir is not cached
 	  (let ((files (ecb-directory-files dir nil nil t))
