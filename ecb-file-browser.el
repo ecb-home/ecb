@@ -1940,42 +1940,43 @@ and IGNORE-CASE return a function which can be used as argument for `sort'."
   "Return a cons cell where car is a list of all files to display in DIR and
 cdr is a list of all subdirs to display in DIR. Both lists are sorted
 according to `ecb-sources-sort-method'."
-  (or (ecb-files-and-subdirs-cache-get dir)
-      ;; dir is not cached
-      (let ((files (ecb-directory-files dir nil nil t))
-            (source-regexps (or (ecb-check-directory-for-source-regexps
-                                 (ecb-fix-filename dir))
-                                '(("") (""))))
-            (cvsignore-files (if (ecb-check-directory-for-cvsignore-exclude dir)
-                                 (ecb-files-from-cvsignore dir)))
-            sorted-files source-files subdirs cached-value)
-        ;; if necessary sort FILES
-        (setq sorted-files
-              (if ecb-sources-sort-method
-                  (sort files (ecb-get-sources-sort-function
-                               ecb-sources-sort-method))
-                files))
-        ;; divide real files and subdirs. For really large directories (~ >=
-        ;; 2000 entries) this is the performance-bottleneck in the
-        ;; file-browser of ECB.
-        (dolist (file sorted-files)
-          (if (ecb-file-directory-p (ecb-fix-filename dir file))
-              (when (not (ecb-check-dir-exclude file))
-;;                 (when (not (ecb-file-accessible-directory-p file))
-;;                   (ecb-merge-face-into-text file
-;;                                             ecb-directory-not-accessible-face))
-                (setq subdirs (append subdirs (list file))))
-            (when (and (not (member file cvsignore-files))
-                       (or (ecb-match-regexp-list file (cadr source-regexps))
-                           (not (ecb-match-regexp-list file (car source-regexps)))))
-              (setq source-files (append source-files (list file))))))
-        
-        (setq cached-value (cons source-files subdirs))
-        ;; check if this directory must be cached
-        (if (ecb-check-directory-for-caching dir (length sorted-files))
-            (ecb-files-and-subdirs-cache-add dir cached-value))
-        ;; return the result
-        cached-value)))
+  (when (file-directory-p dir)
+      (or (ecb-files-and-subdirs-cache-get dir)
+	  ;; dir is not cached
+	  (let ((files (ecb-directory-files dir nil nil t))
+		(source-regexps (or (ecb-check-directory-for-source-regexps
+				     (ecb-fix-filename dir))
+				    '(("") (""))))
+		(cvsignore-files (if (ecb-check-directory-for-cvsignore-exclude dir)
+				     (ecb-files-from-cvsignore dir)))
+		sorted-files source-files subdirs cached-value)
+	    ;; if necessary sort FILES
+	    (setq sorted-files
+		  (if ecb-sources-sort-method
+		      (sort files (ecb-get-sources-sort-function
+				   ecb-sources-sort-method))
+		    files))
+	    ;; divide real files and subdirs. For really large directories (~ >=
+	    ;; 2000 entries) this is the performance-bottleneck in the
+	    ;; file-browser of ECB.
+	    (dolist (file sorted-files)
+	      (if (ecb-file-directory-p (ecb-fix-filename dir file))
+		  (when (not (ecb-check-dir-exclude file))
+		    ;;                 (when (not (ecb-file-accessible-directory-p file))
+		    ;;                   (ecb-merge-face-into-text file
+		    ;;                                             ecb-directory-not-accessible-face))
+		    (setq subdirs (append subdirs (list file))))
+		(when (and (not (member file cvsignore-files))
+			   (or (ecb-match-regexp-list file (cadr source-regexps))
+			       (not (ecb-match-regexp-list file (car source-regexps)))))
+		  (setq source-files (append source-files (list file))))))
+	    
+	    (setq cached-value (cons source-files subdirs))
+	    ;; check if this directory must be cached
+	    (if (ecb-check-directory-for-caching dir (length sorted-files))
+		(ecb-files-and-subdirs-cache-add dir cached-value))
+	    ;; return the result
+	    cached-value))))
 
 
 (defun ecb-update-sources-buffer (dir-before-update)
