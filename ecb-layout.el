@@ -582,15 +582,15 @@ advice documentation of `other-window-for-scrolling'."
 
 (defcustom ecb-ignore-special-display 'compile-window
   "*Ignore special-display-handling.
-This means, that all values of `display-buffer-alist',
-`display-buffer-alist' and `display-buffer-alist' are ignored
+This means, that all values of `special-display-function',
+`special-display-buffer-names' and `special-display-regexps' are ignored
 - only when persistent compile window is used - i.e. if
   `ecb-compile-window-height' is not nil - this is the default value.
 - always when ECB is active - that means no special-display-handling of
   buffers when ECB is active
 - never, i.e. special-dislay-handling depends on the values of the options
-  `display-buffer-alist', `display-buffer-alist' and
-  `display-buffer-alist'."
+  `special-display-function', `special-display-buffer-names' and
+  `special-display-regexps'."
   :group 'ecb-layout
   :type '(radio (const :tag "When a persistent compile-window is used"
                        :value compile-window)
@@ -621,19 +621,19 @@ This means, that a value of not nil for `pop-up-frames' is ignored
            ecb-compile-window-height)))
 
 (defcustom ecb-ignore-display-buffer-function 'always
-  "*Adviced `display-buffer' ignores `display-buffer-alist'.
+  "*Adviced `display-buffer' ignores `display-buffer-function'.
 This means, that the adviced version of `display-buffer' ignores the value of
-`display-buffer-alist' when called for the `ecb-frame'. If this variable
-should not be ignored then the function of `display-buffer-alist' is
+`display-buffer-function' when called for the `ecb-frame'. If this variable
+should not be ignored then the function of `display-buffer-function' is
 completely responsible which window is used for the buffer to display - no
 smart ECB-logic will help to deal best with the ECB-window-layout! You can
-define if and when `display-buffer-alist' should be ignored:
+define if and when `display-buffer-function' should be ignored:
 - only when persistent compile window is used - i.e. if
   `ecb-compile-window-height' is not nil
 - always when ECB is active - that means ignore when ECB is active otherwise
   not - this is the default value
 - never, the adviced version of `display-buffer' always uses the value of
-  `display-buffer-alist' if the value is a function."
+  `display-buffer-function' if the value is a function."
   :group 'ecb-layout
   :type '(radio (const :tag "When a persistent compile-window is used"
                        :value compile-window)
@@ -1968,7 +1968,7 @@ Returns the window displaying BUFFER."
              (check-argument-type 'bufferp buffer)
 
              ;; KB: For pre-display-buffer-function and
-             ;; display-buffer-alist we have to check for
+             ;; display-buffer-function we have to check for
              ;; wrong-number-of-arguments errors because older XEmacs 21.4
              ;; does not support the SHRINK-TO-FIT-argument and therefore
              ;; these functions probably don't too. Therefore in case of this
@@ -1990,16 +1990,16 @@ Returns the window displaying BUFFER."
                          (quit (signal 'quit nil)))))
 
              ;; Give the user the ability to completely reimplement
-             ;; this function via the `display-buffer-alist'.
-             (if display-buffer-alist
+             ;; this function via the `display-buffer-function'.
+             (if display-buffer-function
                  (throw 'done
                         (condition-case oops
-                            (funcall display-buffer-alist buffer
+                            (funcall display-buffer-function buffer
                                      not-this-window-p
                                      override-frame
                                      shrink-to-fit)
                           (wrong-number-of-arguments
-                           (funcall display-buffer-alist buffer
+                           (funcall display-buffer-function buffer
                                     not-this-window-p
                                     override-frame))
                           (error (signal (car oops) (cdr oops)))
@@ -2087,32 +2087,32 @@ Returns the window displaying BUFFER."
                  (throw 'done (display-buffer-1 window)))
 
              ;; Certain buffer names get special handling.
-             (if display-buffer-alist
+             (if special-display-function
                  (progn
                    (if (member (buffer-name buffer)
-                               display-buffer-alist)
-                       (throw 'done (funcall display-buffer-alist buffer)))
+                               special-display-buffer-names)
+                       (throw 'done (funcall special-display-function buffer)))
 
                    (let ((tem (assoc (buffer-name buffer)
-                                     display-buffer-alist)))
+                                     special-display-buffer-names)))
                      (if tem
-                         (throw 'done (funcall display-buffer-alist
+                         (throw 'done (funcall special-display-function
                                                buffer (cdr tem)))))
 
-                   (let ((tem display-buffer-alist))
+                   (let ((tem special-display-regexps))
                      (while tem
                        (let ((car (car tem)))
                          (if (and (stringp car)
                                   (save-match-data (string-match car (buffer-name buffer))))
                              (throw 'done
-                                    (funcall display-buffer-alist buffer)))
+                                    (funcall special-display-function buffer)))
                          (if (and (consp car)
                                   (stringp (car car))
                                   (save-match-data
                                     (string-match (car car)
                                                   (buffer-name buffer))))
                              (throw 'done (funcall
-                                           display-buffer-alist buffer
+                                           special-display-function buffer
                                            (cdr car)))))
                        (setq tem (cdr tem))))))
 
@@ -2876,37 +2876,37 @@ some special tasks:
 
 ;; here come the advices
 
-;; *** `display-buffer-alist' and `display-buffer-alist' now
+;; *** `special-display-buffer-names' and `special-display-regexps' now
 ;; understand two new boolean pseudo-frame-parameters `same-frame' and
 ;; `same-buffer'. This is new in Emacs 22 so we have to integrate it!
 ;; The format is: (same-buffer . VALUE) or (same-frame . VALUE). But this is
 ;; automatically taken into account by ecb-check-for-special-buffer because
-;; the car of an element of display-buffer-alist must be a buffer-name
+;; the car of an element of special-display-buffer-names must be a buffer-name
 ;; and we must only check if the buffer-name matches... if yes our advice of
 ;; display-buffer calls et the end by ad-do-it the display-buffer-code which
 ;; itself evaluates these options... so we are fine with the following
 ;; implementation!
 
 (defun ecb-check-for-special-buffer (buffer-or-name)
-  "Return  not nil if and only if `display-buffer-alist' is not nil and
-BUFFER-OR-NAME is contained or matches `display-buffer-alist' or
-`display-buffer-alist'."
+  "Return  not nil if and only if `special-display-function' is not nil and
+BUFFER-OR-NAME is contained or matches `special-display-buffer-names' or
+`special-display-regexps'."
   (let ((result
          (if (ecb-ignore-special-display)
              nil
            (catch 'done
              (let ((buf-name (ecb-buffer-name buffer-or-name)))
-               (when (and buf-name display-buffer-alist)
+               (when (and buf-name special-display-function)
                  (if (member buf-name
-                             display-buffer-alist)
+                             special-display-buffer-names)
                      (throw 'done t))
       
                  (let ((tem (assoc buf-name
-                                   display-buffer-alist)))
+                                   special-display-buffer-names)))
                    (if tem
                        (throw 'done t)))
 
-                 (let ((tem display-buffer-alist))
+                 (let ((tem special-display-regexps))
                    (while tem
                      (let ((car (car tem)))
                        (if (and (stringp car)
@@ -3006,7 +3006,7 @@ So never a dedicated window is returned during activated ECB."
 ;; This advice is the heart of the mechanism which displays all buffer in the
 ;; compile-window if they are are "compilation-buffers" in the sense of
 ;; `ecb-compilation-buffer-p'!
-;; We do not use `display-buffer-alist' but we just handle it within the
+;; We do not use `display-buffer-function' but we just handle it within the
 ;; advice, because otherwise we would have to implement all window-choosing
 ;; for ourself and with our advice we just "restrict" the windows
 ;; `display-buffer' can use (by setting the not choosable windows temporarly
@@ -3029,8 +3029,8 @@ All buffers which are not \"compilation-buffers\" in the sense of
 `display-buffer' behaves as if the edit-windows would be the only windows in
 the frame.
 
-If BUFFER is contained in `display-buffer-alist' or matches
-`display-buffer-alist' then `display-buffer-alist' will be called \(if
+If BUFFER is contained in `special-display-buffer-names' or matches
+`special-display-regexps' then `special-display-function' will be called \(if
 not nil). But this behavior depends on the value of the option
 `ecb-ignore-special-display'. The values of `same-window-buffer-names' and
 `same-window-regexps' are supported as well.
@@ -3057,12 +3057,12 @@ If called for other frames it works like the original version."
                         (equal (ad-get-arg 2) 0))
                     (equal (selected-frame) ecb-frame)))
            (not (ecb-check-for-special-buffer (ad-get-arg 0)))
-           (not (and (boundp 'display-buffer-alist)
-                     (fboundp display-buffer-alist)
+           (not (and (boundp 'display-buffer-function)
+                     (fboundp display-buffer-function)
                      (not (ecb-ignore-display-buffer-function)))))
-      (let ((display-buffer-alist (if (ecb-ignore-special-display)
+      (let ((special-display-function (if (ecb-ignore-special-display)
                                           nil
-                                        display-buffer-alist)))
+                                        special-display-function)))
         (cond ((ecb-compilation-buffer-p (ad-get-arg 0))
                (ecb-layout-debug-error "display-buffer for a comp-buffer: %s"
                                        (ad-get-arg 0))
