@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-create-layout.el,v 1.38 2009/06/23 11:16:56 berndl Exp $
+;; $Id$
 
 ;;; Commentary:
 ;;
@@ -745,7 +745,7 @@ never selects the edit-window."
                   (tool-bar-lines . 0)
                   (menu-bar-lines . 0)))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Wir müssen ev. ECB vorher
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Wir mï¿¼ssen ev. ECB vorher
 ;; deaktivieren, da sonst ein 2. ECB-menu entsteht. Beim C-c oder C-q eben
 ;; dann wieder aktivieren.
 (defun ecb-create-new-layout ()

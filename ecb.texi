@@ -23,7 +23,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.235 2010/02/24 21:53:55 berndl Exp $
+@c $Id$
 
 @setfilename ecb.info
 
@@ -193,6 +193,7 @@ Installation of ECB
 * Requirements::                Requirements for ECB
 * ECB as XEmacs-package::       Installation of ECB as a XEmacs-package
 * Standard ECB-Installation::   Standard installation of ECB for (X)Emacs
+* Makefile customization::      Customizing build using Makefile.conf
 
 How to set up Emacs for file parsing with ECB
 
@@ -412,6 +413,7 @@ This section describes how to install ECB.
 * Requirements::                Requirements for ECB
 * ECB as XEmacs-package::       Installation of ECB as a XEmacs-package
 * Standard ECB-Installation::   Standard installation of ECB for (X)Emacs
+* Makefile customization::      Customizing build using Makefile.conf
 @end menu
 
 @node Requirements, ECB as XEmacs-package, Installation, Installation
@@ -543,7 +545,7 @@ described in the next section (@pxref{Standard ECB-Installation}).
 @c installing ECB ``by hand'' direct from the ECB-website then you have
 @c to follow the instructions in @ref{Standard ECB-Installation}.
 
-@node Standard ECB-Installation,  , ECB as XEmacs-package, Installation
+@node Standard ECB-Installation, Makefile customization, ECB as XEmacs-package, Installation
 @subsection Standard installation of ECB for (X)Emacs
 
 Follow exatly these steps to install ECB:
@@ -657,6 +659,9 @@ are any. (You can also bytecompile ECB from the command-line either by
 using the @file{Makefile} or by using the batch-file @file{make.bat};
 just read the comments in that file you choose.)
 
+@file{Mekefile} can be customized using @file{Makefile.conf}
+(@pxref{Makefile customization}).
+
 @item Installing the Info-help of ECB
 
 The ECB distribution contains a subdirectory @file{info-help} which
@@ -697,6 +702,32 @@ online help of ECB is always available though, see
 @code{ecb-show-help} (@pxref{Interactive ECB commands}).
 
 @end enumerate
+
+@node Makefile customization, , Standard ECB-Installation, Installation
+@subsection Customizing build using Makefile.conf
+
+Platform specific vars and programs can be customized from a
+command-line or by means of @file{Makefile.conf}, for which
+@file{Makefile.conf.template} is a template. It contains descriptions
+of all configuration options. Copy it to @file{Makefile.conf} and
+override as needed.
+
+If settings hasn't been changed, @file{Makefile} uses platform
+specific defaults.
+
+There is a target, that prints configuration values: @code{make
+printconf}.
+
+When you use CEDET built into Emacs and don't install help, then you
+don't even need the @file{Makefile.conf}.
+
+When you use CEDET from the repo and/or want to install info files,
+then set appropriate variables in @file{Makefile.conf}, for example:
+
+@example
+CEDET = ~/projects/cedet-bzr
+EMACSINFOPATH = ~/.emacs.d/info
+@end example
 
 @node Setting up Emacs, First steps, Installation, Install and first steps
 @section How to set up Emacs for file parsing with ECB
@@ -1162,7 +1193,7 @@ Here is an example of a tree-buffer:
         leaf-node-2  -----|-----[tree-nodes]
         leaf-node-3  -----|
         leaf-node-4  -----|
-    [+] collapsed  -------´
+    [+] collapsed  -------ï¾´
      |
      `-----------------[expand/collapse-symbol]
 @end group
@@ -2307,7 +2338,7 @@ the value of @code{case-fold-search}.
 
 Tip: The @code{ecb-minor-mode} offers you in the @code{ecb-mode-map}
 (customizable via @code{ecb-key-map}) some keys for selecting every window
-of the ecb-frame. This makes window-selection a child´s play. For
+of the ecb-frame. This makes window-selection a childï¾´s play. For
 example you can jump into the method-window by hitting @kbd{C-c . gm}.
 
 @node Personal tree-keybindings, Using popup-menus, Incremental search, Using the keyboard
@@ -2478,7 +2509,7 @@ of the current ECB-layout there are two alternatives:
 @item If the function is contained in
 @code{ecb-layout-always-operate-in-edit-window} the right edit-window
 is selected (depends on the value of the option
-@code{ecb-mouse-click-destination}) and does then it´s job.
+@code{ecb-mouse-click-destination}) and does then itï¾´s job.
 
 @item Otherwise the behavior depends on the value of the option
 @code{ecb-advice-window-functions-signal-error}.
@@ -2521,7 +2552,7 @@ If called in the compile window there are two alternatives:
 If the function is contained in
 @code{ecb-layout-always-operate-in-edit-window} the right edit-window
 is selected (depends on the value of the option
-@code{ecb-mouse-click-destination}) and then it does it´s job.
+@code{ecb-mouse-click-destination}) and then it does itï¾´s job.
 
 @item
 Otherwise the behavior depends on the value of the option
@@ -6585,7 +6616,7 @@ not required there.
 @item
 Keys can be written by their ASCII code, using a backslash followed by
 up to six octal digits. This is the only way to represent keys with
-codes above ÿ.
+codes above ï¿¿.
 
 @item
 One or more prefixes M- (meta), C- (control), S- (shift), A- (alt), H-
@@ -10221,7 +10252,7 @@ basic face-settings can be easily changed just by customizing the face
 @code{ecb-default-highlight-face}!
 
 @item ecb-directories-general-face:
-Basic face for the ECB directories buffer. It´s recommended to define
+Basic face for the ECB directories buffer. Itï¾´s recommended to define
 here the font-family, the font-size, the basic color etc.
 
 @item ecb-directory-face:
@@ -10268,7 +10299,7 @@ Define face used for highlighting current history-entry in the history
 buffer.
 
 @item ecb-history-general-face:
-Basic face for the ECB history buffer. It´s recommended to define here
+Basic face for the ECB history buffer. Itï¾´s recommended to define here
 the font-family, the font-size, the basic color etc.
 
 @item ecb-history-indirect-buffer-face:
@@ -10286,7 +10317,7 @@ Define face used for highlighting current method, class or variable in
 the methods buffer.
 
 @item ecb-methods-general-face:
-Basic face for the ECB methods buffer. It´s recommended to define here
+Basic face for the ECB methods buffer. Itï¾´s recommended to define here
 the font-family, the font-size, the basic color etc.
 
 @item ecb-method-non-semantic-face:
@@ -10312,7 +10343,7 @@ buffer.
 Define a face for displaying sources in the directories buffer.
 
 @item ecb-sources-general-face:
-Basic face for the ECB sources buffer. It´s recommended to define here
+Basic face for the ECB sources buffer. Itï¾´s recommended to define here
 the font-family, the font-size, the basic color etc.
 
 @item ecb-source-read-only-face
@@ -10957,7 +10988,7 @@ This command creates a problem-report buffer for you. After that you
 get a menu ``Mail'' (dependent on the mail-package used, the menu can
 have a different name) with commands to send the problem report. But
 for this the variable @code{mail-user-agent} must be configured right for
-your system. If you can´t get working this mechanism you can simply
+your system. If you canï¾´t get working this mechanism you can simply
 copy the whole problem-report buffer after filling it out and sending
 it with your standard mail-client to
 @email{ecb-list@@lists.sourceforge.net}!
@@ -11204,7 +11235,7 @@ There are two basic faces:
 @item @code{ecb-default-general-face}:
 Basic face for displaying an ECB-tree-buffer.
 
-It´s recommended to define the font-family, the font-size, the basic
+Itï¾´s recommended to define the font-family, the font-size, the basic
 color etc. with this face.
 
 In GNU Emacs 21.X all faces (even the face
@@ -12634,7 +12665,7 @@ Here is an example of a tree-buffer:
             <leaf-node-2>  -----|-----[tree-nodes]
             <leaf-node-3>  -----|
             <leaf-node-4>  -----|
-        [+] <collapsed>  -------´
+        [+] <collapsed>  -------ï¾´
          |
          `-----------------[expand/collapse-symbol]
 @end group
@@ -14945,7 +14976,7 @@ very well under all circumstances!
 @subsubsection Package calendar.el
 
 @cindex calendar package
-With activated ECB @code{calendar} does not shrink it´s window to the small
+With activated ECB @code{calendar} does not shrink itï¾´s window to the small
 size but splits the window equally. But if you add this to your
 @file{.emacs} it works:
 

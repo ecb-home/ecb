@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.452 2010/02/23 16:09:08 berndl Exp $
+;; $Id$
 
 ;;; Commentary:
 ;;
@@ -136,6 +136,7 @@
 (eval-when-compile
   (require 'silentcomp))
 
+(require 'info)
 
 ;; We need this libraries already here if we miss some requirements
 (require 'ecb-upgrade)
@@ -195,31 +196,12 @@
 (require 'ecb-analyse)
 (require 'ecb-symboldef)
 
-;; various loads
-(require 'assoc)
-
 (eval-when-compile
   ;; to avoid compiler grips
   (require 'cl))
 
-
 ;; XEmacs
 (silentcomp-defun ecb-redraw-modeline)
-(silentcomp-defvar modeline-map)
-(silentcomp-defvar progress-feedback-use-echo-area)
-;; Emacs
-(silentcomp-defun force-mode-line-update)
-(silentcomp-defun font-lock-add-keywords)
-
-(silentcomp-defvar current-menubar)
-(silentcomp-defun find-menu-item)
-(silentcomp-defun add-submenu)
-(silentcomp-defun delete-menu-item)
-(silentcomp-defun Info-goto-node)
-
-(silentcomp-defun ecb-speedbar-deactivate)
-(silentcomp-defvar ecb-speedbar-buffer-name)
-
 
 ;;====================================================
 ;; Variables
@@ -1216,7 +1198,7 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
         (ecb-select-ecb-frame)
         (ecb-update-directories-buffer))
 
-    (let ((stack-trace-on-error stack-trace-on-error))
+    (let ((debug-on-error debug-on-error))
       ;; we activate only if all before-hooks return non nil
       (when (run-hook-with-args-until-failure 'ecb-before-activate-hook)
 
@@ -1350,19 +1332,6 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
               ;; enabling the VC-support
               (ecb-vc-enable-internals 1)
               
-              ;; menus - dealing with the menu for XEmacs is really a pain...
-              (when ecb-running-xemacs
-                (let ((dummy-buf-name " *dummytogetglobalmap*"))
-                  (with-current-buffer (get-buffer-create dummy-buf-name)
-                    (add-submenu nil ecb-minor-menu)
-                    (kill-buffer dummy-buf-name)))
-                (save-excursion
-                  (dolist (buf (buffer-list))
-                    (set-buffer buf)
-                    (if (null (car (find-menu-item current-menubar
-                                                   (list ecb-menu-name))))
-                        (add-submenu nil ecb-minor-menu)))))
-
               (add-hook (if ecb-running-xemacs
                             'activate-menubar-hook
                           'menu-bar-update-hook)
@@ -1451,7 +1420,7 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
         
         (condition-case err-obj
             ;; enable mouse-tracking for the ecb-tree-buffers; we do this after
-            ;; running the personal hooks because if a user put´s activation of
+            ;; running the personal hooks because if a user putï¾´s activation of
             ;; follow-mouse.el (`turn-on-follow-mouse') in the
             ;; `ecb-activate-hook' then our own ECB mouse-tracking must be
             ;; activated later. If `turn-on-follow-mouse' would be activated
@@ -1560,16 +1529,6 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
 
       ;; disabling the VC-support
       (ecb-vc-enable-internals -1)
-
-      ;; menus - dealing with the menu for XEmacs is really a pain...
-      (ignore-errors
-        (when ecb-running-xemacs
-          (save-excursion
-            (dolist (buf (buffer-list))
-              (set-buffer buf)
-              (if (car (find-menu-item current-menubar
-                                       (list ecb-menu-name)))
-                  (delete-menu-item (list ecb-menu-name)))))))
       
       (remove-hook (if ecb-running-xemacs
                        'activate-menubar-hook
@@ -1658,7 +1617,7 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
         (ecb-edit-area-creators-init))
 
       ;; we can safely do the kills because killing non existing buffers
-      ;; doesn´t matter. We kill these buffers because some customize-options
+      ;; doesnï¾´t matter. We kill these buffers because some customize-options
       ;; takes only effect when deactivating/reactivating ECB, or to be more
       ;; precise when creating the tree-buffers again.
       (dolist (tb-elem (ecb-ecb-buffer-registry-name-list 'only-tree-buffers))
@@ -1695,9 +1654,11 @@ if the minor mode is enabled.
     (if new-state
         (ecb-activate-internal)
       (ecb-deactivate-internal)))
+
   (if ecb-running-xemacs
       (ecb-redraw-modeline t)
     (force-mode-line-update t))
+
   ecb-minor-mode)
 
 

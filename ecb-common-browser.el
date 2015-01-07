@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.45 2010/02/23 16:08:56 berndl Exp $
+;; $Id$
 
 
 ;;; History
@@ -45,9 +45,6 @@
 ;; (require 'ecb-layout) ;; causes cyclic dependencies!
 (require 'ecb-mode-line)
 (require 'ecb-navigate)
-
-;; various loads
-(require 'assoc)
 
 (eval-when-compile
   ;; to avoid compiler grips
@@ -1670,12 +1667,17 @@ function reads them to these hooks."
              file-accessible-directory-p
              file-name-sans-extension
              file-writable-p
-             file-name-as-directory
-             directory-files))
+             file-name-as-directory))
   (fset (intern (format "ecb-%s" f))
         `(lambda (file-or-dir-name &rest args)
            ,(format "Delegate all args to `%s' but call first `ecb-fix-path' for FILE-OR-DIR-NAME." f)
            (apply (quote ,f) (ecb-fix-path file-or-dir-name) args))))
+
+(defun ecb-directory-files (dir &rest args)
+  "Wrapper for directory-files that fixes the file name & catch file errors"
+  (condition-case nil
+      (apply 'directory-files (ecb-fix-path dir) args)
+    (error nil)))
 
 (defun ecb-expand-file-name (name &optional default-dir)
   "Delegate all args to `expand-file-name' but call first `ecb-fix-path'

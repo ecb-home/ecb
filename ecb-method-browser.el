@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.99 2010/02/23 16:09:05 berndl Exp $
+;; $Id$
 
 ;;; Commentary:
 
@@ -42,11 +42,9 @@
 
 (require 'ecb-cedet-wrapper)
 (require 'ecb-semantic)
+(require 'ecb-semantic-wrapper)
 ;; This loads the semantic-setups for the major-modes.
 ;; (require 'semantic-load)
-
-;; various loads
-(require 'assoc)
 
 (eval-when-compile
   ;; to avoid compiler grips
@@ -1902,6 +1900,7 @@ This function MUST be called with the source-buffer as current buffer!"
                                 (if has-protection 1 -1)
                                 icon-name)))
 
+
 (defun ecb-children-tags (parent-tag)
   "Return a list of children-tags of PARENT-TAG. If a child is not a
 semantic-tag \(but a plain string) then it will be converted to a positionless
@@ -3031,7 +3030,7 @@ rebuilding a not visible source-buffer."
                                        (widen)
                                        (ecb-fetch-semantic-tags full-semantic))))))
       ;; If the `ecb-fetch-semantic-tags' has done no reparsing but
-      ;; only used it´s still valid cache then neither the hooks of
+      ;; only used itï¾´s still valid cache then neither the hooks of
       ;; `semantic-after-toplevel-cache-change-hook' nor the hooks in
       ;; `semantic-after-partial-cache-change-hook' are evaluated and
       ;; therefore `ecb-rebuild-methods-buffer-with-tagcache' was not called.
@@ -3092,7 +3091,7 @@ removes only the tag-tree for SOURCE-NAME from the cache."
   (if (not source-name)
       (setq ecb-tag-tree-cache nil)
     (setq ecb-tag-tree-cache
-          (adelete 'ecb-tag-tree-cache source-name))))
+          (delq (assoc source-name ecb-tag-tree-cache) ecb-tag-tree-cache))))
 
 (defvar ecb-current-post-processed-tag-table nil
   "This is the current tag-table of the current source-buffer returned by

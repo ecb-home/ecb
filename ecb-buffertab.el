@@ -1,6 +1,6 @@
 ;;; ecb-buffertab.el --- 
 
-;; $Id: ecb-buffertab.el,v 1.7 2002/12/29 10:15:12 burtonator Exp $
+;; $Id$
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -50,20 +50,28 @@
 
 (require 'ecb-compilation)
 
-(with-no-warnings (defface ecb-buffertab-primary-face '((t (:bold t :foreground "black")))
-  "Face used to highlight the annotation lines to the left of the annotate buffer."))
+(with-no-warnings
+  (defface ecb-buffertab-primary-face '((t (:bold t :foreground "black")))
+    "Face used to highlight the annotation lines to the left of the annotate buffer."
+    :group 'ecb))
 
-(with-no-warnings (defface ecb-buffertab-secondary-face '((t (:bold nil :foreground "black")))
-  "Face used to highlight the annotation lines to the left of the annotate buffer."))
+(with-no-warnings
+  (defface ecb-buffertab-secondary-face '((t (:bold nil :foreground "black")))
+    "Face used to highlight the annotation lines to the left of the annotate buffer."
+    :group 'ecb))
 
-(with-no-warnings (defface ecb-buffertab-secondary-mouse-face '((t (:bold nil :foreground "black" :italic t)))
-  "Face used to highlight the annotation lines to the left of the annotate buffer."))
+(with-no-warnings
+  (defface ecb-buffertab-secondary-mouse-face '((t (:bold nil :foreground "black" :italic t)))
+    "Face used to highlight the annotation lines to the left of the annotate buffer."
+    :group 'ecb))
 
-(with-no-warnings (defcustom ecb-buffertab-map (let ((map (make-sparse-keymap)))
-                               (define-key map [header-line down-mouse-2] 'ecb-buffertab-popup-menu)
-                               map)
-
-  "Key map used for buffertab navigation"))
+(with-no-warnings
+  (defcustom ecb-buffertab-map
+    (let ((map (make-sparse-keymap)))
+      (define-key map [header-line down-mouse-2] 'ecb-buffertab-popup-menu)
+      map)
+    "Key map used for buffertab navigation"
+    :group 'ecb))
 
 (defun ecb-buffertab-popup-menu()
   "Popup a menu for selecting an ECB buffer."
@@ -91,23 +99,21 @@
   ""
   (interactive)
 
-  (with-no-warnings(let((ecb-prefix "   ECB: " ))
-    (save-excursion
+  (with-no-warnings
+    (let ((ecb-prefix "   ECB: " ))
+      (with-current-buffer (get-buffer ecb-speedbar-buffer-name)
+	;;FIXME: figure out what modeline tab to use
+	(setq header-line-format (concat ecb-prefix "/ " (buffer-name)" "))
 
-      (set-buffer (get-buffer ecb-speedbar-buffer-name))
+	(add-text-properties 0 (length ecb-prefix)
+			     (list 'face 'ecb-buffertab-primary-face)
+			     header-line-format)
 
-      ;;FIXME: figure out what modeline tab to use
-      (setq header-line-format (concat ecb-prefix "/ " (buffer-name)" "))
-                                   
-      (add-text-properties 0 (length ecb-prefix)
-                           (list 'face 'ecb-buffertab-primary-face)
-                           header-line-format)
-      
-      (add-text-properties (1+ (length ecb-prefix)) (length header-line-format)
-                           (list 'face 'ecb-buffertab-secondary-face
-                                 'mouse-face 'ecb-buffertab-secondary-mouse-face
-                                 'local-map 'ecb-buffertab-map)
-                           header-line-format)))))
+	(add-text-properties (1+ (length ecb-prefix)) (length header-line-format)
+			     (list 'face 'ecb-buffertab-secondary-face
+				   'mouse-face 'ecb-buffertab-secondary-mouse-face
+				   'local-map 'ecb-buffertab-map)
+			     header-line-format)))))
 
 (silentcomp-provide 'ecb-buffertab)
 

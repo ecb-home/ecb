@@ -22,7 +22,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-semantic-wrapper.el,v 1.27 2009/04/15 14:22:35 berndl Exp $
+;; $Id$
 
 ;;; Commentary:
 
@@ -38,8 +38,13 @@
 
 
 (require 'semantic)
-(require 'semantic-ctxt)
-(require 'semantic-analyze)
+(if (locate-library "semantic-ctxt")
+    (progn
+      (require 'semantic-ctxt)
+      (require 'semantic-analyze))
+  (progn
+    (require 'semantic/ctxt)
+    (require 'semantic/analyze)))
 
 (defconst ecb-semantic-2-loaded (string-match "^2" semantic-version))
 (defconst ecb-semantic-2-beta-nr (if (and ecb-semantic-2-loaded
@@ -60,8 +65,6 @@
 (silentcomp-defvar semanticdb-search-system-databases)
 (silentcomp-defvar semantic-format-use-images-flag)
 (silentcomp-defvar ezimage-use-images)
-;; semantic 2.0 does not have this
-(silentcomp-defvar semantic--buffer-cache)
 
 ;; -- getter functions for all variables of semantic currently used by ECB ---
 
@@ -221,8 +224,7 @@ unloaded buffer representation."
   "Attempt to calculate the parent-tag of TAG."
   (if (fboundp 'semantic-tag-calculate-parent)
       (apply 'semantic-tag-calculate-parent (list tag))
-    (save-excursion
-      (set-buffer (ecb--semantic-tag-buffer tag))
+    (with-current-buffer (ecb--semantic-tag-buffer tag)
       (goto-char (ecb--semantic-tag-start tag))
       (ecb--semantic-current-tag-parent))))
 
@@ -285,7 +287,9 @@ unloaded buffer representation."
 (if (fboundp 'semantic-fetch-available-tags)
     (defalias 'ecb--semantic-fetch-available-tags 'semantic-fetch-available-tags)
   (defsubst ecb--semantic-fetch-available-tags ()
-    semantic--buffer-cache))
+    (if (boundp 'semantic--buffer-cache)
+	semantic--buffer-cache
+      semantic-toplevel-bovine-cache)))
 
 (if (fboundp 'semantic-tag-components)
     (defalias 'ecb--semantic-tag-components

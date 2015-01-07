@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-jde.el,v 1.19 2009/05/10 16:41:42 berndl Exp $
+;; $Id$
 
 ;;; Commentary:
 ;;
@@ -113,7 +113,7 @@ available."
                   ;; for finding the source-file of `thing-of-interest' would
                   ;; be extracted in an own function of JDE.
                   
-                  ;; we have found the java-sourcefile. So let´s display its
+                  ;; we have found the java-sourcefile. So letï¾´s display its
                   ;; contents in the method-buffer of ECB - we must select the
                   ;; methods-window before because otherwise our automatically
                   ;; buffer-sync would resync with current java-source-file.
