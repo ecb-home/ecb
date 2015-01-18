@@ -1,12 +1,14 @@
 ;;; ecb-upgrade.el --- Upgrade an old ecb-version to the latest one
 
-;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2015 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
+;;                           Ryan Ware,
 ;;                           Free Software Foundation, Inc.
 
 ;; Author: Klaus Berndl <klaus.berndl@sdm.de>
-;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
+;;         Ryan Ware <ryan.r.ware@intel.com>
+;; Maintainer: Ryan Ware <ryan.r.ware@intel.com>
 ;; Keywords: browser, code, programming, tools
 ;; Created: 2002
 
@@ -141,7 +143,7 @@
 
 ;;; History
 ;;
-;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; For the ChangeLog of this file see the git-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
 
@@ -152,10 +154,9 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-;; (defconst ecb-version "2.33beta1"
-;;   "Current ECB version.")
+;; TODO: Makefile frobbing broken
 
-(defconst ecb-version "2.40"
+(defconst ecb-version "2.50"
   "Current ECB version.")
 
 (eval-when-compile
@@ -173,7 +174,12 @@
 
 ;; Each NEWS-string should be a one-liner shorter than 70 chars
 (defconst ecb-upgrade-news
-  '(("2.40" . ("ECB now requires full CEDET being installed (at least 1.0pre6)."
+  '(("2.50" . ("ECB now requires full CEDET being installed (at least 2.0)."
+	       "By default ECB now utilizes CEDET distributed as part of Emacs."
+	       "ECB now requires Emacs 24.4 (though previous versions may work."
+               "This release includes numerous fixes related to moving to the latest Emacs"
+               ))
+    ("2.40" . ("ECB now requires full CEDET being installed (at least 1.0pre6)."
                "More user-responsible buffer-parsing based on the idle-mechanism of semantic."
                "ECB is able to work with indirect buffers it the base-buffer is filebased."
                "The history can now be bucketized, see new `ecb-history-make-buckets'."
@@ -249,7 +255,6 @@
 (defconst ecb-upgradable-option-alist
   '((ecb-compile-window-temporally-enlarge . (ecb-compile-window-temporally-enlarge
                                               ecb-upgrade-compile-window-temporally-enlarge))
-    ;;(ecb-window-sync . (ecb-window-sync ecb-upgrade-window-sync))
     (ecb-hide-ecb-windows-hook . (ecb-hide-ecb-windows-before-hook identity))
     (ecb-show-ecb-windows-hook . (ecb-show-ecb-windows-before-hook identity))
     (ecb-layout-nr . (ecb-layout-name ecb-upgrade-layout-nr))
@@ -801,7 +806,6 @@ defined type. If not store it in `ecb-not-compatible-options'."
   (setq ecb-not-compatible-options nil)
 
   ;; get all options of ECB
-;;   (let ((ecb-options nil))
   (ecb-get-all-ecb-options)
   
   ;; check if all current values of ECB options match their types. Add not
@@ -1217,16 +1221,6 @@ Return nil if ver-str has not the required syntax:
                     (string-to-number (match-string 4 str))
                   0))))))
 
-;; (ecb-package-version-str2list "1.0")
-;; (ecb-package-version-str2list "1.0alpha")
-;; (ecb-package-version-str2list "1.0alpha3")
-;; (ecb-package-version-str2list "1.0beta")
-;; (ecb-package-version-str2list "1.0beta3")
-;; (ecb-package-version-str2list "1.0pre")
-;; (ecb-package-version-str2list "1.0pre3")
-;; (ecb-package-version-str2list "1.0.1")
-
-
 
 (defun ecb-package-version-list< (ver1 ver2)
   "Return non-nil if VER1 is less than VER2."
@@ -1234,7 +1228,6 @@ Return nil if ver-str has not the required syntax:
 	(v1-1 (nth 1 ver1))
 	(v1-2 (nth 2 ver1))
 	(v1-3 (nth 3 ver1))
-	;; v2
 	(v2-0 (nth 0 ver2))
 	(v2-1 (nth 1 ver2))
 	(v2-2 (nth 2 ver2))
@@ -1271,15 +1264,6 @@ Return nil if ver-str has not the required syntax:
                    (not (= (nth 3 ver) 0)))
               (number-to-string (nth 3 ver))
             "")))
-
-;; (ecb-package-version-list2str (ecb-package-version-str2list "1.0"))
-;; (ecb-package-version-list2str (ecb-package-version-str2list "1.0alpha"))
-;; (ecb-package-version-list2str (ecb-package-version-str2list "1.0alpha3"))
-;; (ecb-package-version-list2str (ecb-package-version-str2list "1.0beta"))
-;; (ecb-package-version-list2str (ecb-package-version-str2list "1.0beta3"))
-;; (ecb-package-version-list2str (ecb-package-version-str2list "1.0pre"))
-;; (ecb-package-version-list2str (ecb-package-version-str2list "1.0pre3"))
-;; (ecb-package-version-list2str (ecb-package-version-str2list "1.0.1"))
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: remove from texi the whole
 ;; download stuff inkl. in the command ssection ecb-download-*

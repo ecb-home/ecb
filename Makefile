@@ -1,12 +1,14 @@
 # This Makefile byte-compiles the ECB lisp files and generates online-help.
 
-# Copyright (C) 2000 - 2010 Jesper Nordenberg,
+# Copyright (C) 2000 - 2015 Jesper Nordenberg,
 #                           Klaus Berndl,
+#                           Ryan Ware,
 #                           Free Software Foundation, Inc.
 
 # Author: Jesper Nordenberg <mayhem@home.se>
 #         Klaus Berndl <klaus.berndl@sdm.de>
-# Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
+#         Ryan Ware <ryan.r.ware@intel.com>
+# Maintainer: Ryan Ware <ryan.r.ware@intel.com>
 # Keywords: browser, code, programming, tools
 # Created: 2001
 
@@ -25,9 +27,13 @@
 
 # $Id$
 
+# New Makefile layout created by Alex Ott.
+
 SHELL = /bin/bash
 
 PLATFORM=$(shell uname -s)
+
+.PHONY: ecb autoloads online-help
 
 #
 # Override vars in Makefile.conf if needed
@@ -63,7 +69,7 @@ endif
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
-ecb_VERSION=2.41
+ecb_VERSION=2.50
 
 include ecb-makedef.mk
 
