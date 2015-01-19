@@ -1,3 +1,13 @@
+* Changes for ECB version 2.50
+
+** By default now uses integrated CEDET in Emacs
+
+** Better compatibility with Emacs 24.4
+
+** Includes new Makefile layout thanks to Alex Ott
+
+** Includes a number of bug fixes thanks to Alex Ott
+
 * Changes for ECB version 2.40.1
 
 ** Better compatibility with forthcoming Gnu Emacs 23.2
