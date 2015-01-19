@@ -1,14 +1,16 @@
 ;;; ecb-common-browser.el --- common browsing stuff for  Emacs
 
-;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2015 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
+;;                           Ryan Ware,
 ;;                           Free Software Foundation, Inc.
 
 ;; Author: Jesper Nordenberg <mayhem@home.se>
 ;;         Klaus Berndl <klaus.berndl@sdm.de>
 ;;         Kevin A. Burton <burton@openprivacy.org>
-;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
+;;         Ryan Ware <ryan.r.ware@intel.com>
+;; Maintainer: Ryan Ware <ryan.r.ware@intel.com>
 ;; Keywords: browser, code, programming, tools
 ;; Created: 2004
 
@@ -42,7 +44,6 @@
 (require 'ecb-util)
 
 (require 'tree-buffer)
-;; (require 'ecb-layout) ;; causes cyclic dependencies!
 (require 'ecb-mode-line)
 (require 'ecb-navigate)
 
@@ -760,11 +761,6 @@ Example:
 
 (put 'defecb-advice 'lisp-indent-function 3)
 
-;; (insert (pp (macroexpand '(defecb-advice insert around
-;;                                          ecb-always-disabled-advices "doc"
-;;                                          (message "test")))))
-
-
 (defun ecb-enable-ecb-advice (function-symbol advice-class arg)
   "If ARG is greater or equal zero then enable the adviced version of
 FUNCTION-SYMBOL. Otherwise disable the adviced version. The advice must be
@@ -1270,14 +1266,6 @@ tree-buffer is automatically performed."
                 `(when (and (not no-meta-hiding) meta-mode)
                    (ecb-run-with-idle-timer 0.001 nil 'ecb-hide-ecb-windows))))))))
 
-;; (insert (pp (macroexpand
-;;              '(defecb-tree-buffer-callback kausi-callback ecb-history-buffer
-;;                 expand (&optional a b)
-;;                 "das ist ein Docstring"
-;;                 (message "")
-;;                 (if nil t nil)))))
-
-
 (put 'defecb-tree-buffer-callback 'lisp-indent-function 4)
 
 ;; the filename/path cache
@@ -1400,11 +1388,6 @@ Body-tracing means calls to `ecb-bodytrace-autocontrol/sync-fcn-error'
 somewhere within the BODY of functions defined by
 `defecb-autocontrol/sync-function'. So by setting this variable tracing of the
 BODY of autocontrol/sync-function can be switched on or off.")
-
-;; (setq ecb-autotrace-autocontrol/sync-functions
-;;       (list 'ecb-compilation-buffer-list-changed-p))
-;; (setq ecb-bodytrace-autocontrol/sync-functions
-;;       (list 'ecb-compilation-buffer-list-changed-p))
 
 (defun ecb-autotrace-autocontrol/sync-fcn-error (autocontrol-fcn &rest args)
   "Run ARGS through `format' and write it to the *Messages*-buffer.
@@ -1616,27 +1599,6 @@ hold in the variable `ecb-a-special-buffer-name'.
               ))))))
 (put 'defecb-autocontrol/sync-function 'lisp-indent-function 4)
 
-;; (insert (pp (macroexpand
-;;              '(defecb-autocontrol/sync-function ecb-analyse-buffer-sync-test 
-;;                 ecb-anaylyse-buffer-name-test ecb-basic-buffer-sync nil
-;;                 "testdoctsirng"
-;;                 (let ((analysis nil)
-;;                       (completions nil)
-;;                       (fnargs nil)
-;;                       (cnt nil)
-;;                       )
-;;                   ;; Try and get some sort of analysis
-;;                   (ignore-errors
-;;                     (save-excursion
-;;                       (setq analysis (ecb--semantic-analyze-current-context (point)))
-;;                       (setq cnt (ecb--semantic-find-tag-by-overlay))
-;;                       (when analysis
-;;                         (setq completions (ecb--semantic-analyze-possible-completions analysis))
-;;                         (setq fnargs (ecb--semantic-get-local-arguments (point)))
-;;                         )))))
-;;              )))
-
-
 (defecb-autocontrol/sync-function ecb-monitor-autocontrol-functions nil nil nil
   "Checks if all necessary ECB-hooks are contained in `post-command-hook' rsp.
 `pre-command-hook'. If one of them has been removed by Emacs \(Emacs resets
@@ -1788,8 +1750,6 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
                                                               filename))))))
           (ecb-fixed-filename-cache-put path filename result)
           result))))
-
-;; (ecb-fix-filename "/berndl@ecb.sourceforge.net:~")
 
 ;; -- end of canonical filenames
 
