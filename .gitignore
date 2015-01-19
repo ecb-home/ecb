@@ -5,3 +5,7 @@
 /info-help/
 /ecb-autoloads.el
 Makefile.conf
+
+*vc-log*
+
+ecb-compile-script
