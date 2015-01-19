@@ -1,12 +1,14 @@
 ;;; ecb-create-layout.el --- creating new layouts
 
-;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2015 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
+;;                           Ryan Ware,
 ;;                           Free Software Foundation, Inc.
 
 ;; Author: Klaus Berndl <klaus.berndl@sdm.de>
-;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
+;;         Ryan Ware <ryan.r.ware@intel.com>
+;; Maintainer: Ryan Ware <ryan.r.ware@intel.com>
 ;; Keywords: browser, code, programming, tools
 ;; Created: 2002
 
@@ -155,28 +157,6 @@
 
 (defconst ecb-create-layout-file-header
      "
-
-;; Copyright (C) 2001 - 2005 Jesper Nordenberg
-;; Copyright (C) 2001 - 2005 Free Software Foundation, Inc.
-;; Copyright (C) 2001 - 2005 Klaus Berndl <klaus.berndl@sdm.de>
-
-;; Author: Klaus Berndl <klaus.berndl@sdm.de>
-;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
-;; Keywords: java, class, browser
-
-;; This program is free software; you can redistribute it and/or modify it
-;; under the terms of the GNU General Public License as published by the Free
-;; Software Foundation; either version 2, or (at your option) any later
-;; version.
-
-;; This program is distributed in the hope that it will be useful, but WITHOUT
-;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-;; FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-;; more details.
-
-;; You should have received a copy of the GNU General Public License along
-;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
-;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 ;;; Commentary:
 
@@ -635,14 +615,6 @@ never selects the edit-window."
     'ecb-create-layout-next-window)
   (define-key ecb-create-layout-mode-map (kbd "C-p")
     'ecb-create-layout-previous-window)
-;;   (define-key ecb-create-layout-mode-map (kbd "C-h v")
-;;     'describe-variable)
-;;   (define-key ecb-create-layout-mode-map (kbd "C-h k")
-;;     'describe-key)
-;;   (define-key ecb-create-layout-mode-map (kbd "C-h d")
-;;     'ecb-create-layout-debug)
-;;   (define-key ecb-create-layout-mode-map (kbd "M-<down>")
-;;     'scroll-other-window)
   (set-keymap-parent ecb-create-layout-mode-map nil))
 
 
