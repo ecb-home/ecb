@@ -1,12 +1,14 @@
 ;;; ecb-compatibility.el --- ECB-compatibility for other packages
 
-;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2015 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
+;;                           Ryan Ware,
 ;;                           Free Software Foundation, Inc.
 
 ;; Author: Klaus Berndl <klaus.berndl@sdm.de>
-;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
+;;         Ryan Ware <ryan.r.ware@intel.com>
+;; Maintainer: Ryan Ware <ryan.r.ware@intel.com>
 ;; Keywords: browser, code, programming, tools
 ;; Created: 2004
 
@@ -23,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compatibility.el,v 1.17 2009/06/24 17:49:54 berndl Exp $
+;; $Id$
 
 ;;; Commentary:
 ;;
@@ -174,8 +176,7 @@ BUFFER is displayed in an edit-window!"
     (let (;; This runs the `other-window'-calls in the body in the right mode
           (ecb-other-window-behavior 'only-edit))
       ;; return the current number of edit-windows if point is in an edit-window
-      ;; and always return 1 if point is not in an edit-window. Moved to 
-      ;; cl-flet from flet.
+      ;; and always return 1 if point is not in an edit-window.
       (cl-flet ((count-windows (&optional minibuf)
                             (if (ecb-point-in-edit-window-number)
                                 (length (ecb-canonical-edit-windows-list))
@@ -214,17 +215,6 @@ BUFFER is displayed in an edit-window!"
 
 (silentcomp-defun ediff-cleanup-mess)
 (silentcomp-defvar ediff-quit-hook)
-
-;; (defecb-advice ediff-setup-windows around ecb-compatibility-advices
-;;   "Ediff can manage all its windows with deactivated ECB-advices.
-
-;; This is possible because we have in the setup-hook cleared the whole ecb-frame."
-;;   (if (and (boundp 'ecb-minor-mode)
-;;            ecb-minor-mode
-;;            (eq (selected-frame) ecb-frame))
-;;       (ecb-with-original-basic-functions
-;;        ad-do-it)
-;;     ad-do-it))
 
 (defvar ecb-before-ediff-window-config nil)
 

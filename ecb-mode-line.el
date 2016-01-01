@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-mode-line.el,v 1.42 2010/02/23 16:09:06 berndl Exp $
+;; $Id$
 
 ;;; Commentary:
 ;;
@@ -328,9 +328,9 @@ as \"W-<number>\"."
   (if (ecb-buffer-obj buffer-name)
       (with-current-buffer buffer-name
         (setq mode-line-format new-mode-line-format)
-        (if ecb-running-xemacs
-            (ecb-redraw-modeline)
-          (force-mode-line-update)))
+	(if ecb-running-xemacs
+	    (ecb-redraw-modeline)
+	  (force-mode-line-update)))
     (message "This buffer isn't available: %s"  buffer-name)))
 
 (silentcomp-provide 'ecb-mode-line)

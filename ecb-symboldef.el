@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-symboldef.el,v 1.20 2010/03/02 12:02:59 berndl Exp $
+;; $Id$
 
 ;;; Commentary:
 ;;
@@ -285,20 +285,17 @@ EDIT-BUFFER is that buffer VSYMBOL is used."
           (temp-buffer-setup-hook nil)
           ;; this does not call temp-buffer-show-hook!!!
           (temp-buffer-show-function (function (lambda (b) nil))))
-      ;; Moved to cl-flet from flet.
       (cl-flet ((help-buffer () ecb-symboldef-temp-buffer-name)
              ;; (print-help-return-message (&optional function) nil)
              ;; for XEmacs
              (help-buffer-name () ecb-symboldef-temp-buffer-name))
         (cl-labels ((print-help-return-message (&optional function) nil))
-          (describe-variable vsymbol)))
-      ))
+          (describe-variable vsymbol)))))
   (with-current-buffer ecb-symboldef-temp-buffer-name
     (when (member 'eieio-help-mode-augmentation-maybee temp-buffer-show-hook)
       (let ((major-mode 'help-mode))
         (eieio-help-mode-augmentation-maybee)))
-    (buffer-string))
-  )
+    (buffer-string)))
 
 (silentcomp-defun function-at-point)
 (silentcomp-defun function-called-at-point)

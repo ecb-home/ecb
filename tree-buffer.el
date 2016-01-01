@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.188 2010/02/23 16:09:16 berndl Exp $
+;; $Id$
 
 ;;; Commentary:
 
@@ -1519,7 +1519,7 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
         (let ((exp-node-children-count (1+ (tree-buffer-count-subnodes-to-display node)))
               (point-window-line (count-lines (window-start window) node-point)))
           ;; if the current node is not already displayed in the first line of
-          ;; the window (= condition 1) and if not all of it´s children are
+          ;; the window (= condition 1) and if not all of itï¾´s children are
           ;; visible in the window then we can do some optimization.
           (if (and (save-excursion
                      (goto-char node-point)
@@ -1529,7 +1529,7 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
                           (goto-char node-point)
                           (forward-line exp-node-children-count)
                           (pos-visible-in-window-p (point) window))))
-              ;; optimize the display of NODE and it´s children so as much as
+              ;; optimize the display of NODE and itï¾´s children so as much as
               ;; possible are visible.
               (set-window-start window
                                 (save-excursion

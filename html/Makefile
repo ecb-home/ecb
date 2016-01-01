@@ -23,7 +23,7 @@
 # GNU Emacs; see the file COPYING.  If not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# $Id: Makefile,v 1.25 2009/11/20 10:15:07 berndl Exp $
+# $Id$
 
 
 # Just type "make upload" to upload a complete new build of the whole
@@ -31,8 +31,6 @@
 #
 # Or type "make all" or "make upload-build" to generate the whole website
 # and build an uploadable ecb-website.tar.gz file.
-
-# $Id: Makefile,v 1.25 2009/11/20 10:15:07 berndl Exp $
 
 EMACS=emacs
 

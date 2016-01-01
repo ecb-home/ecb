@@ -21,7 +21,7 @@
 # GNU Emacs; see the file COPYING.  If not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# $Id: ecb-makedef.mk,v 1.10 2009/06/23 11:16:56 berndl Exp $
+# $Id$
 
 RM=rm -f
 CP=cp

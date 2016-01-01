@@ -1,6 +1,6 @@
 ;;; ecb-multiframe.el --- 
 
-;; $Id: ecb-multiframe.el,v 1.8 2002/10/31 00:03:12 burtonator Exp $
+;; $Id$
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -95,7 +95,6 @@
   
   (dolist(variable ecb-multiframe-variables)
     (set-frame-parameter nil frame (list (cons variable nil)))
-
     (modify-frame-parameters frame (list (cons variable nil))))
 
   ;;ecb-eshell-buffer-name ?
@@ -122,7 +121,7 @@
     ;;fix speedbar by binding the given speedbar frame value with the current frame
       
     (mapc (lambda(sframe)
-              (when (boundp sframe)
+	    (when (boundp sframe)
                 (set-frame-parameter nil frame (list (cons sframe frame))))
                 (modify-frame-parameters frame (list (cons sframe frame))))
             '(speedbar-frame speedbar-attached-frame dframe-attached-frame))
@@ -145,19 +144,22 @@ frame.  When complete return the new buffer name."
 
   (let((new-buffer-name (format buffer-format-name
                                 (format-time-string "%s"))))
+    (with-no-warnings
+      (set-frame-parameter nil frame (list (cons variable new-buffer-name))))
   
-    (with-no-warnings(set-frame-parameter nil frame (list (cons variable new-buffer-name))))
-  
-    (with-no-warnings(modify-frame-parameters frame (list (cons variable new-buffer-name))))
+    (with-no-warnings
+      (modify-frame-parameters frame (list (cons variable new-buffer-name))))
+
     new-buffer-name))
 
-(with-no-warnings(defun ecb-deactivate-internal ()
-  "Deactivates the ECB and kills all ECB buffers and windows."
-  (unless (not ecb-minor-mode)
-    
-    (setq ecb-minor-mode nil))
-  (message "The ECB is now deactivated.")
-  ecb-minor-mode))
+(with-no-warnings
+  (defun ecb-deactivate-internal ()
+    "Deactivates the ECB and kills all ECB buffers and windows."
+    (unless (not ecb-minor-mode)
+      
+      (setq ecb-minor-mode nil))
+    (message "The ECB is now deactivated.")
+    ecb-minor-mode))
 
 (defun ecb-multiframe-activate-hook()
   "Hook to run to initialize multiframe support"

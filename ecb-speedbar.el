@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.77 2010/02/23 16:09:06 berndl Exp $
+;; $Id$
 
 ;;; Commentary:
 
@@ -444,6 +444,14 @@ speedbar-window is not visible within the ECB-frame."
 ;; semantic-grammar available) but which can be parsed by imenu and/or etags
 ;; via speedbar.
 
+(defun ecb-speedbar-decorate-tag (tag face)
+  "Set given face to tag's text & return decorated text"
+  (let* ((txt-tmp (car tag))
+	 (txt (when (stringp txt-tmp) (substring txt-tmp 0))))
+    (when txt
+      (set-text-properties 0 (length txt) `(face ,face) txt))
+    txt))
+
 (defun ecb-speedbar-sb-tag-p (tag)
   "Return not nil if TAG is a semantic-tag generated from a speedbar tag."
   (ecb--semantic--tag-get-property tag 'ecb-speedbar-tag))
@@ -475,11 +483,7 @@ Return NODE."
          (ecb--semantic--tag-put-property new-tag 'ecb-speedbar-tag t)
          (ecb-apply-user-filter-to-tags (list new-tag))
          (when (not (ecb-tag-forbidden-display-p new-tag))
-           (tree-node-new (progn
-                            (set-text-properties
-                             0 (length (car tag))
-                             `(face ,ecb-method-non-semantic-face) (car tag))
-                            (car tag))
+           (tree-node-new (ecb-speedbar-decorate-tag tag ecb-method-non-semantic-face)
                           0
                           new-tag
                           t
@@ -495,11 +499,7 @@ Return NODE."
          (when (not (ecb-tag-forbidden-display-p new-tag))             
            (ecb-create-non-semantic-tree
             (setq new-node
-                  (tree-node-new (progn
-                                   (set-text-properties
-                                    0 (length (car tag))
-                                    `(face ,ecb-method-non-semantic-face) (car tag))
-                                   (car tag))
+                  (tree-node-new (ecb-speedbar-decorate-tag tag ecb-method-non-semantic-face)
                                  0
                                  new-tag
                                  nil node))
@@ -510,11 +510,7 @@ Return NODE."
         (speedbar-generic-list-group
          (ecb-create-non-semantic-tree
           (setq new-node
-                (tree-node-new (progn
-                                 (set-text-properties
-                                  0 (length (car tag))
-                                  `(face ,ecb-method-non-semantic-face) (car tag))
-                                 (car tag))
+                (tree-node-new (ecb-speedbar-decorate-tag tag ecb-method-non-semantic-face)
                                1
                                nil nil node))
           (cdr tag))

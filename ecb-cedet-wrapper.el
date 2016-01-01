@@ -1,10 +1,12 @@
 ;;; ecb-cedet-wrapper.el -- define wrappers for all cedet funcs/vars
 
-;; Copyright (C) 2000 - 2009 Klaus Berndl,
+;; Copyright (C) 2000 - 2015 Klaus Berndl,
+;;                           Ryan Ware,
 ;;                           Free Software Foundation, Inc.
 
 ;; Author: Klaus Berndl <klaus.berndl@sdm.de>
-;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
+;;         Ryan Ware <ryan.r.ware@intel.com>
+;; Maintainer: Ryan Ware <ryan.r.ware@intel.com>
 ;; Keywords: browser, code, programming, tools
 ;; Created: 2009
 
@@ -21,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-cedet-wrapper.el,v 1.7 2010/02/21 13:10:12 berndl Exp $
+;; $Id$
 
 ;;; Commentary:
 
@@ -260,11 +262,6 @@ If ECB detects a problem it is reported and then an error is thrown."
       semantic-format-use-images-flag))
 
 ;; -- an alias for all functions of cedet currently used by ECB ---
-
-;; (delq nil (mapcar (function (lambda (f)
-;;                               (if (not (fboundp f))
-;;                                   f)))
-;;                   ecb--cedet-function-list))
 
 (defconst ecb--cedet-function-list
   '(

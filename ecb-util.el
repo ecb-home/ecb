@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.165 2010/03/02 12:02:59 berndl Exp $
+;; $Id$
 
 ;;; Commentary:
 ;;
@@ -63,7 +63,6 @@
 (silentcomp-defun noninteractive)
 ;; Emacs
 (silentcomp-defun event-basic-type)
-(silentcomp-defvar noninteractive)
 (silentcomp-defun window-edges)
 (silentcomp-defun buffer-local-value)
 (silentcomp-defun posn-point)
@@ -2355,8 +2354,10 @@ cons-cell \('test-inner-loop . \"test\")"
       `(called-interactively-p ,kind)
     `(interactive-p)))
 
-;; labels is obsolete as of Gnu Emacs 24.3
+;; labels & flet is obsolete as of Gnu Emacs 24.3, so we use them but provide
+;; compatibility with older versions
 (unless (fboundp 'cl-labels) (fset 'cl-labels 'labels))
+(unless (fboundp 'cl-flet) (fset 'cl-flet 'flet))
 
 ;; redraw-modeline is an obsolete function as of Gnu Emacs 24.3
 (defmacro ecb-redraw-modeline (&optional kind)
