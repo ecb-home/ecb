@@ -387,7 +387,8 @@ enlarge the compile-window over half of the frame-height and also not below
              (equal frame ecb-frame))
     (ignore-errors (ecb-eshell-recenter))))
 
-(add-hook 'ecb-activate-hook 'ecb-eshell-auto-activate-hook)
+;; Adding this hook clobbered any attempt to customize the variable
+;; (add-hook 'ecb-activate-hook 'ecb-eshell-auto-activate-hook)
 
 (silentcomp-provide 'ecb-eshell)
 
